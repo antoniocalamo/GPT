@@ -425,13 +425,23 @@ textarea{resize:vertical; min-height:50px;}
 .pack-item.not-needed{opacity:.5;}
 
 /* ---- Gomme table ---- */
-table.tires{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.tires{width:100%; border-collapse:collapse; font-size:13.5px; table-layout:fixed;}
 table.tires th{
   text-align:left; font-family:'Fraunces',serif; font-size:13px; color:var(--forest);
-  border-bottom:2px solid var(--line); padding:8px 10px;
+  border-bottom:2px solid var(--line); padding:8px 14px 8px 10px; overflow:hidden;
 }
-table.tires td{padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
-table.tires input[type=text], table.tires input[type=date]{font-size:13px; padding:4px 6px;}
+table.tires td{padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; overflow:hidden;}
+table.tires input[type=text], table.tires input[type=date]{font-size:13px; padding:4px 6px; width:100%;}
+.col-resize-handle{
+  position:absolute; top:0; right:0; width:8px; height:100%; cursor:col-resize;
+  border-right:2px solid transparent;
+}
+.col-resize-handle:hover{border-right-color:var(--forest);}
+.row-resize-handle{
+  position:absolute; left:0; bottom:0; width:100%; height:6px; cursor:row-resize;
+  border-bottom:2px solid transparent;
+}
+.row-resize-handle:hover{border-bottom-color:var(--forest);}
 
 .empty-hint{color:var(--ink-soft); font-size:13px; font-style:italic; padding:12px 0;}
 
@@ -837,7 +847,7 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, gommeLayout:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null;
 let currentUser = null;
 let isGuest = false;
@@ -886,6 +896,7 @@ async function loadAll(){
   state.customTabs = await store.get("customTabs", []);
   state.customTabsPrivate = await store.get(privKey("customTabs"), []);
   state.hiddenBuiltins = await store.get(privKey("hiddenBuiltins"), []);
+  state.gommeLayout = await store.get(privKey("gommeLayout"), {colWidths:{}, rowHeights:{}});
   state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
 }
 
@@ -1795,6 +1806,10 @@ function renderBbqDetail(detail, bbq){
 }
 
 /* ---------------- GOMME ---------------- */
+const GOMME_FIELDS = [
+  ["treno","text","Treno",110],["intervento","text","Intervento",220],["data","date","Data",130],
+  ["km","text","Km",80],["note","text","Note",220]
+];
 function renderGomme(main){
   main.appendChild(el("div",{class:"section-head"},[
     el("h1",{},"Manutenzione gomme"),
@@ -1808,32 +1823,89 @@ function renderGomme(main){
   });
   main.appendChild(addBtn);
 
+  const layout = state.gommeLayout;
+  const wrap = el("div",{style:"overflow-x:auto;"});
   const table = el("table",{class:"tires card"});
-  table.appendChild(el("tr",{},[
-    el("th",{},"Treno"), el("th",{},"Intervento"), el("th",{},"Data"),
-    el("th",{},"Km"), el("th",{},"Note"), el("th",{},"")
-  ]));
+  const colgroup = el("colgroup");
+  const cols = {};
+  GOMME_FIELDS.forEach(([f,,,defaultW])=>{
+    const w = layout.colWidths[f] || defaultW;
+    const col = el("col",{style:`width:${w}px;`});
+    cols[f] = col;
+    colgroup.appendChild(col);
+  });
+  colgroup.appendChild(el("col",{style:"width:36px;"}));
+  table.appendChild(colgroup);
+
+  const headRow = el("tr");
+  GOMME_FIELDS.forEach(([f,,label])=>{
+    const th = el("th",{style:"position:relative;"}, label);
+    const handle = el("span",{class:"col-resize-handle"});
+    handle.addEventListener("pointerdown",(e)=>{
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      const startX = e.clientX;
+      const startW = parseInt(cols[f].style.width, 10);
+      function move(ev){
+        const w = Math.max(50, startW + (ev.clientX - startX));
+        cols[f].style.width = w+"px";
+        layout.colWidths[f] = w;
+      }
+      function up(){
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", up);
+        store.set(privKey("gommeLayout"), layout);
+      }
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", up);
+    });
+    th.appendChild(handle);
+    headRow.appendChild(th);
+  });
+  headRow.appendChild(el("th",{},""));
+  table.appendChild(headRow);
+
   state.tires.forEach((row,i)=>{
-    const tr = el("tr");
-    const fields = [
-      ["treno","text","110px"],["intervento","text","auto"],["data","date","130px"],
-      ["km","text","80px"],["note","text","auto"]
-    ];
-    fields.forEach(([f,type])=>{
-      const td = el("td");
+    const rowH = layout.rowHeights[row.id];
+    const tr = el("tr",{style: rowH ? `height:${rowH}px;` : ""});
+    GOMME_FIELDS.forEach(([f,type])=>{
+      const td = el("td",{style:"position:relative;"});
       const inp = el("input",{type, value:row[f]||""});
       inp.addEventListener("change", ()=>{ row[f]=inp.value; store.set("tires", state.tires); });
       td.appendChild(inp);
       tr.appendChild(td);
     });
+    const lastTd = el("td",{style:"position:relative;"});
     const del = el("button",{class:"btn small danger"},"✕");
     del.addEventListener("click", ()=>{
       state.tires.splice(i,1); store.set("tires", state.tires); render("gomme");
     });
-    tr.appendChild(el("td",{},del));
+    lastTd.appendChild(del);
+    const rowHandle = el("span",{class:"row-resize-handle"});
+    rowHandle.addEventListener("pointerdown",(e)=>{
+      e.preventDefault();
+      rowHandle.setPointerCapture(e.pointerId);
+      const startY = e.clientY;
+      const startH = tr.offsetHeight;
+      function move(ev){
+        const h = Math.max(28, startH + (ev.clientY - startY));
+        tr.style.height = h+"px";
+        layout.rowHeights[row.id] = h;
+      }
+      function up(){
+        rowHandle.removeEventListener("pointermove", move);
+        rowHandle.removeEventListener("pointerup", up);
+        store.set(privKey("gommeLayout"), layout);
+      }
+      rowHandle.addEventListener("pointermove", move);
+      rowHandle.addEventListener("pointerup", up);
+    });
+    lastTd.appendChild(rowHandle);
+    tr.appendChild(lastTd);
     table.appendChild(tr);
   });
-  main.appendChild(table);
+  wrap.appendChild(table);
+  main.appendChild(wrap);
 }
 
 /* ---------------- FINANZE ---------------- */
