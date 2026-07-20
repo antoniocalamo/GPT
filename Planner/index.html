@@ -1679,13 +1679,13 @@ function renderOrto(main){
     });
     if(activeCommentId===c.id){
       const pop = el("div",{class:"orto-comment-pop"});
+      pop.addEventListener("click", ev=>ev.stopPropagation());
+      pop.addEventListener("mousedown", ev=>ev.stopPropagation());
       const ta = el("textarea",{rows:"3", placeholder:"Scrivi un commento…"});
       ta.value = c.text||"";
-      ta.addEventListener("mousedown", ev=>ev.stopPropagation());
       ta.addEventListener("change", ()=>{ c.text=ta.value; store.set("orto", state.orto); });
       pop.appendChild(ta);
       const delC = el("button",{class:"btn small danger", style:"margin-top:6px;"},"Elimina commento");
-      delC.addEventListener("mousedown", ev=>ev.stopPropagation());
       delC.addEventListener("click", ()=>{
         state.orto.comments = state.orto.comments.filter(x=>x.id!==c.id);
         activeCommentId = null;
