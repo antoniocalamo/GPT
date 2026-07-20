@@ -24,20 +24,32 @@
   --card:#FFFFFB;
   --shadow: 0 2px 10px rgba(35,48,42,0.09);
 }
+:root[data-theme="dark"]{
+  --paper:#1A211C;
+  --paper-2:#20281F;
+  --ink:#EDE7D3;
+  --ink-soft:#A9AE9C;
+  --line:#3A4536;
+  --card:#242D24;
+  --shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
 *{box-sizing:border-box;}
+html, body{height:100%;}
 body{
   margin:0;
   font-family:'Inter',sans-serif;
   background:var(--paper);
   color:var(--ink);
-  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
+  transition: background .2s ease, color .2s ease;
 }
 .mono{font-family:'IBM Plex Mono',monospace;}
 h1,h2,h3,.display{font-family:'Fraunces',serif;}
 
 .app{
   display:flex;
-  min-height:100vh;
+  height:100vh;
 }
 
 /* ---- Sidebar tabs (notebook-tab signature) ---- */
@@ -48,6 +60,9 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   padding:32px 0 32px 18px;
   width:190px;
   flex-shrink:0;
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 .tabs .brand{
   display:flex;
@@ -162,15 +177,30 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   overflow:hidden;
 }
 .topbar{
-  display:flex; align-items:center; justify-content:flex-end; gap:16px;
+  display:flex; align-items:center; justify-content:flex-end; gap:14px;
   padding:18px 44px 0 20px; flex-shrink:0;
 }
+.zoom-controls{display:flex; align-items:center; gap:2px;}
+.zoom-controls .btn{padding:4px 9px; font-size:13px;}
+.zoom-level{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
+  min-width:36px; text-align:center;
+}
+.app-version{
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+  opacity:.75; white-space:nowrap;
+}
+#theme-toggle-btn{font-size:14px; padding:5px 9px;}
 main{
   flex:1;
   padding:20px 44px 38px 44px;
   overflow-x:hidden;
   overflow-y:auto;
   min-width:0;
+}
+.dash-header-sticky{
+  position:sticky; top:-20px; z-index:20; background:var(--paper-2);
+  margin:-20px -44px 0 -44px; padding:20px 44px 0 44px;
 }
 .section-head{
   display:flex;
@@ -274,7 +304,7 @@ textarea{resize:vertical; min-height:50px;}
 .section-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
 .task-item{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:8px;
   padding:5px 6px;
   margin:0 -6px;
@@ -284,37 +314,46 @@ textarea{resize:vertical; min-height:50px;}
 }
 .task-item:last-child{border-bottom:none;}
 .task-item:hover{background:rgba(35,48,42,0.035);}
-.task-item input[type=text]{border:none; background:transparent; padding:2px 0;}
-.task-item input[type=text]:focus{outline:none; background:#fff;}
-.task-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
-.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:13px; opacity:.5;}
+.task-item input[type=checkbox]{margin-top:4px;}
+.task-item textarea{
+  border:none; background:transparent; padding:4px 0; resize:none; overflow:hidden;
+  font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); line-height:1.4; flex:1; min-width:0;
+}
+.task-item textarea:focus{outline:none; background:#fff; border-radius:6px; padding:4px 6px;}
+.task-item.done textarea{text-decoration:line-through; color:var(--ink-soft);}
+.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:13px; opacity:.5; flex-shrink:0; margin-top:4px;}
 .task-item .del:hover{opacity:1; color:var(--rust);}
 .task-block{margin-bottom:2px;}
 .subtask-list{margin-left:26px; margin-top:2px; margin-bottom:4px;}
-.subtask-item{padding:3px 6px; font-size:12.5px;}
-.subtask-item input[type=text]{font-size:12.5px;}
-.subtask-add{margin-top:2px; margin-bottom:2px;}
-.subtask-add input{font-size:12.5px; padding:4px 8px;}
+.subtask-item{padding:2px 6px;}
+.subtask-item textarea{font-size:12.5px; padding:3px 0;}
+.subtask-add{margin-top:1px; margin-bottom:1px; margin-left:2px;}
+.subtask-add input{font-size:11.5px; padding:3px 7px; max-width:220px;}
 .urgent-flag{
   width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   font-family:'Fraunces',serif; font-weight:700; font-size:12px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent;
+  flex-shrink:0; background:transparent; margin-top:2px;
 }
 .urgent-flag.active{background:var(--rust); border-color:var(--rust); color:#fff;}
 .bold-flag{
   width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   font-family:'Inter',sans-serif; font-weight:700; font-size:11px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent;
+  flex-shrink:0; background:transparent; margin-top:2px;
 }
 .bold-flag.active{background:var(--forest); border-color:var(--forest); color:#fff;}
 .task-item.urgent{background:rgba(140,58,38,0.07); border-radius:7px;}
-.task-item.urgent input[type=text]{color:var(--rust); font-weight:600;}
-.reorder-btns{display:flex; flex-direction:column; gap:0; flex-shrink:0; opacity:.35;}
-.reorder-btns:hover{opacity:.9;}
-.reorder-btn{font-size:8px; line-height:8px; cursor:pointer; color:var(--ink-soft); padding:1px 3px;}
-.reorder-btn:hover{color:var(--forest);}
+.task-item.urgent textarea{color:var(--rust); font-weight:600;}
+.drag-grip{
+  width:15px; height:20px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
+  display:flex; align-items:center; justify-content:center; margin-top:2px;
+}
+.drag-grip svg{width:100%; height:100%;}
+.drag-grip:hover{opacity:.9;}
+.drag-grip:active{cursor:grabbing;}
+.task-item.dragging, .check-item.pack-item.dragging{opacity:.4;}
+.task-item.drag-over, .check-item.pack-item.drag-over{background:rgba(51,80,63,0.09); border-radius:7px;}
 .add-line{
   display:flex; gap:8px; margin-top:8px;
 }
@@ -348,9 +387,9 @@ textarea{resize:vertical; min-height:50px;}
 .orto-obj{
   position:absolute;
   border-radius:10px;
-  padding:8px 10px;
+  padding:5px 7px;
   color:#fff;
-  font-size:12.5px;
+  font-size:10.5px;
   font-weight:600;
   cursor:grab;
   box-shadow: 0 3px 8px rgba(0,0,0,0.18);
@@ -358,30 +397,35 @@ textarea{resize:vertical; min-height:50px;}
   overflow:hidden;
 }
 .orto-obj:active{cursor:grabbing;}
-.orto-obj-head{display:flex; align-items:center; gap:6px; margin-bottom:4px;}
-.orto-obj-icon{width:16px; height:16px; flex-shrink:0; opacity:.95;}
+.orto-obj.orto-frame{box-shadow:none; cursor:grab; padding:0;}
+.orto-obj-head{display:flex; align-items:center; gap:4px; margin-bottom:2px;}
+.orto-obj-icon{width:12px; height:12px; flex-shrink:0; opacity:.95;}
 .orto-obj-icon svg{width:100%; height:100%; display:block;}
 .orto-obj-name{
-  background:transparent; border:none; color:#fff; font-weight:600; font-size:12.5px;
+  background:transparent; border:none; color:#fff; font-weight:600; font-size:10.5px;
   padding:0; flex:1; min-width:0;
 }
 .orto-obj-color{
-  width:18px; height:18px; border:none; border-radius:5px; padding:0; cursor:pointer;
+  width:13px; height:13px; border:none; border-radius:4px; padding:0; cursor:pointer;
   background:transparent; flex-shrink:0;
 }
-.orto-obj-fields{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
+.orto-obj-fields{display:flex; flex-direction:column; gap:2px; margin-top:2px;}
 .orto-obj-mini{
-  background:rgba(255,255,255,0.18); border:none; border-radius:5px; color:#fff;
-  font-size:10.5px; padding:2px 5px; width:100%;
+  background:rgba(255,255,255,0.18); border:none; border-radius:4px; color:#fff;
+  font-size:8.5px; padding:1px 4px; width:100%;
 }
 .orto-obj-mini::placeholder{color:rgba(255,255,255,0.75);}
 .orto-obj-resize{
   position:absolute; right:2px; bottom:2px; width:12px; height:12px; cursor:nwse-resize;
   border-right:2px solid rgba(255,255,255,0.6); border-bottom:2px solid rgba(255,255,255,0.6);
 }
-.bed-del{
-  position:absolute; top:4px; right:6px; font-size:12px; opacity:.7; cursor:pointer; color:#fff;
+.orto-obj-resize.frame-resize{
+  border-right-color:rgba(26,26,26,0.5); border-bottom-color:rgba(26,26,26,0.5);
 }
+.bed-del{
+  position:absolute; top:3px; right:5px; font-size:11px; opacity:.7; cursor:pointer; color:#fff;
+}
+.bed-del.frame-del{color:#1a1a1a; opacity:.5;}
 .bed-del:hover{opacity:1;}
 .orto-comment-pin{
   position:absolute; width:26px; height:26px; border-radius:7px 7px 7px 2px;
@@ -471,6 +515,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 .stat-icon svg{width:100%; height:100%; display:block;}
 .stat-value{font-family:'Fraunces',serif; font-weight:700; font-size:21px; color:var(--ink); line-height:1.1;}
 .stat-label{font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+.stat-weather{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--teal); margin-top:5px;}
 
 /* ---- Finanze ---- */
 .finance-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px; align-items:start;}
@@ -634,7 +679,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     <div id="login-error" class="login-error"></div>
     <button type="submit" class="btn primary" style="width:100%;margin-top:6px;">Accedi</button>
     <button type="button" id="guest-btn" class="btn ghost" style="width:100%;margin-top:8px;">Entra come guest (solo test)</button>
-    <div class="login-footer">v0.6<br>by Antonio Calamo</div>
+    <div class="login-footer" id="login-version"></div>
   </form>
 </div>
 <div class="app" id="app-root" style="display:none;">
@@ -683,14 +728,17 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     <button class="tab-add" id="add-tab-btn" type="button">
       <span style="font-size:15px;line-height:1;">+</span> Nuova scheda
     </button>
-    <div class="brand-footer">
-      <div>v0.7<br>by Antonio Calamo</div>
-    </div>
   </nav>
   <div class="main-wrap">
     <div class="topbar">
+      <button id="theme-toggle-btn" class="btn ghost small" title="Cambia tema">☾</button>
+      <div class="zoom-controls">
+        <button id="zoom-out-btn" class="btn ghost small" title="Riduci zoom">−</button>
+        <span id="zoom-level" class="zoom-level">100%</span>
+        <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
+      </div>
+      <div id="app-version" class="app-version"></div>
       <div id="user-email" class="user-email"></div>
-      <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;word-break:break-all;"></div>
       <button id="logout-btn" class="btn ghost small">Esci</button>
     </div>
     <main id="main"></main>
@@ -729,6 +777,7 @@ const SHARED_BOARD_TEMPLATE = () => [];
 const ICON_EMPTY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 19V7a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 5v5h5"/></svg>';
 const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>';
 const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const ICON_GRIP = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 const ICON_DROP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3s7 7.5 7 12.5a7 7 0 1 1-14 0C5 10.5 12 3 12 3Z"/></svg>';
 const ICON_SPROUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10C12 6 9 4 5 4c0 4 3 6 7 6Z"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6Z"/></svg>';
 const ICON_LEAF_ORTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg>';
@@ -740,6 +789,7 @@ const ICON_HEDGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const ICON_BENCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 11h18M5 11v7M19 11v7M3 15h18"/></svg>';
 const ICON_PEBBLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="15" r="2.1"/><circle cx="13" cy="17" r="2.5"/><circle cx="18" cy="13" r="1.7"/><circle cx="9" cy="9" r="1.5"/></svg>';
 const ICON_COMMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4V4Z"/></svg>';
+const ICON_RECT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>';
 const ORTO_TYPES = {
   coltura: { label:"Coltura / aiuola", icon:ICON_LEAF_ORTO, color:"#4C7A4C" },
   compost_aerobica: { label:"Compostiera aerobica", icon:ICON_BIN, color:"#8C3A26" },
@@ -748,7 +798,8 @@ const ORTO_TYPES = {
   ingresso: { label:"Ingresso", icon:ICON_GATE, color:"#233A46" },
   siepe: { label:"Siepe", icon:ICON_HEDGE, color:"#2F5B5E" },
   panca: { label:"Panca", icon:ICON_BENCH, color:"#57394F" },
-  ciottoli: { label:"Ciottoli", icon:ICON_PEBBLES, color:"#9C8B6B" }
+  ciottoli: { label:"Ciottoli", icon:ICON_PEBBLES, color:"#9C8B6B" },
+  rettangolo: { label:"Rettangolo (contorno)", icon:ICON_RECT, color:"transparent", isFrame:true }
 };
 function fmtDateShort(iso){
   if(!iso) return "—";
@@ -776,6 +827,7 @@ const KPI_CATALOG = {
     compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true }
 };
 const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
+const APP_VERSION = "v0.10";
 const ADMIN_EMAIL = "antonio.calamo@gmail.com";
 const DEFAULT_TAGLINES = [
   "Siamo li Coooocchiiii",
@@ -824,6 +876,33 @@ const BBQ_TEMPLATE = () => ([
 const SUPABASE_URL = "https://ojucknfxtbcjqvjhqljc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_oBGq3W5oMZihk70Mt2KRSA_uKKUJeTb";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+document.getElementById("login-version").innerHTML = APP_VERSION + "<br>by Antonio Calamo";
+document.getElementById("app-version").textContent = APP_VERSION + " · Antonio Calamo";
+
+let uiTheme = "light";
+let uiZoom = 1;
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", uiTheme);
+  document.getElementById("theme-toggle-btn").textContent = uiTheme==="dark" ? "☀" : "☾";
+}
+function applyZoom(){
+  document.getElementById("app-root").style.zoom = uiZoom;
+  document.getElementById("zoom-level").textContent = Math.round(uiZoom*100)+"%";
+}
+document.getElementById("theme-toggle-btn").addEventListener("click", ()=>{
+  uiTheme = uiTheme==="dark" ? "light" : "dark";
+  applyTheme();
+  store.set(privKey("uiTheme"), uiTheme);
+});
+document.getElementById("zoom-in-btn").addEventListener("click", ()=>{
+  uiZoom = Math.min(1.3, +(uiZoom+0.1).toFixed(2)); applyZoom();
+  store.set(privKey("uiZoom"), uiZoom);
+});
+document.getElementById("zoom-out-btn").addEventListener("click", ()=>{
+  uiZoom = Math.max(0.8, +(uiZoom-0.1).toFixed(2)); applyZoom();
+  store.set(privKey("uiZoom"), uiZoom);
+});
 
 const store = {
   async get(key, fallback){
@@ -897,6 +976,8 @@ async function loadAll(){
   state.customTabsPrivate = await store.get(privKey("customTabs"), []);
   state.hiddenBuiltins = await store.get(privKey("hiddenBuiltins"), []);
   state.gommeLayout = await store.get(privKey("gommeLayout"), {colWidths:{}, rowHeights:{}});
+  uiTheme = await store.get(privKey("uiTheme"), "light");
+  uiZoom = await store.get(privKey("uiZoom"), 1);
   state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
 }
 
@@ -924,8 +1005,9 @@ async function startApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app-root").style.display="flex";
   document.getElementById("user-email").textContent = currentUser.email + (isGuest ? " (guest)" : "");
-  document.getElementById("user-id").textContent = isGuest ? "modalità test — dati privati non salvati" : "uid: " + currentUser.id;
   await loadAll();
+  applyTheme();
+  applyZoom();
   currentTagline = state.taglines.length ? state.taglines[Math.floor(Math.random()*state.taglines.length)] : "";
   applyHiddenBuiltins();
   renderCustomTabButtons();
@@ -958,6 +1040,25 @@ document.getElementById("logout-btn").addEventListener("click", async ()=>{
 });
 
 /* ---------------- helpers ---------------- */
+function attachRowDrag(handle, row, i, arr, onSave){
+  handle.draggable = true;
+  handle.addEventListener("dragstart",(e)=>{
+    e.dataTransfer.setData("text/plain", String(i));
+    e.dataTransfer.effectAllowed = "move";
+    row.classList.add("dragging");
+  });
+  handle.addEventListener("dragend", ()=> row.classList.remove("dragging"));
+  row.addEventListener("dragover",(e)=>{ e.preventDefault(); row.classList.add("drag-over"); });
+  row.addEventListener("dragleave", ()=> row.classList.remove("drag-over"));
+  row.addEventListener("drop",(e)=>{
+    e.preventDefault(); row.classList.remove("drag-over");
+    const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if(isNaN(fromIdx) || fromIdx===i) return;
+    const [moved] = arr.splice(fromIdx,1);
+    arr.splice(i,0,moved);
+    onSave();
+  });
+}
 function openModal(contentBuilderFn){
   const overlay = el("div",{class:"modal-overlay"});
   const modal = el("div",{class:"modal-card"});
@@ -1015,6 +1116,17 @@ function computeStats(){
   if(dated.length) lastTire = new Date(dated[0].data).toLocaleDateString("it-IT");
   return { pct, activeChecklists, lastTire, net: computeNetWorth() };
 }
+let weatherCache = null;
+async function ensureWeatherLoaded(){
+  if(weatherCache) return weatherCache;
+  try{
+    const lat=45.4642, lon=9.19;
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum&timezone=auto`);
+    const data = await res.json();
+    weatherCache = { temp: Math.round(data.current.temperature_2m), precipToday: data.daily.precipitation_sum[0] };
+  }catch(e){ weatherCache = null; }
+  return weatherCache;
+}
 function statCard(kpiKey){
   const def = KPI_CATALOG[kpiKey];
   if(!def) return null;
@@ -1032,6 +1144,13 @@ function statCard(kpiKey){
     card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
   }
   card.appendChild(el("div",{class:"stat-label"}, def.label));
+  if(kpiKey==="ortoWater"){
+    const weatherLine = el("div",{class:"stat-weather"}, "meteo…");
+    card.appendChild(weatherLine);
+    ensureWeatherLoaded().then(w=>{
+      weatherLine.textContent = w ? `oggi: ${w.precipToday}mm · ${w.temp}°C` : "meteo non disponibile";
+    });
+  }
   return card;
 }
 function renderStatsBar(main){
@@ -1149,7 +1268,8 @@ function orderedDaysFromToday(){
   return DAY_ORDER.slice(todayIdx).concat(DAY_ORDER.slice(0, todayIdx));
 }
 function renderDashboard(main){
-  main.appendChild(el("div",{class:"section-head"},[
+  const headerWrap = el("div",{class:"dash-header-sticky"});
+  headerWrap.appendChild(el("div",{class:"section-head"},[
     el("h1",{},"Come siamo messi questa settimana?"),
     el("span",{class:"tag"},"aggiornata in automatico")
   ]));
@@ -1160,7 +1280,8 @@ function renderDashboard(main){
     editT.addEventListener("click", openTaglinesModal);
     subRow.appendChild(editT);
   }
-  main.appendChild(subRow);
+  headerWrap.appendChild(subRow);
+  main.appendChild(headerWrap);
   renderStatsBar(main);
 
   const toolbar = el("div",{class:"week-toolbar"});
@@ -1191,7 +1312,8 @@ function renderDashboard(main){
   const week = el("div",{class:"week-table"});
   week.appendChild(sectionLabel("To Do List", "var(--forest)"));
   const todayName = orderedDaysFromToday()[0];
-  orderedDaysFromToday().forEach(day=>{
+  const todayDate = new Date();
+  orderedDaysFromToday().forEach((day, idx)=>{
     const tasks = state.dashboard.week[day];
     const dayCard = el("div",{class:"card day-card", style:`--day-color:${DAY_COLORS[day]}`});
     tasks.forEach((t,i)=>{
@@ -1226,27 +1348,30 @@ function renderDashboard(main){
     addLine.appendChild(input);
     dayCard.appendChild(addLine);
     const rowClass = "day-row"+(day===todayName?" today":"");
-    const label = day===todayName ? day+" · oggi" : day;
+    const d = new Date(todayDate); d.setDate(todayDate.getDate()+idx);
+    const dateStr = String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+    const label = day===todayName ? day+" "+dateStr+" · oggi" : day+" "+dateStr;
     week.appendChild(el("div",{class:rowClass},[el("div",{class:"day-label"},label), dayCard]));
   });
   grid.appendChild(week);
 
   const side = el("div",{class:"side-stack"});
-  side.appendChild(sectionLabel("Backlog", "var(--mustard)"));
+  const addBoxBtn = el("button",{class:"btn ghost small"},"+ Nuova board");
+  addBoxBtn.addEventListener("click", openNewBoxModal);
+  side.appendChild(sectionLabel("Backlog", "var(--mustard)", addBoxBtn));
   state.dashboard.backlogBoxes.forEach(box=>{
     side.appendChild(backlogBoxCard(box));
   });
-  const addBoxBtn = el("button",{class:"btn ghost small", style:"align-self:flex-start;"},"+ Nuova board");
-  addBoxBtn.addEventListener("click", openNewBoxModal);
-  side.appendChild(addBoxBtn);
   grid.appendChild(side);
   main.appendChild(grid);
 }
-function sectionLabel(text, color){
-  return el("div",{class:"section-label"},[
+function sectionLabel(text, color, actionEl){
+  const row = el("div",{class:"section-label"},[
     el("span",{class:"section-dot", style:`background:${color}`}),
-    el("span",{}, text)
+    el("span",{style:"flex:1;"}, text)
   ]);
+  if(actionEl) row.appendChild(actionEl);
+  return row;
 }
 function syncParentDone(t){
   if(t.subtasks && t.subtasks.length){
@@ -1258,6 +1383,7 @@ function renderTaskBlock(main, day, t, i){
   const tasks = state.dashboard.week[day];
   const wrap = el("div",{class:"task-block"});
   const row = el("div",{class:"task-item"+(t.done?" done":"")+(t.urgent?" urgent":"")});
+  const grip = el("span",{class:"drag-grip", html:ICON_GRIP});
   const cb = el("input",{type:"checkbox"});
   cb.checked = t.done;
   cb.addEventListener("change", ()=>{
@@ -1275,48 +1401,23 @@ function renderTaskBlock(main, day, t, i){
     t.bold = !t.bold;
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  const txt = el("input",{type:"text", style: t.bold ? "font-weight:700;" : ""}); txt.value = t.text;
+  const txt = el("textarea",{rows:"1", style: t.bold ? "font-weight:700;" : ""}); txt.value = t.text;
+  txt.addEventListener("input", ()=>autoResize(txt));
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
-  const reorder = el("span",{class:"reorder-btns"});
-  const upBtn = el("span",{class:"reorder-btn", html:"▲"});
-  upBtn.addEventListener("click", ()=>{
-    if(i===0) return;
-    [tasks[i-1], tasks[i]] = [tasks[i], tasks[i-1]];
-    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-  });
-  const downBtn = el("span",{class:"reorder-btn", html:"▼"});
-  downBtn.addEventListener("click", ()=>{
-    if(i===tasks.length-1) return;
-    [tasks[i+1], tasks[i]] = [tasks[i], tasks[i+1]];
-    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-  });
-  reorder.appendChild(upBtn); reorder.appendChild(downBtn);
   const del = el("span",{class:"del", html:"✕"});
   del.addEventListener("click", ()=>{
     state.dashboard.week[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  row.appendChild(reorder); row.appendChild(cb); row.appendChild(urgentBtn); row.appendChild(boldBtn); row.appendChild(txt); row.appendChild(del);
+  row.appendChild(grip); row.appendChild(cb); row.appendChild(urgentBtn); row.appendChild(boldBtn); row.appendChild(txt); row.appendChild(del);
+  attachRowDrag(grip, row, i, tasks, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
   wrap.appendChild(row);
 
   const subWrap = el("div",{class:"subtask-list"});
   t.subtasks.forEach((s,si)=>{
     if(state.dashboard.showCompleted===false && s.done) return;
     const srow = el("div",{class:"task-item subtask-item"+(s.done?" done":"")+(s.urgent?" urgent":"")});
-    const sReorder = el("span",{class:"reorder-btns"});
-    const sUp = el("span",{class:"reorder-btn", html:"▲"});
-    sUp.addEventListener("click", ()=>{
-      if(si===0) return;
-      [t.subtasks[si-1], t.subtasks[si]] = [t.subtasks[si], t.subtasks[si-1]];
-      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-    });
-    const sDown = el("span",{class:"reorder-btn", html:"▼"});
-    sDown.addEventListener("click", ()=>{
-      if(si===t.subtasks.length-1) return;
-      [t.subtasks[si+1], t.subtasks[si]] = [t.subtasks[si], t.subtasks[si+1]];
-      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-    });
-    sReorder.appendChild(sUp); sReorder.appendChild(sDown);
+    const sGrip = el("span",{class:"drag-grip", html:ICON_GRIP});
     const scb = el("input",{type:"checkbox"}); scb.checked = s.done;
     scb.addEventListener("change", ()=>{
       s.done = scb.checked; syncParentDone(t);
@@ -1332,14 +1433,16 @@ function renderTaskBlock(main, day, t, i){
       s.bold = !s.bold;
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    const stxt = el("input",{type:"text", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
+    const stxt = el("textarea",{rows:"1", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
+    stxt.addEventListener("input", ()=>autoResize(stxt));
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
     sdel.addEventListener("click", ()=>{
       t.subtasks.splice(si,1); syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    srow.appendChild(sReorder); srow.appendChild(scb); srow.appendChild(sUrgentBtn); srow.appendChild(sBoldBtn); srow.appendChild(stxt); srow.appendChild(sdel);
+    srow.appendChild(sGrip); srow.appendChild(scb); srow.appendChild(sUrgentBtn); srow.appendChild(sBoldBtn); srow.appendChild(stxt); srow.appendChild(sdel);
+    attachRowDrag(sGrip, srow, si, t.subtasks, ()=>{ syncParentDone(t); store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
     subWrap.appendChild(srow);
   });
   const addSub = el("div",{class:"add-line subtask-add"});
@@ -1503,42 +1606,49 @@ function renderOrto(main){
 
   state.orto.objects.forEach(obj=>{
     const def = ORTO_TYPES[obj.type] || ORTO_TYPES.coltura;
-    const node = el("div",{class:"orto-obj", style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; background:${obj.color||def.color}`});
+    const isFrame = def.isFrame;
+    const bg = isFrame ? "transparent" : (obj.color||def.color);
+    const extraStyle = isFrame ? "border:2px solid #1a1a1a; box-shadow:none;" : "";
+    const node = el("div",{class:"orto-obj"+(isFrame?" orto-frame":""), style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; background:${bg}; ${extraStyle}`});
 
-    const del = el("span",{class:"bed-del", html:"✕"});
+    const del = el("span",{class:"bed-del"+(isFrame?" frame-del":""), html:"✕"});
     del.addEventListener("click",(e)=>{
       e.stopPropagation();
       state.orto.objects = state.orto.objects.filter(o=>o.id!==obj.id);
       store.set("orto", state.orto); render("orto");
     });
-    const head = el("div",{class:"orto-obj-head"});
-    head.appendChild(el("span",{class:"orto-obj-icon", html:def.icon}));
-    const nameInput = el("input",{type:"text", value:obj.name, class:"orto-obj-name"});
-    nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-    nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
-    head.appendChild(nameInput);
-    const colorInput = el("input",{type:"color", value:obj.color||def.color, class:"orto-obj-color"});
-    colorInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-    colorInput.addEventListener("change", ()=>{ obj.color=colorInput.value; node.style.background=colorInput.value; store.set("orto", state.orto); });
-    head.appendChild(colorInput);
-    node.appendChild(del); node.appendChild(head);
+    node.appendChild(del);
 
-    if(obj.type==="coltura"){
-      const fields = el("div",{class:"orto-obj-fields"});
-      const plantCount = el("input",{type:"text", value:obj.plantCount||"", placeholder:"n. piantine", class:"orto-obj-mini"});
-      plantCount.addEventListener("mousedown", ev=>ev.stopPropagation());
-      plantCount.addEventListener("change", ()=>{ obj.plantCount=plantCount.value; store.set("orto", state.orto); });
-      const plantDate = el("input",{type:"date", value:obj.plantDate||"", class:"orto-obj-mini", title:"Data trapianto"});
-      plantDate.addEventListener("mousedown", ev=>ev.stopPropagation());
-      plantDate.addEventListener("change", ()=>{ obj.plantDate=plantDate.value; store.set("orto", state.orto); });
-      const harvestDate = el("input",{type:"date", value:obj.harvestDate||"", class:"orto-obj-mini", title:"Raccolta prevista"});
-      harvestDate.addEventListener("mousedown", ev=>ev.stopPropagation());
-      harvestDate.addEventListener("change", ()=>{ obj.harvestDate=harvestDate.value; store.set("orto", state.orto); });
-      fields.appendChild(plantCount); fields.appendChild(plantDate); fields.appendChild(harvestDate);
-      node.appendChild(fields);
+    if(!isFrame){
+      const head = el("div",{class:"orto-obj-head"});
+      head.appendChild(el("span",{class:"orto-obj-icon", html:def.icon}));
+      const nameInput = el("input",{type:"text", value:obj.name, class:"orto-obj-name"});
+      nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
+      nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
+      head.appendChild(nameInput);
+      const colorInput = el("input",{type:"color", value:obj.color||def.color, class:"orto-obj-color"});
+      colorInput.addEventListener("mousedown", ev=>ev.stopPropagation());
+      colorInput.addEventListener("change", ()=>{ obj.color=colorInput.value; node.style.background=colorInput.value; store.set("orto", state.orto); });
+      head.appendChild(colorInput);
+      node.appendChild(head);
+
+      if(obj.type==="coltura"){
+        const fields = el("div",{class:"orto-obj-fields"});
+        const plantCount = el("input",{type:"text", value:obj.plantCount||"", placeholder:"n. piantine", class:"orto-obj-mini"});
+        plantCount.addEventListener("mousedown", ev=>ev.stopPropagation());
+        plantCount.addEventListener("change", ()=>{ obj.plantCount=plantCount.value; store.set("orto", state.orto); });
+        const plantDate = el("input",{type:"date", value:obj.plantDate||"", class:"orto-obj-mini", title:"Data trapianto"});
+        plantDate.addEventListener("mousedown", ev=>ev.stopPropagation());
+        plantDate.addEventListener("change", ()=>{ obj.plantDate=plantDate.value; store.set("orto", state.orto); });
+        const harvestDate = el("input",{type:"date", value:obj.harvestDate||"", class:"orto-obj-mini", title:"Raccolta prevista"});
+        harvestDate.addEventListener("mousedown", ev=>ev.stopPropagation());
+        harvestDate.addEventListener("change", ()=>{ obj.harvestDate=harvestDate.value; store.set("orto", state.orto); });
+        fields.appendChild(plantCount); fields.appendChild(plantDate); fields.appendChild(harvestDate);
+        node.appendChild(fields);
+      }
     }
 
-    const resizeHandle = el("span",{class:"orto-obj-resize"});
+    const resizeHandle = el("span",{class:"orto-obj-resize"+(isFrame?" frame-resize":"")});
     node.appendChild(resizeHandle);
 
     makeDraggable(node, obj, board);
@@ -1732,12 +1842,7 @@ function renderCollection(main, opts){
 
 function renderPackItem(item, i, arr, onSave, idPrefix){
   const row = el("div",{class:"check-item pack-item"+(item.done?" done":"")+(!item.take?" not-needed":"")});
-  const reorder = el("span",{class:"reorder-btns"});
-  const up = el("span",{class:"reorder-btn", html:"▲"});
-  up.addEventListener("click", ()=>{ if(i===0) return; [arr[i-1],arr[i]]=[arr[i],arr[i-1]]; onSave(); });
-  const down = el("span",{class:"reorder-btn", html:"▼"});
-  down.addEventListener("click", ()=>{ if(i===arr.length-1) return; [arr[i+1],arr[i]]=[arr[i],arr[i+1]]; onSave(); });
-  reorder.appendChild(up); reorder.appendChild(down);
+  const grip = el("span",{class:"drag-grip", html:ICON_GRIP});
   const numInp = el("input",{type:"text", class:"pack-num", value:item.num||"", placeholder:"#"});
   numInp.addEventListener("change", ()=>{ item.num=numInp.value; onSave(false); });
   const cb = el("input",{type:"checkbox", id:idPrefix+i});
@@ -1748,7 +1853,8 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   const lab = el("label",{for:idPrefix+i}, item.text);
   const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
   del.addEventListener("click", ()=>{ arr.splice(i,1); onSave(); });
-  row.appendChild(reorder); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(lab); row.appendChild(del);
+  row.appendChild(grip); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(lab); row.appendChild(del);
+  attachRowDrag(grip, row, i, arr, onSave);
   return row;
 }
 function renderTripDetail(detail, trip){
