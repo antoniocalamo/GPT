@@ -180,6 +180,11 @@ main{
   text-transform:uppercase;
   letter-spacing:.06em;
 }
+.dash-subtitle{
+  display:flex; align-items:center; gap:8px;
+  font-family:'Fraunces',serif; font-style:italic; font-weight:600;
+  font-size:13.5px; color:var(--ink-soft); margin-top:-18px; margin-bottom:22px;
+}
 
 button{font-family:'Inter',sans-serif;}
 .btn{
@@ -272,6 +277,12 @@ textarea{resize:vertical; min-height:50px;}
 .task-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
 .task-item .del{cursor:pointer; color:var(--ink-soft); font-size:13px; opacity:.5;}
 .task-item .del:hover{opacity:1; color:var(--rust);}
+.task-block{margin-bottom:2px;}
+.subtask-list{margin-left:26px; margin-top:2px; margin-bottom:4px;}
+.subtask-item{padding:3px 6px; font-size:12.5px;}
+.subtask-item input[type=text]{font-size:12.5px;}
+.subtask-add{margin-top:2px; margin-bottom:2px;}
+.subtask-add input{font-size:12.5px; padding:4px 8px;}
 .add-line{
   display:flex; gap:8px; margin-top:8px;
 }
@@ -287,7 +298,12 @@ textarea{resize:vertical; min-height:50px;}
 .note-item textarea:focus{outline:none; background:#fff; border-radius:6px;}
 
 /* ---- Orto board ---- */
-.orto-toolbar{display:flex; gap:10px; margin-bottom:14px;}
+.orto-toolbar{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+.weather-chip{
+  display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft);
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:8px 12px; margin-bottom:14px; width:fit-content;
+}
 .orto-board{
   position:relative;
   background:repeating-linear-gradient(0deg, var(--card), var(--card) 39px, var(--line) 40px);
@@ -475,6 +491,8 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 
 /* ---- Custom sidebar tabs ---- */
 .custom-tab{position:relative;}
+.custom-tab .tab-icon{cursor:pointer;}
+.custom-tab .tab-icon:hover{opacity:1;}
 .tab-del{
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
   opacity:0; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--paper-2);
@@ -522,7 +540,8 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     </label>
     <div id="login-error" class="login-error"></div>
     <button type="submit" class="btn primary" style="width:100%;margin-top:6px;">Accedi</button>
-    <div class="login-footer">v0.5<br>by Antonio Calamo</div>
+    <button type="button" id="guest-btn" class="btn ghost" style="width:100%;margin-top:8px;">Entra come guest (solo test)</button>
+    <div class="login-footer">v0.6<br>by Antonio Calamo</div>
   </form>
 </div>
 <div class="app" id="app-root" style="display:none;">
@@ -575,7 +594,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <div id="user-email" class="user-email"></div>
       <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;margin-top:2px;word-break:break-all;"></div>
       <button id="logout-btn" class="btn ghost small" style="margin-top:8px;">Esci</button>
-      <div style="margin-top:12px;">v0.5<br>by Antonio Calamo</div>
+      <div style="margin-top:12px;">v0.6<br>by Antonio Calamo</div>
     </div>
   </nav>
   <main id="main"></main>
@@ -639,6 +658,19 @@ const KPI_CATALOG = {
     compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true }
 };
 const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
+const ADMIN_EMAIL = "antonio.calamo@gmail.com";
+const DEFAULT_TAGLINES = [
+  "Siamo li Coooocchiiii",
+  "Ho solo dubbi",
+  "Un attacco di panico gestito bene!",
+  "QUESTA E' TEMPTATION ISLAAAAAAND",
+  "Dolci in forno!",
+  "Shinra Tensei",
+  "KAIZOKU OU NI ORE WA NARU!",
+  "Quando torniamo in Giappone?",
+  "ANTONIOOOOOO (cit.)",
+  "Facciamo un accordo: tu butti l'umido, io no"
+];
 const STANDARD_ICONS = {
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
   pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
@@ -647,7 +679,15 @@ const STANDARD_ICONS = {
   map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6Z"/></svg>',
   film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14M3 10h5M16 10h5M3 15h5M16 15h5"/></svg>',
-  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>'
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>',
+  gamepad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v4M5 12h4" stroke-linecap="round"/><circle cx="16" cy="11" r="1"/><circle cx="18.5" cy="13.5" r="1"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+  plane: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.5 21 9 15l-6-3.5L4 10l6 1.5L14 4l2 .5-2.5 7L20 13l-.5 2-6.5-1.5L11 20Z"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 13h18M12 9v12"/><path d="M12 9C9 9 8 7 8 5.5A2.5 2.5 0 0 1 12 4c0 1.5-1 5-1 5S13.5 9 16 9c2 0 3.5-1 3.5-1"/><path d="M12 9c3 0 4-2 4-3.5A2.5 2.5 0 0 0 12 4"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+  wrench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5l-6 6 2.4 2.4 6-6a4 4 0 0 0 5-5.4l-2.7 2.7-2.3-2.3Z"/></svg>'
 };
 const TAB_COLORS = ["#2B4638","#4C7A4C","#2F5B5E","#8C3A26","#AD7A22","#233A46","#57394F"];
 const DAY_COLORS = { "Lunedì":"#2B4638","Martedì":"#4C7A4C","Mercoledì":"#2F5B5E","Giovedì":"#AD7A22","Venerdì":"#8C3A26","Sabato":"#57394F","Domenica":"#233A46" };
@@ -689,12 +729,14 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null;
 let currentUser = null;
+let isGuest = false;
 let customTabData = {};
 let activeCustomItem = {};
 let showCompleted = true;
+let currentTagline = "";
 let netWorthHidden = false;
 
 function privKey(name){ return "priv:"+currentUser.id+":"+name; }
@@ -724,6 +766,7 @@ async function loadAll(){
   state.customTabs = await store.get("customTabs", []);
   state.customTabsPrivate = await store.get(privKey("customTabs"), []);
   state.hiddenBuiltins = await store.get(privKey("hiddenBuiltins"), []);
+  state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
 }
 
 /* ---------------- auth ---------------- */
@@ -743,9 +786,10 @@ function showLogin(){
 async function startApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app-root").style.display="flex";
-  document.getElementById("user-email").textContent = currentUser.email;
-  document.getElementById("user-id").textContent = "uid: " + currentUser.id;
+  document.getElementById("user-email").textContent = currentUser.email + (isGuest ? " (guest)" : "");
+  document.getElementById("user-id").textContent = isGuest ? "modalità test — dati privati non salvati" : "uid: " + currentUser.id;
   await loadAll();
+  currentTagline = state.taglines.length ? state.taglines[Math.floor(Math.random()*state.taglines.length)] : "";
   applyHiddenBuiltins();
   renderCustomTabButtons();
   render("dashboard");
@@ -761,8 +805,19 @@ document.getElementById("login-form").addEventListener("submit", async (e)=>{
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if(error) errEl.textContent = "Credenziali non valide.";
 });
+document.getElementById("guest-btn").addEventListener("click", async ()=>{
+  // Bypass di test: NON è una sessione Supabase reale. I dati privati (Home/Finanze)
+  // non verranno salvati (bloccati dalla RLS), solo quelli condivisi funzionano.
+  isGuest = true;
+  currentUser = { id: "guest-test-user", email: "guest@test.local" };
+  await startApp();
+});
 document.getElementById("logout-btn").addEventListener("click", async ()=>{
-  await sb.auth.signOut();
+  if(isGuest){
+    isGuest = false; currentUser = null; showLogin();
+  } else {
+    await sb.auth.signOut();
+  }
 });
 
 /* ---------------- helpers ---------------- */
@@ -844,6 +899,28 @@ function renderStatsBar(main){
     if(card) row.appendChild(card);
   });
   main.appendChild(row);
+}
+function openTaglinesModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Sottotitoli casuali"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"},"Uno viene scelto a caso a ogni accesso. Un elemento per riga."));
+    const ta = el("textarea",{rows:"10", style:"font-size:13px;"});
+    ta.value = state.taglines.join("\n");
+    modal.appendChild(ta);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Salva");
+    saveBtn.addEventListener("click", ()=>{
+      const lines = ta.value.split("\n").map(l=>l.trim()).filter(l=>l.length);
+      if(!lines.length) return;
+      state.taglines = lines;
+      store.set("taglines", state.taglines);
+      close(); render("dashboard");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
 }
 function openKpiSettingsModal(){
   openModal((modal, close)=>{
@@ -928,6 +1005,14 @@ function renderDashboard(main){
     el("h1",{},"Come siamo messi questa settimana?"),
     el("span",{class:"tag"},"aggiornata in automatico")
   ]));
+  const subRow = el("div",{class:"dash-subtitle"});
+  subRow.appendChild(el("span",{}, currentTagline));
+  if(currentUser.email === ADMIN_EMAIL){
+    const editT = el("span",{class:"box-edit-icon", html:ICON_EDIT, title:"Modifica sottotitoli"});
+    editT.addEventListener("click", openTaglinesModal);
+    subRow.appendChild(editT);
+  }
+  main.appendChild(subRow);
   renderStatsBar(main);
 
   const toolbar = el("div",{class:"week-toolbar"});
@@ -959,22 +1044,13 @@ function renderDashboard(main){
     const dayCard = el("div",{class:"card day-card", style:`--day-color:${DAY_COLORS[day]}`});
     tasks.forEach((t,i)=>{
       if(!showCompleted && t.done) return;
-      dayCard.appendChild(taskRow(t, ()=>{
-        state.dashboard.week[day][i].done = !t.done;
-        store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-      }, (val)=>{
-        state.dashboard.week[day][i].text = val;
-        store.set(privKey("dashboard"), state.dashboard);
-      }, ()=>{
-        state.dashboard.week[day].splice(i,1);
-        store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-      }));
+      dayCard.appendChild(renderTaskBlock(main, day, t, i));
     });
     const addLine = el("div",{class:"add-line"});
     const input = el("input",{type:"text", placeholder:"aggiungi task…"});
     input.addEventListener("keydown", (e)=>{
       if(e.key==="Enter" && input.value.trim()){
-        state.dashboard.week[day].push({text:input.value.trim(), done:false});
+        state.dashboard.week[day].push({text:input.value.trim(), done:false, subtasks:[]});
         store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
       }
     });
@@ -1003,16 +1079,64 @@ function sectionLabel(text, color){
     el("span",{}, text)
   ]);
 }
-function taskRow(t, onToggle, onEdit, onDel){
+function syncParentDone(t){
+  if(t.subtasks && t.subtasks.length){
+    t.done = t.subtasks.every(s=>s.done);
+  }
+}
+function renderTaskBlock(main, day, t, i){
+  if(!t.subtasks) t.subtasks = [];
+  const wrap = el("div",{class:"task-block"});
   const row = el("div",{class:"task-item"+(t.done?" done":"")});
   const cb = el("input",{type:"checkbox"});
-  cb.checked = t.done; cb.addEventListener("change", onToggle);
+  cb.checked = t.done;
+  cb.addEventListener("change", ()=>{
+    t.done = cb.checked;
+    if(t.subtasks.length) t.subtasks.forEach(s=>s.done=t.done);
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
   const txt = el("input",{type:"text"}); txt.value = t.text;
-  txt.addEventListener("change", ()=>onEdit(txt.value));
+  txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
   const del = el("span",{class:"del", html:"✕"});
-  del.addEventListener("click", onDel);
+  del.addEventListener("click", ()=>{
+    state.dashboard.week[day].splice(i,1);
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
   row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
-  return row;
+  wrap.appendChild(row);
+
+  const subWrap = el("div",{class:"subtask-list"});
+  t.subtasks.forEach((s,si)=>{
+    if(!showCompleted && s.done) return;
+    const srow = el("div",{class:"task-item subtask-item"+(s.done?" done":"")});
+    const scb = el("input",{type:"checkbox"}); scb.checked = s.done;
+    scb.addEventListener("change", ()=>{
+      s.done = scb.checked; syncParentDone(t);
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    const stxt = el("input",{type:"text"}); stxt.value = s.text;
+    stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
+    const sdel = el("span",{class:"del", html:"✕"});
+    sdel.addEventListener("click", ()=>{
+      t.subtasks.splice(si,1); syncParentDone(t);
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    srow.appendChild(scb); srow.appendChild(stxt); srow.appendChild(sdel);
+    subWrap.appendChild(srow);
+  });
+  const addSub = el("div",{class:"add-line subtask-add"});
+  const subInput = el("input",{type:"text", placeholder:"+ sotto-task…"});
+  subInput.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && subInput.value.trim()){
+      t.subtasks.push({text:subInput.value.trim(), done:false});
+      syncParentDone(t);
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    }
+  });
+  addSub.appendChild(subInput);
+  subWrap.appendChild(addSub);
+  wrap.appendChild(subWrap);
+  return wrap;
 }
 function backlogBoxCard(box){
   const card = el("div",{class:"card side-card"});
@@ -1146,6 +1270,10 @@ function renderOrto(main){
 
   main.appendChild(toolbar);
 
+  const weatherBox = el("div",{class:"weather-chip", id:"weather-chip"}, "Meteo…");
+  main.appendChild(weatherBox);
+  loadOrtoWeather(weatherBox);
+
   const board = el("div",{class:"orto-board", id:"orto-board"});
   state.orto.beds.forEach(bed=>{
     const b = el("div",{class:"bed", style:`left:${bed.x}%; top:${bed.y}%; background:${bed.color}`});
@@ -1168,6 +1296,31 @@ function renderOrto(main){
     board.appendChild(b);
   });
   main.appendChild(board);
+}
+async function loadOrtoWeather(container){
+  // Milano come riferimento (Open-Meteo, nessuna API key richiesta).
+  const lat = 45.4642, lon = 9.19;
+  try{
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum&timezone=auto`);
+    const data = await res.json();
+    const temp = Math.round(data.current.temperature_2m);
+    const precipNow = data.current.precipitation;
+    const precipToday = data.daily.precipitation_sum[0];
+    container.innerHTML = "";
+    container.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
+    container.appendChild(el("span",{}, `Milano ora: ${temp}°C, pioggia oggi: ${precipToday} mm`));
+    if(precipToday > 0.5){
+      const markBtn = el("button",{class:"btn small ghost", style:"margin-left:10px;"}, "Piove — segna come annaffiata oggi");
+      markBtn.addEventListener("click", ()=>{
+        state.orto.lastWatered = new Date().toISOString().slice(0,10);
+        store.set("orto", state.orto); render("orto");
+      });
+      container.appendChild(markBtn);
+    }
+  }catch(e){
+    container.innerHTML = "";
+    container.appendChild(el("span",{}, "Meteo non disponibile al momento."));
+  }
 }
 function makeDraggable(node, bed, board){
   node.addEventListener("pointerdown",(e)=>{
@@ -1490,7 +1643,27 @@ function renderCustomTabButtons(){
 }
 function customTabButton(tab){
   const btn = el("button",{class:"tab custom-tab", "data-tab":"custom:"+tab.id, style:`background:${tab.color}`});
-  btn.appendChild(el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list}));
+  const iconEl = el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list, title:"Cambia icona"});
+  iconEl.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    openModal((modal, close)=>{
+      modal.appendChild(el("h3",{},"Icona scheda"));
+      const picker = iconPickerRow(tab.icon, (k)=>{
+        tab.icon = k;
+        const targetKey = tab.private ? privKey("customTabs") : "customTabs";
+        const targetArr = tab.private ? state.customTabsPrivate : state.customTabs;
+        store.set(targetKey, targetArr);
+        close(); renderCustomTabButtons();
+      });
+      modal.appendChild(picker);
+      const actions = el("div",{class:"modal-actions"});
+      const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
+      closeBtn.addEventListener("click", close);
+      actions.appendChild(closeBtn);
+      modal.appendChild(actions);
+    });
+  });
+  btn.appendChild(iconEl);
   btn.appendChild(el("span",{class:"tab-label"}, tab.name));
   const delBtn = el("span",{class:"tab-del", html:"✕"});
   delBtn.addEventListener("click",(e)=>{
