@@ -18,6 +18,7 @@
   --teal:#3C6E71;
   --rust:#A8462E;
   --mustard:#C68A2E;
+  --slate:#2E4756;
   --line:#D3C7A9;
   --card:#FBF8F1;
   --shadow: 0 2px 10px rgba(35,48,42,0.10);
@@ -85,10 +86,13 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .tab{
   position:relative;
+  display:flex;
+  align-items:center;
+  gap:11px;
   border:none;
   cursor:pointer;
   text-align:left;
-  padding:14px 16px 14px 18px;
+  padding:12px 16px 12px 16px;
   border-radius:12px 0 0 12px;
   font-family:'Fraunces',serif;
   font-weight:600;
@@ -96,9 +100,12 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   color:var(--paper-2);
   background:var(--ink-soft);
   transform:translateX(0);
-  transition:transform .18s ease, box-shadow .18s ease;
+  transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
   box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
+.tab-icon{width:19px; height:19px; flex-shrink:0; opacity:.92;}
+.tab-icon svg{width:100%; height:100%; display:block;}
+.tab-label{display:flex; flex-direction:column; line-height:1.25;}
 .tab .sub{
   display:block;
   font-family:'Inter',sans-serif;
@@ -112,11 +119,13 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 .tab[data-c="viaggio"]{background:var(--teal);}
 .tab[data-c="grigliate"]{background:var(--rust);}
 .tab[data-c="gomme"]{background:var(--mustard); color:#2b2110;}
+.tab[data-c="finanze"]{background:var(--slate);}
 .tab.active{
   transform:translateX(14px);
   box-shadow: var(--shadow);
 }
-.tab:not(.active):hover{transform:translateX(6px);}
+.tab:not(.active){opacity:.88;}
+.tab:not(.active):hover{transform:translateX(6px); opacity:1;}
 
 /* ---- Main content ---- */
 main{
@@ -176,6 +185,7 @@ button{font-family:'Inter',sans-serif;}
   padding:18px 20px;
   box-shadow: var(--shadow);
   border:1px solid var(--line);
+  transition: box-shadow .2s ease;
 }
 
 input[type=text], textarea, input[type=date]{
@@ -220,10 +230,14 @@ textarea{resize:vertical; min-height:50px;}
   display:flex;
   align-items:center;
   gap:8px;
-  padding:5px 0;
+  padding:5px 6px;
+  margin:0 -6px;
+  border-radius:7px;
   border-bottom:1px dashed var(--line);
+  transition: background .15s ease;
 }
 .task-item:last-child{border-bottom:none;}
+.task-item:hover{background:rgba(35,48,42,0.035);}
 .task-item input[type=text]{border:none; background:transparent; padding:2px 0;}
 .task-item input[type=text]:focus{outline:none; background:#fff;}
 .task-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
@@ -303,6 +317,56 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 
 .empty-hint{color:var(--ink-soft); font-size:13px; font-style:italic; padding:12px 0;}
 
+/* ---- Empty states ---- */
+.empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; padding:40px 20px; text-align:center;
+  border:1px dashed var(--line); border-radius:14px; background:var(--card);
+  color:var(--ink-soft);
+}
+.empty-state .empty-icon{width:32px; height:32px; opacity:.5;}
+.empty-state .empty-icon svg{width:100%; height:100%;}
+.empty-state span{font-size:13px; font-style:italic; max-width:240px; line-height:1.5;}
+
+/* ---- Stats bar ---- */
+.stats-row{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;
+}
+.stat-card{
+  background:var(--card); border-radius:14px; padding:16px 18px;
+  box-shadow:var(--shadow); border:1px solid var(--line);
+  border-left:4px solid var(--forest);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.stat-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(35,48,42,0.14); }
+.stat-icon{width:19px; height:19px; margin-bottom:10px;}
+.stat-icon svg{width:100%; height:100%; display:block;}
+.stat-value{font-family:'Fraunces',serif; font-weight:700; font-size:21px; color:var(--ink); line-height:1.1;}
+.stat-label{font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+
+/* ---- Finanze ---- */
+.finance-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px; align-items:start;}
+.finance-row{
+  display:flex; align-items:center; gap:8px; padding:6px 0;
+  border-bottom:1px dashed var(--line);
+}
+.finance-row:last-of-type{border-bottom:none;}
+.finance-row input[type=text]{border:none; background:transparent; padding:2px 0;}
+.finance-row input[type=text]:focus{outline:none; background:#fff; border-radius:6px;}
+.finance-value{max-width:92px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+.net-summary{
+  display:flex; align-items:center; flex-wrap:wrap; gap:16px;
+  padding:20px 24px; margin-bottom:22px; border-left:4px solid var(--slate);
+}
+.net-label{font-family:'Fraunces',serif; font-size:15px; color:var(--ink-soft);}
+.net-value{font-family:'Fraunces',serif; font-weight:700; font-size:27px; color:var(--slate);}
+.history-row{
+  display:flex; align-items:center; gap:12px; padding:7px 0;
+  border-bottom:1px dashed var(--line); font-size:13.5px;
+}
+.history-row:last-child{border-bottom:none;}
+.history-value{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--slate);}
+
 @media (max-width: 880px){
   .app{flex-direction:column;}
   .tabs{
@@ -316,6 +380,8 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
   .day-row{grid-template-columns:80px 1fr;}
   .collection{flex-direction:column;}
   .coll-list{width:100%; flex-direction:row; flex-wrap:wrap;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .finance-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -326,12 +392,31 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <div class="brand-mark"><span>P</span></div>
       <div class="brand-name">Planner</div>
     </div>
-    <button class="tab active" data-c="dashboard" data-tab="dashboard">Settimana<span class="sub">to-do &amp; note</span></button>
-    <button class="tab" data-c="orto" data-tab="orto">Orto<span class="sub">progetto Maiera</span></button>
-    <button class="tab" data-c="viaggio" data-tab="viaggio">Viaggi<span class="sub">checklist partenza</span></button>
-    <button class="tab" data-c="grigliate" data-tab="grigliate">Grigliate<span class="sub">checklist &amp; note</span></button>
-    <button class="tab" data-c="gomme" data-tab="gomme">Gomme<span class="sub">manutenzione</span></button>
-    <div class="brand-footer">v0.1<br>by Antonio Calamo</div>
+    <button class="tab active" data-c="dashboard" data-tab="dashboard">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+      <span class="tab-label">Settimana<span class="sub">to-do &amp; note</span></span>
+    </button>
+    <button class="tab" data-c="orto" data-tab="orto">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg></span>
+      <span class="tab-label">Orto<span class="sub">progetto Maiera</span></span>
+    </button>
+    <button class="tab" data-c="viaggio" data-tab="viaggio">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg></span>
+      <span class="tab-label">Viaggi<span class="sub">checklist partenza</span></span>
+    </button>
+    <button class="tab" data-c="grigliate" data-tab="grigliate">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21c4 0 6-2.5 6-6 0-3-2-4.5-3-7 0 2-1.5 3-1.5 3S14 8 12 3c0 4-5 6-5 11 0 .5 0 1 .1 1.5C6.5 14 6 13 6 13c-.5 2 0 8 6 8Z"/></svg></span>
+      <span class="tab-label">Grigliate<span class="sub">checklist &amp; note</span></span>
+    </button>
+    <button class="tab" data-c="gomme" data-tab="gomme">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="tab-label">Gomme<span class="sub">manutenzione</span></span>
+    </button>
+    <button class="tab" data-c="finanze" data-tab="finanze">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg></span>
+      <span class="tab-label">Finanze<span class="sub">patrimonio netto</span></span>
+    </button>
+    <div class="brand-footer">v0.2<br>by Antonio Calamo</div>
   </nav>
   <main id="main"></main>
 </div>
@@ -355,8 +440,16 @@ const DEFAULTS = {
   },
   trips: [],
   bbqs: [],
-  tires: []
+  tires: [],
+  finance: { liquidity: [], nonliquid: [], debts: [], history: [] }
 };
+
+/* ---------------- icons ---------------- */
+const ICON_EMPTY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 19V7a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 5v5h5"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4.5 4.5L19 7"/></svg>';
+const ICON_SUITCASE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>';
+const ICON_TIRE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg>';
 const TRIP_TEMPLATE = () => ([
   {title:"All season", items:["Documenti e portafoglio","Caricatori e cavi","Beauty case","Cambio biancheria"].map(t=>({text:t, done:false}))},
   {title:"Se estate", items:["Costume","Crema solare","Occhiali da sole"].map(t=>({text:t, done:false}))},
@@ -395,7 +488,7 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null };
 let activeTrip = null, activeBbq = null;
 
 async function loadAll(){
@@ -404,6 +497,48 @@ async function loadAll(){
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
+  state.finance = await store.get("finance", DEFAULTS.finance);
+}
+
+/* ---------------- helpers ---------------- */
+function emptyState(text, iconSvg){
+  return el("div",{class:"empty-state"},[
+    el("div",{class:"empty-icon", html:iconSvg||ICON_EMPTY}),
+    el("span",{}, text)
+  ]);
+}
+function computeNetWorth(){
+  const sum = arr => (arr||[]).reduce((s,i)=> s + (parseFloat(String(i.value).replace(",","."))||0), 0);
+  return sum(state.finance.liquidity) + sum(state.finance.nonliquid) - sum(state.finance.debts);
+}
+function fmtEUR(n){
+  return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", maximumFractionDigits:0});
+}
+function computeStats(){
+  let total=0, done=0;
+  Object.values(state.dashboard.week).forEach(arr=>{ arr.forEach(t=>{ total++; if(t.done) done++; }); });
+  const pct = total ? Math.round(done/total*100) : 0;
+  const activeChecklists = state.trips.length + state.bbqs.length;
+  let lastTire = "—";
+  const dated = state.tires.filter(t=>t.data).sort((a,b)=> new Date(b.data)-new Date(a.data));
+  if(dated.length) lastTire = new Date(dated[0].data).toLocaleDateString("it-IT");
+  return { pct, activeChecklists, lastTire, net: computeNetWorth() };
+}
+function statCard(iconSvg, color, value, label){
+  const card = el("div",{class:"stat-card", style:`border-left-color:${color}`});
+  card.appendChild(el("div",{class:"stat-icon", style:`color:${color}`, html:iconSvg}));
+  card.appendChild(el("div",{class:"stat-value"}, String(value)));
+  card.appendChild(el("div",{class:"stat-label"}, label));
+  return card;
+}
+function renderStatsBar(main){
+  const s = computeStats();
+  const row = el("div",{class:"stats-row"});
+  row.appendChild(statCard(ICON_CHECK, "var(--forest)", s.pct+"%", "task completati questa settimana"));
+  row.appendChild(statCard(ICON_SUITCASE, "var(--teal)", s.activeChecklists, "checklist viaggio/grigliata attive"));
+  row.appendChild(statCard(ICON_TIRE, "var(--mustard)", s.lastTire, "ultimo intervento gomme"));
+  row.appendChild(statCard(ICON_COIN, "var(--slate)", fmtEUR(s.net), "patrimonio netto"));
+  main.appendChild(row);
 }
 
 /* ---------------- tab switching ---------------- */
@@ -436,6 +571,7 @@ function renderDashboard(main){
     el("h1",{},"La mia settimana"),
     el("span",{class:"tag"},"aggiornata in automatico")
   ]));
+  renderStatsBar(main);
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
   Object.keys(state.dashboard.week).forEach(day=>{
@@ -603,7 +739,7 @@ function renderCollection(main, opts){
   const detail = el("div",{class:"coll-detail"});
   const current = state[key].find(c=>c.id===active);
   if(!current){
-    detail.appendChild(el("div",{class:"empty-hint"},"Seleziona o crea una checklist per iniziare."));
+    detail.appendChild(emptyState("Seleziona o crea una checklist per iniziare.", ICON_SUITCASE));
   } else {
     const delBtn = el("button",{class:"btn danger small"},"Elimina checklist");
     delBtn.style.marginBottom="14px";
@@ -724,6 +860,74 @@ function renderGomme(main){
   main.appendChild(table);
 }
 
+/* ---------------- FINANZE ---------------- */
+function financeBlock(title, key){
+  const block = el("div",{class:"card cat-block"});
+  block.appendChild(el("h4",{},title));
+  state.finance[key].forEach((item,i)=>{
+    const row = el("div",{class:"finance-row"});
+    const nameInp = el("input",{type:"text", value:item.name||"", placeholder:"voce"});
+    nameInp.addEventListener("change", ()=>{ item.name=nameInp.value; store.set("finance", state.finance); });
+    const valInp = el("input",{type:"text", class:"finance-value", value:item.value||"", placeholder:"0"});
+    valInp.addEventListener("change", ()=>{ item.value=valInp.value; store.set("finance", state.finance); render("finanze"); });
+    const del = el("span",{class:"del", html:"✕"});
+    del.addEventListener("click", ()=>{ state.finance[key].splice(i,1); store.set("finance", state.finance); render("finanze"); });
+    row.appendChild(nameInp); row.appendChild(valInp); row.appendChild(del);
+    block.appendChild(row);
+  });
+  const addLine = el("div",{class:"add-line"});
+  const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()){
+      state.finance[key].push({name:input.value.trim(), value:""});
+      store.set("finance", state.finance); render("finanze");
+    }
+  });
+  addLine.appendChild(input);
+  block.appendChild(addLine);
+  return block;
+}
+function renderFinanze(main){
+  main.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},"Finanze"),
+    el("span",{class:"tag"},"patrimonio netto")
+  ]));
+  const grid = el("div",{class:"finance-grid"});
+  grid.appendChild(financeBlock("Liquidità","liquidity"));
+  grid.appendChild(financeBlock("Asset non liquidi","nonliquid"));
+  grid.appendChild(financeBlock("Debiti","debts"));
+  main.appendChild(grid);
+
+  const net = computeNetWorth();
+  const summary = el("div",{class:"card net-summary"});
+  summary.appendChild(el("div",{class:"net-label"},"Patrimonio netto attuale"));
+  summary.appendChild(el("div",{class:"net-value"}, fmtEUR(net)));
+  const snapBtn = el("button",{class:"btn primary"},"+ Salva snapshot");
+  snapBtn.addEventListener("click", ()=>{
+    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), net});
+    store.set("finance", state.finance); render("finanze");
+  });
+  summary.appendChild(snapBtn);
+  main.appendChild(summary);
+
+  const histBlock = el("div",{class:"card cat-block"});
+  histBlock.appendChild(el("h4",{},"Storico snapshot"));
+  if(!state.finance.history.length){
+    histBlock.appendChild(emptyState("Salva il primo snapshot per iniziare a tracciare l'andamento nel tempo.", ICON_COIN));
+  } else {
+    state.finance.history.forEach((h,i)=>{
+      const row = el("div",{class:"history-row"});
+      row.appendChild(el("span",{class:"mono"}, h.date));
+      row.appendChild(el("span",{class:"history-value"}, fmtEUR(h.net)));
+      const del = el("span",{class:"del", html:"✕"});
+      del.addEventListener("click", ()=>{ state.finance.history.splice(i,1); store.set("finance", state.finance); render("finanze"); });
+      row.appendChild(del);
+      histBlock.appendChild(row);
+    });
+  }
+  main.appendChild(histBlock);
+}
+
 /* ---------------- render dispatcher ---------------- */
 function clear(main){ main.innerHTML=""; return main; }
 function render(tab){
@@ -739,6 +943,7 @@ function render(tab){
     setActive:(id)=>activeBbq=id, template:BBQ_TEMPLATE, renderDetail:renderBbqDetail
   });
   else if(tab==="gomme") renderGomme(main);
+  else if(tab==="finanze") renderFinanze(main);
 }
 
 loadAll().then(()=>render("dashboard"));
