@@ -150,14 +150,26 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 
 /* ---- Main content ---- */
-main{
+.main-wrap{
   flex:1;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
   background:var(--paper-2);
   border-radius:28px 0 0 28px;
   margin:14px 14px 14px 0;
   box-shadow: var(--shadow);
-  padding:38px 44px;
+  overflow:hidden;
+}
+.topbar{
+  display:flex; align-items:center; justify-content:flex-end; gap:16px;
+  padding:18px 44px 0 20px; flex-shrink:0;
+}
+main{
+  flex:1;
+  padding:20px 44px 38px 44px;
   overflow-x:hidden;
+  overflow-y:auto;
   min-width:0;
 }
 .section-head{
@@ -283,6 +295,26 @@ textarea{resize:vertical; min-height:50px;}
 .subtask-item input[type=text]{font-size:12.5px;}
 .subtask-add{margin-top:2px; margin-bottom:2px;}
 .subtask-add input{font-size:12.5px; padding:4px 8px;}
+.urgent-flag{
+  width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  font-family:'Fraunces',serif; font-weight:700; font-size:12px; color:var(--ink-soft);
+  flex-shrink:0; background:transparent;
+}
+.urgent-flag.active{background:var(--rust); border-color:var(--rust); color:#fff;}
+.bold-flag{
+  width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:700; font-size:11px; color:var(--ink-soft);
+  flex-shrink:0; background:transparent;
+}
+.bold-flag.active{background:var(--forest); border-color:var(--forest); color:#fff;}
+.task-item.urgent{background:rgba(140,58,38,0.07); border-radius:7px;}
+.task-item.urgent input[type=text]{color:var(--rust); font-weight:600;}
+.reorder-btns{display:flex; flex-direction:column; gap:0; flex-shrink:0; opacity:.35;}
+.reorder-btns:hover{opacity:.9;}
+.reorder-btn{font-size:8px; line-height:8px; cursor:pointer; color:var(--ink-soft); padding:1px 3px;}
+.reorder-btn:hover{color:var(--forest);}
 .add-line{
   display:flex; gap:8px; margin-top:8px;
 }
@@ -344,10 +376,20 @@ textarea{resize:vertical; min-height:50px;}
 .coll-detail{flex:1; min-width:0;}
 .cat-block{margin-bottom:18px;}
 .cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
-.check-item{display:flex; align-items:center; gap:8px; padding:4px 0;}
-.check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest);}
+.check-item{display:flex; align-items:center; gap:6px; padding:4px 0;}
+.check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest); flex-shrink:0;}
 .check-item.done label{text-decoration:line-through; color:var(--ink-soft);}
-.check-item label{font-size:13.5px; flex:1;}
+.check-item label{font-size:13.5px; flex:1; min-width:0;}
+.pack-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 20px;}
+@media (max-width:1100px){ .pack-grid{grid-template-columns:1fr;} }
+.pack-num{
+  width:24px; flex-shrink:0; border:1px solid var(--line); border-radius:5px;
+  padding:2px 3px; font-size:11px; text-align:center; background:#fff;
+}
+.take-flag{width:17px; height:17px; color:var(--ink-soft); opacity:.35; cursor:pointer; flex-shrink:0;}
+.take-flag svg{width:100%; height:100%; display:block;}
+.take-flag.active{color:var(--leaf); opacity:1;}
+.pack-item.not-needed{opacity:.5;}
 
 /* ---- Gomme table ---- */
 table.tires{width:100%; border-collapse:collapse; font-size:13.5px;}
@@ -389,14 +431,22 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 
 /* ---- Finanze ---- */
 .finance-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px; align-items:start;}
+.finance-item{border-bottom:1px dashed var(--line); padding:4px 0;}
+.finance-item:last-of-type{border-bottom:none;}
 .finance-row{
-  display:flex; align-items:center; gap:8px; padding:6px 0;
-  border-bottom:1px dashed var(--line);
+  display:flex; align-items:center; gap:8px; padding:2px 0;
 }
-.finance-row:last-of-type{border-bottom:none;}
 .finance-row input[type=text]{border:none; background:transparent; padding:2px 0;}
 .finance-row input[type=text]:focus{outline:none; background:#fff; border-radius:6px;}
-.finance-value{max-width:92px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+.finance-value{max-width:100px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+.finance-note{
+  border:none; background:transparent; font-size:11.5px; font-style:italic; color:var(--ink-soft);
+  padding:0 0 4px 0; width:100%;
+}
+.finance-note:focus{outline:none; background:#fff; border-radius:6px; padding:2px 4px;}
+.chart-legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:11.5px; color:var(--ink-soft);}
+.chart-legend-item{display:flex; align-items:center; gap:6px;}
+.chart-legend-dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
 .net-summary{
   display:flex; align-items:center; flex-wrap:wrap; gap:16px;
   padding:20px 24px; margin-bottom:22px; border-left:4px solid var(--slate);
@@ -591,13 +641,17 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <span style="font-size:15px;line-height:1;">+</span> Nuova scheda
     </button>
     <div class="brand-footer">
-      <div id="user-email" class="user-email"></div>
-      <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;margin-top:2px;word-break:break-all;"></div>
-      <button id="logout-btn" class="btn ghost small" style="margin-top:8px;">Esci</button>
-      <div style="margin-top:12px;">v0.6<br>by Antonio Calamo</div>
+      <div>v0.7<br>by Antonio Calamo</div>
     </div>
   </nav>
-  <main id="main"></main>
+  <div class="main-wrap">
+    <div class="topbar">
+      <div id="user-email" class="user-email"></div>
+      <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;word-break:break-all;"></div>
+      <button id="logout-btn" class="btn ghost small">Esci</button>
+    </div>
+    <main id="main"></main>
+  </div>
 </div>
 
 <script>
@@ -635,7 +689,7 @@ const ICON_SPROUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 function fmtDateShort(iso){
   if(!iso) return "—";
   const d = new Date(iso);
-  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
 }
 const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4.5 4.5L19 7"/></svg>';
 const ICON_SUITCASE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>';
@@ -735,8 +789,12 @@ let currentUser = null;
 let isGuest = false;
 let customTabData = {};
 let activeCustomItem = {};
-let showCompleted = true;
 let currentTagline = "";
+let lastTaskByDay = {};
+function focusAddInput(day){
+  const inp = document.querySelector('.add-line input[data-day="'+day+'"]');
+  if(inp) inp.focus();
+}
 let netWorthHidden = false;
 
 function privKey(name){ return "priv:"+currentUser.id+":"+name; }
@@ -775,7 +833,13 @@ async function initAuth(){
   if(session){ currentUser = session.user; await startApp(); }
   else showLogin();
   sb.auth.onAuthStateChange((event, session)=>{
-    if(event === "SIGNED_IN" && session){ currentUser = session.user; startApp(); }
+    if(event === "SIGNED_IN" && session){
+      if(currentUser && currentUser.id === session.user.id){
+        currentUser = session.user; // stesso utente: solo refresh token, non tocco la UI
+        return;
+      }
+      currentUser = session.user; startApp();
+    }
     if(event === "SIGNED_OUT"){ currentUser = null; showLogin(); }
   });
 }
@@ -850,12 +914,23 @@ function emptyState(text, iconSvg){
     el("span",{}, text)
   ]);
 }
+function sumFinanceArr(arr){
+  return (arr||[]).reduce((s,i)=> s + (parseFloat(String(i.value).replace(",","."))||0), 0);
+}
+function computeCategoryTotals(){
+  const liquidity = sumFinanceArr(state.finance.liquidity);
+  const nonliquid = sumFinanceArr(state.finance.nonliquid);
+  const debts = sumFinanceArr(state.finance.debts);
+  return { liquidity, nonliquid, debts, net: liquidity + nonliquid - debts };
+}
 function computeNetWorth(){
-  const sum = arr => (arr||[]).reduce((s,i)=> s + (parseFloat(String(i.value).replace(",","."))||0), 0);
-  return sum(state.finance.liquidity) + sum(state.finance.nonliquid) - sum(state.finance.debts);
+  return computeCategoryTotals().net;
 }
 function fmtEUR(n){
   return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", maximumFractionDigits:0});
+}
+function fmtMoneyPlain(n){
+  return n.toLocaleString("it-IT",{maximumFractionDigits:0}) + " €";
 }
 function computeStats(){
   let total=0, done=0;
@@ -1018,8 +1093,12 @@ function renderDashboard(main){
   const toolbar = el("div",{class:"week-toolbar"});
   const toggleLabel = el("label",{class:"toggle-completed"});
   const toggleInput = el("input",{type:"checkbox"});
-  toggleInput.checked = showCompleted;
-  toggleInput.addEventListener("change", ()=>{ showCompleted = toggleInput.checked; render("dashboard"); });
+  toggleInput.checked = state.dashboard.showCompleted !== false;
+  toggleInput.addEventListener("change", ()=>{
+    state.dashboard.showCompleted = toggleInput.checked;
+    store.set(privKey("dashboard"), state.dashboard);
+    render("dashboard");
+  });
   toggleLabel.appendChild(toggleInput);
   toggleLabel.appendChild(document.createTextNode("Mostra i task completati"));
   toolbar.appendChild(toggleLabel);
@@ -1043,15 +1122,32 @@ function renderDashboard(main){
     const tasks = state.dashboard.week[day];
     const dayCard = el("div",{class:"card day-card", style:`--day-color:${DAY_COLORS[day]}`});
     tasks.forEach((t,i)=>{
-      if(!showCompleted && t.done) return;
+      if(state.dashboard.showCompleted===false && t.done) return;
       dayCard.appendChild(renderTaskBlock(main, day, t, i));
     });
     const addLine = el("div",{class:"add-line"});
-    const input = el("input",{type:"text", placeholder:"aggiungi task…"});
+    const input = el("input",{type:"text", placeholder:"aggiungi task… (Tab per sotto-task)", "data-day":day});
     input.addEventListener("keydown", (e)=>{
       if(e.key==="Enter" && input.value.trim()){
-        state.dashboard.week[day].push({text:input.value.trim(), done:false, subtasks:[]});
-        store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+        const newTask = {text:input.value.trim(), done:false, subtasks:[]};
+        state.dashboard.week[day].push(newTask);
+        lastTaskByDay[day] = newTask;
+        store.set(privKey("dashboard"), state.dashboard);
+        renderDashboard(clear(main));
+        focusAddInput(day);
+      } else if(e.key==="Tab" && input.value.trim()){
+        e.preventDefault();
+        const parent = lastTaskByDay[day];
+        if(parent){
+          if(!parent.subtasks) parent.subtasks = [];
+          parent.subtasks.push({text:input.value.trim(), done:false});
+          syncParentDone(parent);
+        } else {
+          state.dashboard.week[day].push({text:input.value.trim(), done:false, subtasks:[]});
+        }
+        store.set(privKey("dashboard"), state.dashboard);
+        renderDashboard(clear(main));
+        focusAddInput(day);
       }
     });
     addLine.appendChild(input);
@@ -1086,8 +1182,9 @@ function syncParentDone(t){
 }
 function renderTaskBlock(main, day, t, i){
   if(!t.subtasks) t.subtasks = [];
+  const tasks = state.dashboard.week[day];
   const wrap = el("div",{class:"task-block"});
-  const row = el("div",{class:"task-item"+(t.done?" done":"")});
+  const row = el("div",{class:"task-item"+(t.done?" done":"")+(t.urgent?" urgent":"")});
   const cb = el("input",{type:"checkbox"});
   cb.checked = t.done;
   cb.addEventListener("change", ()=>{
@@ -1095,33 +1192,81 @@ function renderTaskBlock(main, day, t, i){
     if(t.subtasks.length) t.subtasks.forEach(s=>s.done=t.done);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  const txt = el("input",{type:"text"}); txt.value = t.text;
+  const urgentBtn = el("span",{class:"urgent-flag"+(t.urgent?" active":""), title:"Segna urgente"}, "!");
+  urgentBtn.addEventListener("click", ()=>{
+    t.urgent = !t.urgent;
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
+  const boldBtn = el("span",{class:"bold-flag"+(t.bold?" active":""), title:"Grassetto"}, "B");
+  boldBtn.addEventListener("click", ()=>{
+    t.bold = !t.bold;
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
+  const txt = el("input",{type:"text", style: t.bold ? "font-weight:700;" : ""}); txt.value = t.text;
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
+  const reorder = el("span",{class:"reorder-btns"});
+  const upBtn = el("span",{class:"reorder-btn", html:"▲"});
+  upBtn.addEventListener("click", ()=>{
+    if(i===0) return;
+    [tasks[i-1], tasks[i]] = [tasks[i], tasks[i-1]];
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
+  const downBtn = el("span",{class:"reorder-btn", html:"▼"});
+  downBtn.addEventListener("click", ()=>{
+    if(i===tasks.length-1) return;
+    [tasks[i+1], tasks[i]] = [tasks[i], tasks[i+1]];
+    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+  });
+  reorder.appendChild(upBtn); reorder.appendChild(downBtn);
   const del = el("span",{class:"del", html:"✕"});
   del.addEventListener("click", ()=>{
     state.dashboard.week[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+  row.appendChild(reorder); row.appendChild(cb); row.appendChild(urgentBtn); row.appendChild(boldBtn); row.appendChild(txt); row.appendChild(del);
   wrap.appendChild(row);
 
   const subWrap = el("div",{class:"subtask-list"});
   t.subtasks.forEach((s,si)=>{
-    if(!showCompleted && s.done) return;
-    const srow = el("div",{class:"task-item subtask-item"+(s.done?" done":"")});
+    if(state.dashboard.showCompleted===false && s.done) return;
+    const srow = el("div",{class:"task-item subtask-item"+(s.done?" done":"")+(s.urgent?" urgent":"")});
+    const sReorder = el("span",{class:"reorder-btns"});
+    const sUp = el("span",{class:"reorder-btn", html:"▲"});
+    sUp.addEventListener("click", ()=>{
+      if(si===0) return;
+      [t.subtasks[si-1], t.subtasks[si]] = [t.subtasks[si], t.subtasks[si-1]];
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    const sDown = el("span",{class:"reorder-btn", html:"▼"});
+    sDown.addEventListener("click", ()=>{
+      if(si===t.subtasks.length-1) return;
+      [t.subtasks[si+1], t.subtasks[si]] = [t.subtasks[si], t.subtasks[si+1]];
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    sReorder.appendChild(sUp); sReorder.appendChild(sDown);
     const scb = el("input",{type:"checkbox"}); scb.checked = s.done;
     scb.addEventListener("change", ()=>{
       s.done = scb.checked; syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    const stxt = el("input",{type:"text"}); stxt.value = s.text;
+    const sUrgentBtn = el("span",{class:"urgent-flag"+(s.urgent?" active":""), title:"Segna urgente"}, "!");
+    sUrgentBtn.addEventListener("click", ()=>{
+      s.urgent = !s.urgent;
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    const sBoldBtn = el("span",{class:"bold-flag"+(s.bold?" active":""), title:"Grassetto"}, "B");
+    sBoldBtn.addEventListener("click", ()=>{
+      s.bold = !s.bold;
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    });
+    const stxt = el("input",{type:"text", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
     sdel.addEventListener("click", ()=>{
       t.subtasks.splice(si,1); syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    srow.appendChild(scb); srow.appendChild(stxt); srow.appendChild(sdel);
+    srow.appendChild(sReorder); srow.appendChild(scb); srow.appendChild(sUrgentBtn); srow.appendChild(sBoldBtn); srow.appendChild(stxt); srow.appendChild(sdel);
     subWrap.appendChild(srow);
   });
   const addSub = el("div",{class:"add-line subtask-add"});
@@ -1194,12 +1339,13 @@ function backlogBoxCard(box){
   box.items.forEach((note,i)=>{
     const row = el("div",{class:"note-item"});
     const ta = el("textarea",{rows:"1"}); ta.value = note;
-    ta.addEventListener("input", ()=>{ ta.style.height="auto"; ta.style.height = ta.scrollHeight+"px"; });
+    ta.addEventListener("input", ()=>autoResize(ta));
     ta.addEventListener("change", ()=>{ box.items[i]=ta.value; store.set(privKey("dashboard"), state.dashboard); });
     const del = el("span",{class:"del", html:"✕"});
     del.addEventListener("click", ()=>{ box.items.splice(i,1); store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
     row.appendChild(ta); row.appendChild(del);
     card.appendChild(row);
+    autoResize(ta);
   });
   const addLine = el("div",{class:"add-line"});
   const input = el("input",{type:"text", placeholder:"aggiungi…"});
@@ -1390,26 +1536,42 @@ function renderCollection(main, opts){
   main.appendChild(wrap);
 }
 
+function renderPackItem(item, i, arr, onSave, idPrefix){
+  const row = el("div",{class:"check-item pack-item"+(item.done?" done":"")+(!item.take?" not-needed":"")});
+  const reorder = el("span",{class:"reorder-btns"});
+  const up = el("span",{class:"reorder-btn", html:"▲"});
+  up.addEventListener("click", ()=>{ if(i===0) return; [arr[i-1],arr[i]]=[arr[i],arr[i-1]]; onSave(); });
+  const down = el("span",{class:"reorder-btn", html:"▼"});
+  down.addEventListener("click", ()=>{ if(i===arr.length-1) return; [arr[i+1],arr[i]]=[arr[i],arr[i+1]]; onSave(); });
+  reorder.appendChild(up); reorder.appendChild(down);
+  const numInp = el("input",{type:"text", class:"pack-num", value:item.num||"", placeholder:"#"});
+  numInp.addEventListener("change", ()=>{ item.num=numInp.value; onSave(false); });
+  const cb = el("input",{type:"checkbox", id:idPrefix+i});
+  cb.checked = item.done;
+  cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(); });
+  const takeBtn = el("span",{class:"take-flag"+(item.take?" active":""), html:ICON_CHECK, title:"Da prendere"});
+  takeBtn.addEventListener("click", ()=>{ item.take = !item.take; onSave(); });
+  const lab = el("label",{for:idPrefix+i}, item.text);
+  const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+  del.addEventListener("click", ()=>{ arr.splice(i,1); onSave(); });
+  row.appendChild(reorder); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(lab); row.appendChild(del);
+  return row;
+}
 function renderTripDetail(detail, trip){
   trip.data.forEach(cat=>{
     const block = el("div",{class:"cat-block"});
     block.appendChild(el("h4",{},cat.title));
+    const grid = el("div",{class:"pack-grid"});
+    const save = ()=>{ store.set("trips", state.trips); render("viaggio"); };
     cat.items.forEach((it,i)=>{
-      const row = el("div",{class:"check-item"+(it.done?" done":"")});
-      const cb = el("input",{type:"checkbox", id:"t"+trip.id+cat.title+i});
-      cb.checked = it.done;
-      cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set("trips", state.trips); render("viaggio"); });
-      const lab = el("label",{for:"t"+trip.id+cat.title+i}, it.text);
-      const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
-      del.addEventListener("click", ()=>{ cat.items.splice(i,1); store.set("trips", state.trips); render("viaggio"); });
-      row.appendChild(cb); row.appendChild(lab); row.appendChild(del);
-      block.appendChild(row);
+      grid.appendChild(renderPackItem(it, i, cat.items, save, "t"+trip.id+cat.title));
     });
+    block.appendChild(grid);
     const addLine = el("div",{class:"add-line"});
     const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
     input.addEventListener("keydown",(e)=>{
       if(e.key==="Enter" && input.value.trim()){
-        cat.items.push({text:input.value.trim(), done:false});
+        cat.items.push({text:input.value.trim(), done:false, take:false});
         store.set("trips", state.trips); render("viaggio");
       }
     });
@@ -1422,22 +1584,17 @@ function renderTripDetail(detail, trip){
 function renderBbqDetail(detail, bbq){
   const block = el("div",{class:"cat-block"});
   block.appendChild(el("h4",{},"Cosa portare"));
+  const grid = el("div",{class:"pack-grid"});
+  const save = ()=>{ store.set("bbqs", state.bbqs); render("grigliate"); };
   bbq.data.forEach((it,i)=>{
-    const row = el("div",{class:"check-item"+(it.done?" done":"")});
-    const cb = el("input",{type:"checkbox", id:"g"+bbq.id+i});
-    cb.checked = it.done;
-    cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set("bbqs", state.bbqs); render("grigliate"); });
-    const lab = el("label",{for:"g"+bbq.id+i}, it.text);
-    const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
-    del.addEventListener("click", ()=>{ bbq.data.splice(i,1); store.set("bbqs", state.bbqs); render("grigliate"); });
-    row.appendChild(cb); row.appendChild(lab); row.appendChild(del);
-    block.appendChild(row);
+    grid.appendChild(renderPackItem(it, i, bbq.data, save, "g"+bbq.id));
   });
+  block.appendChild(grid);
   const addLine = el("div",{class:"add-line"});
   const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
   input.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && input.value.trim()){
-      bbq.data.push({text:input.value.trim(), done:false});
+      bbq.data.push({text:input.value.trim(), done:false, take:false});
       store.set("bbqs", state.bbqs); render("grigliate");
     }
   });
@@ -1501,27 +1658,81 @@ function financeBlock(title, key){
   const block = el("div",{class:"card cat-block"});
   block.appendChild(el("h4",{},title));
   state.finance[key].forEach((item,i)=>{
+    const itemWrap = el("div",{class:"finance-item"});
     const row = el("div",{class:"finance-row"});
     const nameInp = el("input",{type:"text", value:item.name||"", placeholder:"voce"});
     nameInp.addEventListener("change", ()=>{ item.name=nameInp.value; store.set(privKey("finance"), state.finance); });
-    const valInp = el("input",{type:"text", class:"finance-value", value:item.value||"", placeholder:"0"});
+    const rawVal = parseFloat(String(item.value||"0").replace(",", ".")) || 0;
+    const valInp = el("input",{type:"text", class:"finance-value", value: item.value ? fmtMoneyPlain(rawVal) : "", placeholder:"0 €"});
+    valInp.addEventListener("focus", ()=>{ valInp.value = item.value || ""; });
+    valInp.addEventListener("blur", ()=>{
+      const rv = parseFloat(String(item.value||"0").replace(",", ".")) || 0;
+      valInp.value = item.value ? fmtMoneyPlain(rv) : "";
+    });
     valInp.addEventListener("change", ()=>{ item.value=valInp.value; store.set(privKey("finance"), state.finance); render("finanze"); });
     const del = el("span",{class:"del", html:"✕"});
     del.addEventListener("click", ()=>{ state.finance[key].splice(i,1); store.set(privKey("finance"), state.finance); render("finanze"); });
     row.appendChild(nameInp); row.appendChild(valInp); row.appendChild(del);
-    block.appendChild(row);
+    itemWrap.appendChild(row);
+    const noteInp = el("input",{type:"text", class:"finance-note", value:item.note||"", placeholder:"nota (opzionale)"});
+    noteInp.addEventListener("change", ()=>{ item.note=noteInp.value; store.set(privKey("finance"), state.finance); });
+    itemWrap.appendChild(noteInp);
+    block.appendChild(itemWrap);
   });
   const addLine = el("div",{class:"add-line"});
   const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
   input.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && input.value.trim()){
-      state.finance[key].push({name:input.value.trim(), value:""});
+      state.finance[key].push({name:input.value.trim(), value:"", note:""});
       store.set(privKey("finance"), state.finance); render("finanze");
     }
   });
   addLine.appendChild(input);
   block.appendChild(addLine);
   return block;
+}
+function renderFinanceChart(history){
+  if(history.length < 2){
+    return emptyState("Salva almeno due snapshot per vedere il grafico del trend.", ICON_COIN);
+  }
+  const data = history.slice().reverse();
+  const w = 640, h = 220, pad = 34;
+  const series = [
+    {key:"liquidity", color:"#2F5B5E", label:"Liquidità"},
+    {key:"nonliquid", color:"#4C7A4C", label:"Non liquidi"},
+    {key:"debts", color:"#8C3A26", label:"Debiti"},
+    {key:"net", color:"#233A46", label:"Patrimonio netto"}
+  ];
+  const allVals = data.flatMap(d=> series.map(s=> d[s.key]||0)).concat([0]);
+  const maxV = Math.max(...allVals), minV = Math.min(...allVals);
+  const range = (maxV - minV) || 1;
+  const xStep = data.length>1 ? (w - pad*2) / (data.length - 1) : 0;
+  function xy(val, i){
+    const x = pad + i*xStep;
+    const y = h - pad - ((val - minV) / range) * (h - pad*2);
+    return [x,y];
+  }
+  let svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">`;
+  svg += `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4D6AC" stroke-width="1"/>`;
+  series.forEach(s=>{
+    const d = data.map((row,i)=>{
+      const [x,y] = xy(row[s.key]||0, i);
+      return (i===0?"M":"L")+x.toFixed(1)+","+y.toFixed(1);
+    }).join(" ");
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.key==='net'?2.6:1.6}"/>`;
+  });
+  svg += `</svg>`;
+  const wrap = el("div",{});
+  wrap.appendChild(el("div",{html:svg}));
+  const legend = el("div",{class:"chart-legend"});
+  series.forEach(s=>{
+    legend.appendChild(el("span",{class:"chart-legend-item"},[
+      el("span",{class:"chart-legend-dot", style:`background:${s.color};`}),
+      el("span",{}, s.label)
+    ]));
+  });
+  wrap.appendChild(legend);
+  return wrap;
 }
 function renderFinanze(main){
   main.appendChild(el("div",{class:"section-head"},[
@@ -1540,11 +1751,17 @@ function renderFinanze(main){
   summary.appendChild(el("div",{class:"net-value"}, fmtEUR(net)));
   const snapBtn = el("button",{class:"btn primary"},"+ Salva snapshot");
   snapBtn.addEventListener("click", ()=>{
-    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), net});
+    const totals = computeCategoryTotals();
+    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), ...totals});
     store.set(privKey("finance"), state.finance); render("finanze");
   });
   summary.appendChild(snapBtn);
   main.appendChild(summary);
+
+  const chartBlock = el("div",{class:"card cat-block"});
+  chartBlock.appendChild(el("h4",{},"Andamento nel tempo"));
+  chartBlock.appendChild(renderFinanceChart(state.finance.history));
+  main.appendChild(chartBlock);
 
   const histBlock = el("div",{class:"card cat-block"});
   histBlock.appendChild(el("h4",{},"Storico snapshot"));
@@ -1785,6 +2002,10 @@ document.getElementById("add-tab-btn").addEventListener("click", openNewTabModal
 
 /* ---------------- render dispatcher ---------------- */
 function clear(main){ main.innerHTML=""; return main; }
+function autoResize(ta){
+  ta.style.height = "auto";
+  ta.style.height = ta.scrollHeight + "px";
+}
 function render(tab){
   const main = clear(document.getElementById("main"));
   if(tab==="dashboard") renderDashboard(main);
@@ -1817,8 +2038,10 @@ function render(tab){
         template: SHARED_BOARD_TEMPLATE,
         renderDetail: renderGenericChecklistDetail(storeKey, tab)
       });
+      main2.querySelectorAll("textarea").forEach(ta=>autoResize(ta));
     });
   }
+  main.querySelectorAll("textarea").forEach(ta=>autoResize(ta));
 }
 
 initAuth();
