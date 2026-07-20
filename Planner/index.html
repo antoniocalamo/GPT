@@ -389,6 +389,77 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 .history-row:last-child{border-bottom:none;}
 .history-value{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--slate);}
 
+/* ---- Backlog boxes ---- */
+.backlog-label{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:-4px;
+}
+.side-card-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+.box-icon{width:16px; height:16px; color:var(--forest); flex-shrink:0;}
+.box-icon svg{width:100%; height:100%; display:block;}
+.box-title-input{
+  border:none; background:transparent; font-family:'Fraunces',serif; font-weight:600;
+  font-size:16px; color:var(--ink); padding:2px 0; width:100%;
+}
+.box-title-input:focus{outline:none; background:#fff; border-radius:6px; padding:2px 4px;}
+
+/* ---- Week toolbar / today highlight ---- */
+.week-toolbar{display:flex; align-items:center; gap:18px; margin-bottom:16px; flex-wrap:wrap;}
+.toggle-completed{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-soft); cursor:pointer;}
+.toggle-completed input{accent-color:var(--forest); width:15px; height:15px;}
+.day-row.today .day-label{
+  color:#fff; background:var(--forest); border-radius:8px; padding:6px 10px; display:inline-block;
+}
+.day-row.today .day-card{border-color:var(--forest); box-shadow:0 0 0 2px rgba(51,80,63,0.15), var(--shadow);}
+
+/* ---- Net worth eye toggle ---- */
+.stat-card-head{display:flex; align-items:flex-start; justify-content:space-between;}
+.eye-toggle{cursor:pointer; width:16px; height:16px; color:var(--ink-soft); opacity:.65; flex-shrink:0;}
+.eye-toggle:hover{opacity:1;}
+.eye-toggle svg{width:100%; height:100%; display:block;}
+
+/* ---- Modal ---- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(35,48,42,0.45);
+  display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px;
+}
+.modal-card{
+  background:var(--card); border-radius:16px; padding:26px 28px;
+  box-shadow:var(--shadow); max-width:380px; width:100%;
+}
+.modal-card h3{margin:0 0 16px 0; font-size:17px; font-family:'Fraunces',serif; color:var(--ink);}
+.modal-card .field-label{font-size:12px; color:var(--ink-soft); margin:14px 0 6px; font-weight:600;}
+.icon-picker{display:flex; flex-wrap:wrap; gap:8px; margin:6px 0;}
+.icon-choice{
+  width:38px; height:38px; border-radius:9px; border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  background:#fff; color:var(--ink-soft);
+}
+.icon-choice svg{width:18px; height:18px;}
+.icon-choice.selected{border-color:var(--forest); color:var(--forest); background:rgba(51,80,63,0.08);}
+.color-picker{display:flex; flex-wrap:wrap; gap:9px; margin:6px 0;}
+.color-choice{width:28px; height:28px; border-radius:50%; cursor:pointer; border:2px solid transparent;}
+.color-choice.selected{border-color:var(--ink); box-shadow:0 0 0 2px var(--paper-2);}
+.modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:20px;}
+.modal-radio-row{display:flex; gap:16px; font-size:13px; color:var(--ink);}
+.modal-radio-row label{display:flex; align-items:center; gap:6px; cursor:pointer;}
+
+/* ---- Custom sidebar tabs ---- */
+.custom-tab{position:relative;}
+.tab-del{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  opacity:0; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--paper-2);
+}
+.custom-tab:hover .tab-del{opacity:.75;}
+.tab-del:hover{opacity:1 !important; color:#fff;}
+.tab-add{
+  border:1px dashed var(--line); background:transparent; color:var(--ink-soft);
+  border-radius:12px 0 0 12px; padding:11px 16px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600; text-align:left;
+  display:flex; align-items:center; gap:8px;
+}
+.tab-add:hover{background:rgba(255,255,255,.4); color:var(--ink);}
+
 @media (max-width: 880px){
   .app{flex-direction:column;}
   .tabs{
@@ -432,7 +503,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     </div>
     <button class="tab active" data-c="dashboard" data-tab="dashboard">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
-      <span class="tab-label">Settimana<span class="sub">to-do &amp; note</span></span>
+      <span class="tab-label">Home<span class="sub">settimana &amp; backlog</span></span>
     </button>
     <button class="tab" data-c="orto" data-tab="orto">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg></span>
@@ -458,11 +529,15 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 6-5" stroke-linecap="round"/></svg></span>
       <span class="tab-label">Condivisi<span class="sub">insieme</span></span>
     </button>
+    <div id="custom-tabs-slot"></div>
+    <button class="tab-add" id="add-tab-btn" type="button">
+      <span style="font-size:15px;line-height:1;">+</span> Nuova scheda
+    </button>
     <div class="brand-footer">
       <div id="user-email" class="user-email"></div>
       <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;margin-top:2px;word-break:break-all;"></div>
       <button id="logout-btn" class="btn ghost small" style="margin-top:8px;">Esci</button>
-      <div style="margin-top:12px;">v0.3<br>by Antonio Calamo</div>
+      <div style="margin-top:12px;">v0.4<br>by Antonio Calamo</div>
     </div>
   </nav>
   <main id="main"></main>
@@ -499,6 +574,19 @@ const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const ICON_SUITCASE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>';
 const ICON_TIRE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg>';
+const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.5 6.7C4 8.3 2 12 2 12s4 7 10 7c1.3 0 2.5-.3 3.6-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+const STANDARD_ICONS = {
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  coin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 20s-7-4.5-9.5-9C1 7.5 3 4 6.5 4c2 0 3.5 1.3 4 2.5.5-1.2 2-2.5 4-2.5C18 4 20 7.5 18.5 11 16 15.5 12 20 12 20Z"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6Z"/></svg>',
+  film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14M3 10h5M16 10h5M3 15h5M16 15h5"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>'
+};
+const TAB_COLORS = ["#33503F","#5B8C5A","#3C6E71","#A8462E","#C68A2E","#2E4756","#6B4C74"];
 const TRIP_TEMPLATE = () => ([
   {title:"All season", items:["Documenti e portafoglio","Caricatori e cavi","Beauty case","Cambio biancheria"].map(t=>({text:t, done:false}))},
   {title:"Se estate", items:["Costume","Crema solare","Occhiali da sole"].map(t=>({text:t, done:false}))},
@@ -537,21 +625,35 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null;
 let currentUser = null;
+let customTabData = {};
+let activeCustomItem = {};
+let showCompleted = true;
+let netWorthHidden = false;
 
 function privKey(name){ return "priv:"+currentUser.id+":"+name; }
 
 async function loadAll(){
-  console.log("[Planner] carico dati privati con chiave:", privKey("dashboard"), privKey("finance"));
+  customTabData = {}; activeCustomItem = {};
   state.dashboard = await store.get(privKey("dashboard"), DEFAULTS.dashboard);
+  if(!state.dashboard.backlogBoxes){
+    state.dashboard.backlogBoxes = [
+      {id:"bx1", title:"Domestic Finance", icon:"coin", items: state.dashboard.finance || []},
+      {id:"bx2", title:"Fun", icon:"star", items: state.dashboard.fun || []},
+      {id:"bx3", title:"Note", icon:"pencil", items: state.dashboard.note || []}
+    ];
+    store.set(privKey("dashboard"), state.dashboard);
+  }
   state.orto = await store.get("orto", DEFAULTS.orto);
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
   state.finance = await store.get(privKey("finance"), DEFAULTS.finance);
   state.sharedBoards = await store.get("sharedBoards", DEFAULTS.sharedBoards);
+  state.customTabs = await store.get("customTabs", []);
+  state.customTabsPrivate = await store.get(privKey("customTabs"), []);
 }
 
 /* ---------------- auth ---------------- */
@@ -573,8 +675,8 @@ async function startApp(){
   document.getElementById("app-root").style.display="flex";
   document.getElementById("user-email").textContent = currentUser.email;
   document.getElementById("user-id").textContent = "uid: " + currentUser.id;
-  console.log("[Planner] loggato come", currentUser.email, "— uid:", currentUser.id);
   await loadAll();
+  renderCustomTabButtons();
   render("dashboard");
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
@@ -593,6 +695,29 @@ document.getElementById("logout-btn").addEventListener("click", async ()=>{
 });
 
 /* ---------------- helpers ---------------- */
+function openModal(contentBuilderFn){
+  const overlay = el("div",{class:"modal-overlay"});
+  const modal = el("div",{class:"modal-card"});
+  function closeModal(){ overlay.remove(); }
+  contentBuilderFn(modal, closeModal);
+  overlay.appendChild(modal);
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeModal(); });
+  document.body.appendChild(overlay);
+  return closeModal;
+}
+function iconPickerRow(defaultKey, onSelect){
+  const wrap = el("div",{class:"icon-picker"});
+  let selected = defaultKey;
+  Object.keys(STANDARD_ICONS).forEach(key=>{
+    const btn = el("div",{class:"icon-choice"+(key===selected?" selected":""), html:STANDARD_ICONS[key]});
+    btn.addEventListener("click", ()=>{
+      wrap.querySelectorAll(".icon-choice").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected"); selected=key; onSelect(key);
+    });
+    wrap.appendChild(btn);
+  });
+  return wrap;
+}
 function emptyState(text, iconSvg){
   return el("div",{class:"empty-state"},[
     el("div",{class:"empty-icon", html:iconSvg||ICON_EMPTY}),
@@ -623,13 +748,25 @@ function statCard(iconSvg, color, value, label){
   card.appendChild(el("div",{class:"stat-label"}, label));
   return card;
 }
+function statCardNetWorth(iconSvg, color, value){
+  const card = el("div",{class:"stat-card", style:`border-left-color:${color}`});
+  const head = el("div",{class:"stat-card-head"});
+  head.appendChild(el("div",{class:"stat-icon", style:`color:${color}`, html:iconSvg}));
+  const eye = el("span",{class:"eye-toggle", html: netWorthHidden ? ICON_EYE_OFF : ICON_EYE, title:"Mostra/nascondi"});
+  eye.addEventListener("click", ()=>{ netWorthHidden = !netWorthHidden; render("dashboard"); });
+  head.appendChild(eye);
+  card.appendChild(head);
+  card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : value));
+  card.appendChild(el("div",{class:"stat-label"}, "patrimonio netto"));
+  return card;
+}
 function renderStatsBar(main){
   const s = computeStats();
   const row = el("div",{class:"stats-row"});
   row.appendChild(statCard(ICON_CHECK, "var(--forest)", s.pct+"%", "task completati questa settimana"));
   row.appendChild(statCard(ICON_SUITCASE, "var(--teal)", s.activeChecklists, "checklist viaggio/grigliata attive"));
   row.appendChild(statCard(ICON_TIRE, "var(--mustard)", s.lastTire, "ultimo intervento gomme"));
-  row.appendChild(statCard(ICON_COIN, "var(--slate)", fmtEUR(s.net), "patrimonio netto"));
+  row.appendChild(statCardNetWorth(ICON_COIN, "var(--slate)", fmtEUR(s.net)));
   main.appendChild(row);
 }
 
@@ -658,18 +795,47 @@ function el(tag, attrs={}, children=[]){
 }
 
 /* ---------------- DASHBOARD ---------------- */
+const DAY_ORDER = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+function orderedDaysFromToday(){
+  const jsDay = new Date().getDay(); // 0=Dom..6=Sab
+  const todayIdx = (jsDay + 6) % 7; // 0=Lun..6=Dom
+  return DAY_ORDER.slice(todayIdx).concat(DAY_ORDER.slice(0, todayIdx));
+}
 function renderDashboard(main){
   main.appendChild(el("div",{class:"section-head"},[
-    el("h1",{},"La mia settimana"),
+    el("h1",{},"Come siamo messi questa settimana?"),
     el("span",{class:"tag"},"aggiornata in automatico")
   ]));
   renderStatsBar(main);
+
+  const toolbar = el("div",{class:"week-toolbar"});
+  const toggleLabel = el("label",{class:"toggle-completed"});
+  const toggleInput = el("input",{type:"checkbox"});
+  toggleInput.checked = showCompleted;
+  toggleInput.addEventListener("change", ()=>{ showCompleted = toggleInput.checked; render("dashboard"); });
+  toggleLabel.appendChild(toggleInput);
+  toggleLabel.appendChild(document.createTextNode("Mostra i task completati"));
+  toolbar.appendChild(toggleLabel);
+  const clearBtn = el("button",{class:"btn danger small"},"Elimina completati");
+  clearBtn.addEventListener("click", ()=>{
+    if(confirm("Sei sicuro di voler eliminare definitivamente tutti i task completati di questa settimana? L'azione non è reversibile.")){
+      Object.keys(state.dashboard.week).forEach(day=>{
+        state.dashboard.week[day] = state.dashboard.week[day].filter(t=>!t.done);
+      });
+      store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+    }
+  });
+  toolbar.appendChild(clearBtn);
+  main.appendChild(toolbar);
+
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
-  Object.keys(state.dashboard.week).forEach(day=>{
+  const todayName = orderedDaysFromToday()[0];
+  orderedDaysFromToday().forEach(day=>{
     const tasks = state.dashboard.week[day];
     const dayCard = el("div",{class:"card day-card"});
     tasks.forEach((t,i)=>{
+      if(!showCompleted && t.done) return;
       dayCard.appendChild(taskRow(t, ()=>{
         state.dashboard.week[day][i].done = !t.done;
         store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
@@ -691,14 +857,20 @@ function renderDashboard(main){
     });
     addLine.appendChild(input);
     dayCard.appendChild(addLine);
-    week.appendChild(el("div",{class:"day-row"},[el("div",{class:"day-label"},day), dayCard]));
+    const rowClass = "day-row"+(day===todayName?" today":"");
+    const label = day===todayName ? day+" · oggi" : day;
+    week.appendChild(el("div",{class:rowClass},[el("div",{class:"day-label"},label), dayCard]));
   });
   grid.appendChild(week);
 
   const side = el("div",{class:"side-stack"});
-  side.appendChild(sideCard("Domestic Finance","#A8462E","finance"));
-  side.appendChild(sideCard("Fun","#3C6E71","fun"));
-  side.appendChild(sideCard("Note","#C68A2E","note"));
+  side.appendChild(el("div",{class:"backlog-label"},"Backlog"));
+  state.dashboard.backlogBoxes.forEach(box=>{
+    side.appendChild(backlogBoxCard(box));
+  });
+  const addBoxBtn = el("button",{class:"btn ghost small", style:"align-self:flex-start;"},"+ Nuova board");
+  addBoxBtn.addEventListener("click", openNewBoxModal);
+  side.appendChild(addBoxBtn);
   grid.appendChild(side);
   main.appendChild(grid);
 }
@@ -713,16 +885,31 @@ function taskRow(t, onToggle, onEdit, onDel){
   row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
   return row;
 }
-function sideCard(title, color, key){
+function backlogBoxCard(box){
   const card = el("div",{class:"card side-card"});
-  card.appendChild(el("h3",{},[el("span",{class:"dot", style:`background:${color}`}), title]));
-  state.dashboard[key].forEach((note,i)=>{
+  const head = el("div",{class:"side-card-head"});
+  const titleWrap = el("div",{style:"display:flex;align-items:center;gap:8px;flex:1;min-width:0;"});
+  titleWrap.appendChild(el("span",{class:"box-icon", html:STANDARD_ICONS[box.icon]||STANDARD_ICONS.pencil}));
+  const titleInput = el("input",{type:"text", class:"box-title-input", value:box.title});
+  titleInput.addEventListener("change", ()=>{ box.title=titleInput.value; store.set(privKey("dashboard"), state.dashboard); });
+  titleWrap.appendChild(titleInput);
+  head.appendChild(titleWrap);
+  const delBtn = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:13px;"});
+  delBtn.addEventListener("click", ()=>{
+    if(confirm('Sei sicuro di voler eliminare la board "'+box.title+'"? L\'azione non è reversibile.')){
+      state.dashboard.backlogBoxes = state.dashboard.backlogBoxes.filter(b=>b.id!==box.id);
+      store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+    }
+  });
+  head.appendChild(delBtn);
+  card.appendChild(head);
+  box.items.forEach((note,i)=>{
     const row = el("div",{class:"note-item"});
     const ta = el("textarea",{rows:"1"}); ta.value = note;
     ta.addEventListener("input", ()=>{ ta.style.height="auto"; ta.style.height = ta.scrollHeight+"px"; });
-    ta.addEventListener("change", ()=>{ state.dashboard[key][i]=ta.value; store.set(privKey("dashboard"), state.dashboard); });
+    ta.addEventListener("change", ()=>{ box.items[i]=ta.value; store.set(privKey("dashboard"), state.dashboard); });
     const del = el("span",{class:"del", html:"✕"});
-    del.addEventListener("click", ()=>{ state.dashboard[key].splice(i,1); store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
+    del.addEventListener("click", ()=>{ box.items.splice(i,1); store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
     row.appendChild(ta); row.appendChild(del);
     card.appendChild(row);
   });
@@ -730,13 +917,36 @@ function sideCard(title, color, key){
   const input = el("input",{type:"text", placeholder:"aggiungi…"});
   input.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && input.value.trim()){
-      state.dashboard[key].push(input.value.trim());
+      box.items.push(input.value.trim());
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
     }
   });
   addLine.appendChild(input);
   card.appendChild(addLine);
   return card;
+}
+function openNewBoxModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Nuova board nel Backlog"));
+    const nameInput = el("input",{type:"text", placeholder:"Titolo della board"});
+    modal.appendChild(nameInput);
+    modal.appendChild(el("div",{class:"field-label"},"Icona"));
+    let selIcon = "pencil";
+    modal.appendChild(iconPickerRow(selIcon, (k)=>{ selIcon=k; }));
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const createBtn = el("button",{class:"btn primary"},"Crea");
+    createBtn.addEventListener("click", ()=>{
+      if(!nameInput.value.trim()) return;
+      state.dashboard.backlogBoxes.push({id:"bx"+Date.now(), title:nameInput.value.trim(), icon:selIcon, items:[]});
+      store.set(privKey("dashboard"), state.dashboard);
+      close(); render("dashboard");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(createBtn);
+    modal.appendChild(actions);
+    nameInput.focus();
+  });
 }
 
 /* ---------------- ORTO ---------------- */
@@ -1047,6 +1257,142 @@ function renderSharedBoardDetail(detail, board){
   detail.appendChild(block);
 }
 
+/* ---------------- CUSTOM TABS ---------------- */
+function renderGenericChecklistDetail(storeKey, tabName){
+  return function(detail, board){
+    const block = el("div",{class:"cat-block"});
+    block.appendChild(el("h4",{},"Voci"));
+    board.data.forEach((it,i)=>{
+      const row = el("div",{class:"check-item"+(it.done?" done":"")});
+      const cb = el("input",{type:"checkbox", id:"c"+board.id+i});
+      cb.checked = it.done;
+      cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set(storeKey, state[storeKey]); render(tabName); });
+      const lab = el("label",{for:"c"+board.id+i}, it.text);
+      const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+      del.addEventListener("click", ()=>{ board.data.splice(i,1); store.set(storeKey, state[storeKey]); render(tabName); });
+      row.appendChild(cb); row.appendChild(lab); row.appendChild(del);
+      block.appendChild(row);
+    });
+    const addLine = el("div",{class:"add-line"});
+    const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter" && input.value.trim()){
+        board.data.push({text:input.value.trim(), done:false});
+        store.set(storeKey, state[storeKey]); render(tabName);
+      }
+    });
+    addLine.appendChild(input);
+    block.appendChild(addLine);
+    detail.appendChild(block);
+  };
+}
+function findCustomTab(id){
+  return state.customTabs.find(t=>t.id===id) || state.customTabsPrivate.find(t=>t.id===id);
+}
+async function ensureCustomTabLoaded(tab){
+  const storeKey = tab.private ? privKey("custom:"+tab.id) : "custom:"+tab.id;
+  if(!customTabData[tab.id]) customTabData[tab.id] = await store.get(storeKey, []);
+  state[storeKey] = customTabData[tab.id];
+  return storeKey;
+}
+function renderCustomTabButtons(){
+  const slot = document.getElementById("custom-tabs-slot");
+  slot.innerHTML = "";
+  const all = [...state.customTabs, ...state.customTabsPrivate];
+  all.forEach(tab=>{
+    const btn = el("button",{class:"tab custom-tab", "data-tab":"custom:"+tab.id, style:`background:${tab.color}`});
+    btn.appendChild(el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list}));
+    btn.appendChild(el("span",{class:"tab-label"}, tab.name + (tab.private ? " 🔒" : "")));
+    const delBtn = el("span",{class:"tab-del", html:"✕"});
+    delBtn.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
+        deleteCustomTab(tab);
+      }
+    });
+    btn.appendChild(delBtn);
+    slot.appendChild(btn);
+  });
+}
+async function deleteCustomTab(tab){
+  const contentKey = tab.private ? privKey("custom:"+tab.id) : "custom:"+tab.id;
+  if(tab.private){
+    state.customTabsPrivate = state.customTabsPrivate.filter(t=>t.id!==tab.id);
+    await store.set(privKey("customTabs"), state.customTabsPrivate);
+  } else {
+    state.customTabs = state.customTabs.filter(t=>t.id!==tab.id);
+    await store.set("customTabs", state.customTabs);
+  }
+  await store.set(contentKey, []);
+  delete customTabData[tab.id];
+  renderCustomTabButtons();
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
+  render("dashboard");
+}
+function openNewTabModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Nuova scheda"));
+    const nameInput = el("input",{type:"text", placeholder:"Nome scheda (es. Film da vedere)"});
+    modal.appendChild(nameInput);
+
+    modal.appendChild(el("div",{class:"field-label"},"Colore"));
+    const colorPicker = el("div",{class:"color-picker"});
+    let selColor = TAB_COLORS[Math.floor(Math.random()*TAB_COLORS.length)];
+    TAB_COLORS.forEach(c=>{
+      const dot = el("div",{class:"color-choice"+(c===selColor?" selected":""), style:`background:${c}`});
+      dot.addEventListener("click", ()=>{
+        colorPicker.querySelectorAll(".color-choice").forEach(d=>d.classList.remove("selected"));
+        dot.classList.add("selected"); selColor=c;
+      });
+      colorPicker.appendChild(dot);
+    });
+    modal.appendChild(colorPicker);
+
+    modal.appendChild(el("div",{class:"field-label"},"Icona"));
+    let selIcon = "list";
+    modal.appendChild(iconPickerRow(selIcon, (k)=>{ selIcon=k; }));
+
+    modal.appendChild(el("div",{class:"field-label"},"Visibilità"));
+    const visWrap = el("div",{class:"modal-radio-row"});
+    const sharedLabel = el("label",{});
+    const sharedRadio = el("input",{type:"radio", name:"tabvis"}); sharedRadio.checked = true;
+    sharedLabel.appendChild(sharedRadio); sharedLabel.appendChild(document.createTextNode("Condivisa"));
+    const privateLabel = el("label",{});
+    const privateRadio = el("input",{type:"radio", name:"tabvis"});
+    privateLabel.appendChild(privateRadio); privateLabel.appendChild(document.createTextNode("Solo per me"));
+    visWrap.appendChild(sharedLabel); visWrap.appendChild(privateLabel);
+    modal.appendChild(visWrap);
+
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const createBtn = el("button",{class:"btn primary"},"Crea scheda");
+    createBtn.addEventListener("click", async ()=>{
+      if(!nameInput.value.trim()) return;
+      const isPrivate = privateRadio.checked;
+      const newTab = { id:"t"+Date.now(), name:nameInput.value.trim(), color:selColor, icon:selIcon, private:isPrivate };
+      if(isPrivate){
+        state.customTabsPrivate.push(newTab);
+        await store.set(privKey("customTabs"), state.customTabsPrivate);
+      } else {
+        state.customTabs.push(newTab);
+        await store.set("customTabs", state.customTabs);
+      }
+      renderCustomTabButtons();
+      close();
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      const newBtn = document.querySelector('.tab[data-tab="custom:'+newTab.id+'"]');
+      if(newBtn) newBtn.classList.add("active");
+      render("custom:"+newTab.id);
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(createBtn);
+    modal.appendChild(actions);
+    nameInput.focus();
+  });
+}
+document.getElementById("add-tab-btn").addEventListener("click", openNewTabModal);
+
 /* ---------------- render dispatcher ---------------- */
 function clear(main){ main.innerHTML=""; return main; }
 function render(tab){
@@ -1067,6 +1413,22 @@ function render(tab){
     key:"sharedBoards", tab:"condivisi", title:"Board condivise", active:activeSharedBoard,
     setActive:(id)=>activeSharedBoard=id, template:SHARED_BOARD_TEMPLATE, renderDetail:renderSharedBoardDetail
   });
+  else if(tab.indexOf("custom:")===0){
+    const id = tab.slice(7);
+    const tabCfg = findCustomTab(id);
+    if(!tabCfg) return;
+    main.appendChild(el("div",{class:"empty-hint"},"Caricamento…"));
+    ensureCustomTabLoaded(tabCfg).then((storeKey)=>{
+      const main2 = clear(document.getElementById("main"));
+      renderCollection(main2, {
+        key: storeKey, tab: tab, title: tabCfg.name,
+        active: activeCustomItem[tabCfg.id] || null,
+        setActive: (itemId)=>{ activeCustomItem[tabCfg.id]=itemId; },
+        template: SHARED_BOARD_TEMPLATE,
+        renderDetail: renderGenericChecklistDetail(storeKey, tab)
+      });
+    });
+  }
 }
 
 initAuth();
