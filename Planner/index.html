@@ -460,6 +460,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     </button>
     <div class="brand-footer">
       <div id="user-email" class="user-email"></div>
+      <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;margin-top:2px;word-break:break-all;"></div>
       <button id="logout-btn" class="btn ghost small" style="margin-top:8px;">Esci</button>
       <div style="margin-top:12px;">v0.3<br>by Antonio Calamo</div>
     </div>
@@ -543,6 +544,7 @@ let currentUser = null;
 function privKey(name){ return "priv:"+currentUser.id+":"+name; }
 
 async function loadAll(){
+  console.log("[Planner] carico dati privati con chiave:", privKey("dashboard"), privKey("finance"));
   state.dashboard = await store.get(privKey("dashboard"), DEFAULTS.dashboard);
   state.orto = await store.get("orto", DEFAULTS.orto);
   state.trips = await store.get("trips", DEFAULTS.trips);
@@ -570,6 +572,8 @@ async function startApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app-root").style.display="flex";
   document.getElementById("user-email").textContent = currentUser.email;
+  document.getElementById("user-id").textContent = "uid: " + currentUser.id;
+  console.log("[Planner] loggato come", currentUser.email, "— uid:", currentUser.id);
   await loadAll();
   render("dashboard");
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
