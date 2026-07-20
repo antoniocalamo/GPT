@@ -335,24 +335,25 @@ textarea{resize:vertical; min-height:50px;}
 .subtask-item{padding:2px 6px;}
 .subtask-item textarea{font-size:12.5px; padding:2px 0;}
 .action-grid{
-  display:grid; grid-template-columns:15px 15px; grid-template-rows:15px 15px;
-  gap:2px; flex-shrink:0; margin-top:1px;
+  display:flex; flex-direction:column; gap:2px; flex-shrink:0; margin-top:1px;
 }
-.action-grid-sub{grid-template-columns:15px 15px 15px; grid-template-rows:15px;}
-.urgent-flag, .bold-flag, .add-sub-flag{
+.action-grid-row{display:flex; gap:2px;}
+.action-grid-sub{display:flex; gap:2px; flex-shrink:0; margin-top:1px;}
+.urgent-flag, .add-sub-flag{
   width:15px; height:15px; border-radius:4px; border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   font-size:9.5px; font-weight:700; color:var(--ink-soft);
   background:transparent; user-select:none; line-height:1;
 }
 .urgent-flag{font-family:'Fraunces',serif;}
-.bold-flag, .add-sub-flag{font-family:'Inter',sans-serif;}
-.action-grid input[type=checkbox]{width:15px; height:15px; margin:0;}
+.add-sub-flag{font-family:'Inter',sans-serif;}
+.add-sub-flag{width:32px;}
+.action-grid input[type=checkbox], .action-grid-sub input[type=checkbox]{width:15px; height:15px; margin:0; flex-shrink:0;}
 .urgent-flag.active{background:var(--rust); border-color:var(--rust); color:#fff;}
-.bold-flag.active{background:var(--forest); border-color:var(--forest); color:#fff;}
 .add-sub-flag:hover{background:var(--teal); border-color:var(--teal); color:#fff;}
 .task-item.urgent{background:rgba(140,58,38,0.07); border-radius:7px;}
 .task-item.urgent textarea{color:var(--rust); font-weight:600;}
+.day-row.today .task-item textarea{font-weight:700;}
 .drag-grip{
   width:13px; height:15px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
   display:flex; align-items:center; justify-content:center; margin-top:1px; user-select:none;
@@ -1406,12 +1407,6 @@ function renderTaskBlock(main, day, t, i){
     t.urgent = !t.urgent;
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  const boldBtn = el("span",{class:"bold-flag"+(t.bold?" active":""), title:"Grassetto"}, "B");
-  boldBtn.addEventListener("pointerdown", (e)=>{
-    e.preventDefault(); e.stopPropagation();
-    t.bold = !t.bold;
-    store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-  });
   const addSubBtn = el("span",{class:"add-sub-flag", title:"Aggiungi sotto-task"}, "+");
   addSubBtn.addEventListener("pointerdown", (e)=>{
     e.preventDefault(); e.stopPropagation();
@@ -1423,8 +1418,10 @@ function renderTaskBlock(main, day, t, i){
     if(ta) ta.focus();
   });
   const grid = el("div",{class:"action-grid"});
-  grid.appendChild(cb); grid.appendChild(urgentBtn); grid.appendChild(boldBtn); grid.appendChild(addSubBtn);
-  const txt = el("textarea",{rows:"1", style: t.bold ? "font-weight:700;" : ""}); txt.value = t.text;
+  const topRow = el("div",{class:"action-grid-row"});
+  topRow.appendChild(cb); topRow.appendChild(urgentBtn);
+  grid.appendChild(topRow); grid.appendChild(addSubBtn);
+  const txt = el("textarea",{rows:"1"}); txt.value = t.text;
   txt.addEventListener("input", ()=>autoResize(txt));
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
   const del = el("span",{class:"del", html:"✕"});
@@ -1452,15 +1449,9 @@ function renderTaskBlock(main, day, t, i){
       s.urgent = !s.urgent;
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    const sBoldBtn = el("span",{class:"bold-flag"+(s.bold?" active":""), title:"Grassetto"}, "B");
-    sBoldBtn.addEventListener("pointerdown", (e)=>{
-      e.preventDefault(); e.stopPropagation();
-      s.bold = !s.bold;
-      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-    });
-    const sGrid = el("div",{class:"action-grid action-grid-sub"});
-    sGrid.appendChild(scb); sGrid.appendChild(sUrgentBtn); sGrid.appendChild(sBoldBtn);
-    const stxt = el("textarea",{rows:"1", "data-subid":s.id||"", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
+    const sGrid = el("div",{class:"action-grid-sub"});
+    sGrid.appendChild(scb); sGrid.appendChild(sUrgentBtn);
+    const stxt = el("textarea",{rows:"1", "data-subid":s.id||""}); stxt.value = s.text;
     stxt.addEventListener("input", ()=>autoResize(stxt));
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
