@@ -9,20 +9,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
-  --paper:#E9E2CF;
-  --paper-2:#F7F3E6;
+  --paper:#F5EBD2;
+  --paper-2:#FFFBF1;
   --ink:#23302A;
   --ink-soft:#5B6459;
-  --forest:#33503F;
-  --leaf:#5B8C5A;
-  --teal:#3C6E71;
-  --rust:#A8462E;
-  --mustard:#C68A2E;
-  --slate:#2E4756;
-  --plum:#6B4C74;
-  --line:#D3C7A9;
-  --card:#FBF8F1;
-  --shadow: 0 2px 10px rgba(35,48,42,0.10);
+  --forest:#2B4638;
+  --leaf:#4C7A4C;
+  --teal:#2F5B5E;
+  --rust:#8C3A26;
+  --mustard:#AD7A22;
+  --slate:#233A46;
+  --plum:#57394F;
+  --line:#E4D6AC;
+  --card:#FFFFFB;
+  --shadow: 0 2px 10px rgba(35,48,42,0.09);
 }
 *{box-sizing:border-box;}
 body{
@@ -247,7 +247,14 @@ textarea{resize:vertical; min-height:50px;}
   color:var(--forest);
   padding-top:10px;
 }
-.day-card{padding:12px 14px;}
+.day-card{padding:12px 14px; border-left:4px solid var(--day-color, var(--line));}
+.section-label{
+  display:flex; align-items:center; gap:9px;
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.10em;
+  text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+  padding-bottom:9px; margin-bottom:12px; border-bottom:1px solid var(--line);
+}
+.section-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
 .task-item{
   display:flex;
   align-items:center;
@@ -271,8 +278,6 @@ textarea{resize:vertical; min-height:50px;}
 .add-line input{flex:1;}
 
 .side-stack{display:flex; flex-direction:column; gap:18px;}
-.side-card h3{margin:0 0 10px 0; font-size:16px; display:flex; align-items:center; gap:8px;}
-.side-card .dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
 .note-item{
   padding:6px 0; border-bottom:1px dashed var(--line);
   display:flex; gap:8px; align-items:flex-start;
@@ -390,18 +395,42 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 .history-value{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--slate);}
 
 /* ---- Backlog boxes ---- */
-.backlog-label{
-  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--ink-soft); margin-bottom:-4px;
-}
 .side-card-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
 .box-icon{width:16px; height:16px; color:var(--forest); flex-shrink:0;}
 .box-icon svg{width:100%; height:100%; display:block;}
+.box-icon.clickable{cursor:pointer; opacity:.85;}
+.box-icon.clickable:hover{opacity:1;}
 .box-title-input{
   border:none; background:transparent; font-family:'Fraunces',serif; font-weight:600;
   font-size:16px; color:var(--ink); padding:2px 0; width:100%;
 }
 .box-title-input:focus{outline:none; background:#fff; border-radius:6px; padding:2px 4px;}
+.box-title-text{font-family:'Fraunces',serif; font-weight:700; font-size:16px; color:var(--ink); flex:1; min-width:0;}
+.box-edit-icon{width:13px; height:13px; color:var(--ink-soft); opacity:.5; cursor:pointer; flex-shrink:0;}
+.box-edit-icon:hover{opacity:1;}
+.box-edit-icon svg{width:100%; height:100%;}
+
+/* ---- KPI settings ---- */
+.stats-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+.kpi-gear{cursor:pointer; width:18px; height:18px; color:var(--ink-soft); opacity:.6;}
+.kpi-gear:hover{opacity:1;}
+.kpi-gear svg{width:100%; height:100%;}
+.kpi-check-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px;}
+.kpi-check-row:last-child{border-bottom:none;}
+.kpi-check-row input{width:16px; height:16px; accent-color:var(--forest);}
+
+/* ---- Login footer ---- */
+.login-footer{
+  text-align:center; margin-top:22px; font-family:'IBM Plex Mono',monospace;
+  font-size:11px; color:var(--ink-soft); opacity:.75; line-height:1.6;
+}
+
+/* ---- Sidebar groups ---- */
+.tabs-group-label{
+  font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-soft); opacity:.7;
+  padding:10px 16px 2px 18px; margin-top:4px;
+}
 
 /* ---- Week toolbar / today highlight ---- */
 .week-toolbar{display:flex; align-items:center; gap:18px; margin-bottom:16px; flex-wrap:wrap;}
@@ -493,6 +522,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
     </label>
     <div id="login-error" class="login-error"></div>
     <button type="submit" class="btn primary" style="width:100%;margin-top:6px;">Accedi</button>
+    <div class="login-footer">v0.5<br>by Antonio Calamo</div>
   </form>
 </div>
 <div class="app" id="app-root" style="display:none;">
@@ -505,31 +535,39 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
       <span class="tab-label">Home<span class="sub">settimana &amp; backlog</span></span>
     </button>
-    <button class="tab" data-c="orto" data-tab="orto">
-      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg></span>
-      <span class="tab-label">Orto<span class="sub">progetto Maiera</span></span>
-    </button>
-    <button class="tab" data-c="viaggio" data-tab="viaggio">
-      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg></span>
-      <span class="tab-label">Viaggi<span class="sub">checklist partenza</span></span>
-    </button>
-    <button class="tab" data-c="grigliate" data-tab="grigliate">
-      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21c4 0 6-2.5 6-6 0-3-2-4.5-3-7 0 2-1.5 3-1.5 3S14 8 12 3c0 4-5 6-5 11 0 .5 0 1 .1 1.5C6.5 14 6 13 6 13c-.5 2 0 8 6 8Z"/></svg></span>
-      <span class="tab-label">Grigliate<span class="sub">checklist &amp; note</span></span>
-    </button>
-    <button class="tab" data-c="gomme" data-tab="gomme">
-      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span>
-      <span class="tab-label">Gomme<span class="sub">manutenzione</span></span>
-    </button>
     <button class="tab" data-c="finanze" data-tab="finanze">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg></span>
       <span class="tab-label">Finanze<span class="sub">patrimonio netto</span></span>
     </button>
-    <button class="tab" data-c="condivisi" data-tab="condivisi">
+    <div class="tabs-group-label">Condivise</div>
+    <button class="tab custom-tab" data-c="orto" data-tab="orto" data-builtin="orto">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg></span>
+      <span class="tab-label">Orto<span class="sub">progetto Maiera</span></span>
+      <span class="tab-del" data-builtin-del="orto">✕</span>
+    </button>
+    <button class="tab custom-tab" data-c="viaggio" data-tab="viaggio" data-builtin="viaggio">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg></span>
+      <span class="tab-label">Viaggi<span class="sub">checklist partenza</span></span>
+      <span class="tab-del" data-builtin-del="viaggio">✕</span>
+    </button>
+    <button class="tab custom-tab" data-c="grigliate" data-tab="grigliate" data-builtin="grigliate">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21c4 0 6-2.5 6-6 0-3-2-4.5-3-7 0 2-1.5 3-1.5 3S14 8 12 3c0 4-5 6-5 11 0 .5 0 1 .1 1.5C6.5 14 6 13 6 13c-.5 2 0 8 6 8Z"/></svg></span>
+      <span class="tab-label">Grigliate<span class="sub">checklist &amp; note</span></span>
+      <span class="tab-del" data-builtin-del="grigliate">✕</span>
+    </button>
+    <button class="tab custom-tab" data-c="gomme" data-tab="gomme" data-builtin="gomme">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="tab-label">Gomme<span class="sub">manutenzione</span></span>
+      <span class="tab-del" data-builtin-del="gomme">✕</span>
+    </button>
+    <button class="tab custom-tab" data-c="condivisi" data-tab="condivisi" data-builtin="condivisi">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 6-5" stroke-linecap="round"/></svg></span>
       <span class="tab-label">Condivisi<span class="sub">insieme</span></span>
+      <span class="tab-del" data-builtin-del="condivisi">✕</span>
     </button>
-    <div id="custom-tabs-slot"></div>
+    <div id="custom-tabs-slot-shared"></div>
+    <div class="tabs-group-label" id="private-group-label" style="display:none;">Private</div>
+    <div id="custom-tabs-slot-private"></div>
     <button class="tab-add" id="add-tab-btn" type="button">
       <span style="font-size:15px;line-height:1;">+</span> Nuova scheda
     </button>
@@ -537,7 +575,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
       <div id="user-email" class="user-email"></div>
       <div id="user-id" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);opacity:.65;margin-top:2px;word-break:break-all;"></div>
       <button id="logout-btn" class="btn ghost small" style="margin-top:8px;">Esci</button>
-      <div style="margin-top:12px;">v0.4<br>by Antonio Calamo</div>
+      <div style="margin-top:12px;">v0.5<br>by Antonio Calamo</div>
     </div>
   </nav>
   <main id="main"></main>
@@ -558,7 +596,8 @@ const DEFAULTS = {
       {id:"b1", name:"Pomodori", color:"#A8462E", x:4, y:4, date:""},
       {id:"b2", name:"Zucchine", color:"#5B8C5A", x:34, y:4, date:""},
       {id:"b3", name:"Melone", color:"#C68A2E", x:64, y:4, date:""}
-    ]
+    ],
+    lastWatered: "", lastFertilized: ""
   },
   trips: [],
   bbqs: [],
@@ -570,12 +609,36 @@ const SHARED_BOARD_TEMPLATE = () => [];
 
 /* ---------------- icons ---------------- */
 const ICON_EMPTY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 19V7a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 5v5h5"/></svg>';
+const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>';
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const ICON_DROP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3s7 7.5 7 12.5a7 7 0 1 1-14 0C5 10.5 12 3 12 3Z"/></svg>';
+const ICON_SPROUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10C12 6 9 4 5 4c0 4 3 6 7 6Z"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6Z"/></svg>';
+function fmtDateShort(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+}
 const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4.5 4.5L19 7"/></svg>';
 const ICON_SUITCASE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>';
 const ICON_TIRE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.5 6.7C4 8.3 2 12 2 12s4 7 10 7c1.3 0 2.5-.3 3.6-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+const KPI_CATALOG = {
+  taskPct: { label:"task completati questa settimana", icon:ICON_CHECK, color:"var(--forest)",
+    compute: ()=> computeStats().pct + "%" },
+  ortoWater: { label:"ultima innaffiata/pioggia orto", icon:ICON_DROP, color:"var(--teal)",
+    compute: ()=> fmtDateShort(state.orto.lastWatered) },
+  ortoFertilize: { label:"ultima concimata (mensile)", icon:ICON_SPROUT, color:"var(--leaf)",
+    compute: ()=> fmtDateShort(state.orto.lastFertilized) },
+  tireLast: { label:"ultimo intervento gomme", icon:ICON_TIRE, color:"var(--mustard)",
+    compute: ()=> computeStats().lastTire },
+  checklistActive: { label:"checklist viaggio/grigliata attive", icon:ICON_SUITCASE, color:"var(--slate)",
+    compute: ()=> String(state.trips.length + state.bbqs.length) },
+  netWorth: { label:"patrimonio netto", icon:ICON_COIN, color:"var(--slate)",
+    compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true }
+};
+const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
 const STANDARD_ICONS = {
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
   pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
@@ -586,7 +649,8 @@ const STANDARD_ICONS = {
   film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14M3 10h5M16 10h5M3 15h5M16 15h5"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>'
 };
-const TAB_COLORS = ["#33503F","#5B8C5A","#3C6E71","#A8462E","#C68A2E","#2E4756","#6B4C74"];
+const TAB_COLORS = ["#2B4638","#4C7A4C","#2F5B5E","#8C3A26","#AD7A22","#233A46","#57394F"];
+const DAY_COLORS = { "Lunedì":"#2B4638","Martedì":"#4C7A4C","Mercoledì":"#2F5B5E","Giovedì":"#AD7A22","Venerdì":"#8C3A26","Sabato":"#57394F","Domenica":"#233A46" };
 const TRIP_TEMPLATE = () => ([
   {title:"All season", items:["Documenti e portafoglio","Caricatori e cavi","Beauty case","Cambio biancheria"].map(t=>({text:t, done:false}))},
   {title:"Se estate", items:["Costume","Crema solare","Occhiali da sole"].map(t=>({text:t, done:false}))},
@@ -625,7 +689,7 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null;
 let currentUser = null;
 let customTabData = {};
@@ -644,9 +708,14 @@ async function loadAll(){
       {id:"bx2", title:"Fun", icon:"star", items: state.dashboard.fun || []},
       {id:"bx3", title:"Note", icon:"pencil", items: state.dashboard.note || []}
     ];
-    store.set(privKey("dashboard"), state.dashboard);
   }
+  if(!state.dashboard.kpiSelection){
+    state.dashboard.kpiSelection = DEFAULT_KPI_SELECTION.slice();
+  }
+  store.set(privKey("dashboard"), state.dashboard);
   state.orto = await store.get("orto", DEFAULTS.orto);
+  if(state.orto.lastWatered===undefined) state.orto.lastWatered = "";
+  if(state.orto.lastFertilized===undefined) state.orto.lastFertilized = "";
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
@@ -654,6 +723,7 @@ async function loadAll(){
   state.sharedBoards = await store.get("sharedBoards", DEFAULTS.sharedBoards);
   state.customTabs = await store.get("customTabs", []);
   state.customTabsPrivate = await store.get(privKey("customTabs"), []);
+  state.hiddenBuiltins = await store.get(privKey("hiddenBuiltins"), []);
 }
 
 /* ---------------- auth ---------------- */
@@ -676,6 +746,7 @@ async function startApp(){
   document.getElementById("user-email").textContent = currentUser.email;
   document.getElementById("user-id").textContent = "uid: " + currentUser.id;
   await loadAll();
+  applyHiddenBuiltins();
   renderCustomTabButtons();
   render("dashboard");
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -741,37 +812,88 @@ function computeStats(){
   if(dated.length) lastTire = new Date(dated[0].data).toLocaleDateString("it-IT");
   return { pct, activeChecklists, lastTire, net: computeNetWorth() };
 }
-function statCard(iconSvg, color, value, label){
-  const card = el("div",{class:"stat-card", style:`border-left-color:${color}`});
-  card.appendChild(el("div",{class:"stat-icon", style:`color:${color}`, html:iconSvg}));
-  card.appendChild(el("div",{class:"stat-value"}, String(value)));
-  card.appendChild(el("div",{class:"stat-label"}, label));
-  return card;
-}
-function statCardNetWorth(iconSvg, color, value){
-  const card = el("div",{class:"stat-card", style:`border-left-color:${color}`});
-  const head = el("div",{class:"stat-card-head"});
-  head.appendChild(el("div",{class:"stat-icon", style:`color:${color}`, html:iconSvg}));
-  const eye = el("span",{class:"eye-toggle", html: netWorthHidden ? ICON_EYE_OFF : ICON_EYE, title:"Mostra/nascondi"});
-  eye.addEventListener("click", ()=>{ netWorthHidden = !netWorthHidden; render("dashboard"); });
-  head.appendChild(eye);
-  card.appendChild(head);
-  card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : value));
-  card.appendChild(el("div",{class:"stat-label"}, "patrimonio netto"));
+function statCard(kpiKey){
+  const def = KPI_CATALOG[kpiKey];
+  if(!def) return null;
+  const card = el("div",{class:"stat-card", style:`border-left-color:${def.color}`});
+  if(def.isNetWorth){
+    const head = el("div",{class:"stat-card-head"});
+    head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    const eye = el("span",{class:"eye-toggle", html: netWorthHidden ? ICON_EYE_OFF : ICON_EYE, title:"Mostra/nascondi"});
+    eye.addEventListener("click", ()=>{ netWorthHidden = !netWorthHidden; render("dashboard"); });
+    head.appendChild(eye);
+    card.appendChild(head);
+    card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
+  } else {
+    card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
+  }
+  card.appendChild(el("div",{class:"stat-label"}, def.label));
   return card;
 }
 function renderStatsBar(main){
-  const s = computeStats();
+  const head = el("div",{class:"stats-head"});
+  head.appendChild(el("div",{class:"tag"},"i tuoi indicatori"));
+  const gear = el("span",{class:"kpi-gear", html:ICON_GEAR, title:"Configura indicatori"});
+  gear.addEventListener("click", openKpiSettingsModal);
+  head.appendChild(gear);
+  main.appendChild(head);
   const row = el("div",{class:"stats-row"});
-  row.appendChild(statCard(ICON_CHECK, "var(--forest)", s.pct+"%", "task completati questa settimana"));
-  row.appendChild(statCard(ICON_SUITCASE, "var(--teal)", s.activeChecklists, "checklist viaggio/grigliata attive"));
-  row.appendChild(statCard(ICON_TIRE, "var(--mustard)", s.lastTire, "ultimo intervento gomme"));
-  row.appendChild(statCardNetWorth(ICON_COIN, "var(--slate)", fmtEUR(s.net)));
+  state.dashboard.kpiSelection.forEach(key=>{
+    const card = statCard(key);
+    if(card) row.appendChild(card);
+  });
   main.appendChild(row);
+}
+function openKpiSettingsModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Indicatori in dashboard"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;"},"Scegli quali mostrare:"));
+    const checks = {};
+    Object.keys(KPI_CATALOG).forEach(key=>{
+      const row = el("div",{class:"kpi-check-row"});
+      const cb = el("input",{type:"checkbox"});
+      cb.checked = state.dashboard.kpiSelection.includes(key);
+      checks[key] = cb;
+      row.appendChild(cb);
+      row.appendChild(el("span",{class:"box-icon", html:KPI_CATALOG[key].icon, style:"color:"+KPI_CATALOG[key].color}));
+      row.appendChild(el("span",{}, KPI_CATALOG[key].label));
+      modal.appendChild(row);
+    });
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Salva");
+    saveBtn.addEventListener("click", ()=>{
+      state.dashboard.kpiSelection = Object.keys(KPI_CATALOG).filter(key=>checks[key].checked);
+      store.set(privKey("dashboard"), state.dashboard);
+      close(); render("dashboard");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
 }
 
 /* ---------------- tab switching ---------------- */
 document.getElementById("tabs").addEventListener("click", (e)=>{
+  const delEl = e.target.closest("[data-builtin-del], .tab-del");
+  if(delEl){
+    e.stopPropagation();
+    const builtinKey = delEl.dataset.builtinDel;
+    if(builtinKey){
+      if(confirm('Nascondere la scheda "'+BUILTIN_TABS[builtinKey]+'"? I dati restano salvati e potrai farla ricomparire da "+ Nuova scheda".')){
+        state.hiddenBuiltins.push(builtinKey);
+        store.set(privKey("hiddenBuiltins"), state.hiddenBuiltins);
+        applyHiddenBuiltins();
+        if(document.querySelector('.tab[data-tab="'+builtinKey+'"]').classList.contains("active")){
+          document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+          document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
+          render("dashboard");
+        }
+      }
+    }
+    return;
+  }
   const btn = e.target.closest(".tab");
   if(!btn) return;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -830,10 +952,11 @@ function renderDashboard(main){
 
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
+  week.appendChild(sectionLabel("To Do List", "var(--forest)"));
   const todayName = orderedDaysFromToday()[0];
   orderedDaysFromToday().forEach(day=>{
     const tasks = state.dashboard.week[day];
-    const dayCard = el("div",{class:"card day-card"});
+    const dayCard = el("div",{class:"card day-card", style:`--day-color:${DAY_COLORS[day]}`});
     tasks.forEach((t,i)=>{
       if(!showCompleted && t.done) return;
       dayCard.appendChild(taskRow(t, ()=>{
@@ -864,7 +987,7 @@ function renderDashboard(main){
   grid.appendChild(week);
 
   const side = el("div",{class:"side-stack"});
-  side.appendChild(el("div",{class:"backlog-label"},"Backlog"));
+  side.appendChild(sectionLabel("Backlog", "var(--mustard)"));
   state.dashboard.backlogBoxes.forEach(box=>{
     side.appendChild(backlogBoxCard(box));
   });
@@ -873,6 +996,12 @@ function renderDashboard(main){
   side.appendChild(addBoxBtn);
   grid.appendChild(side);
   main.appendChild(grid);
+}
+function sectionLabel(text, color){
+  return el("div",{class:"section-label"},[
+    el("span",{class:"section-dot", style:`background:${color}`}),
+    el("span",{}, text)
+  ]);
 }
 function taskRow(t, onToggle, onEdit, onDel){
   const row = el("div",{class:"task-item"+(t.done?" done":"")});
@@ -889,9 +1018,44 @@ function backlogBoxCard(box){
   const card = el("div",{class:"card side-card"});
   const head = el("div",{class:"side-card-head"});
   const titleWrap = el("div",{style:"display:flex;align-items:center;gap:8px;flex:1;min-width:0;"});
-  titleWrap.appendChild(el("span",{class:"box-icon", html:STANDARD_ICONS[box.icon]||STANDARD_ICONS.pencil}));
-  const titleInput = el("input",{type:"text", class:"box-title-input", value:box.title});
-  titleInput.addEventListener("change", ()=>{ box.title=titleInput.value; store.set(privKey("dashboard"), state.dashboard); });
+  const iconEl = el("span",{class:"box-icon clickable", html:STANDARD_ICONS[box.icon]||STANDARD_ICONS.pencil, title:"Cambia icona"});
+  iconEl.addEventListener("click", ()=>{
+    openModal((modal, close)=>{
+      modal.appendChild(el("h3",{},"Icona board"));
+      const picker = iconPickerRow(box.icon, (k)=>{
+        box.icon = k; store.set(privKey("dashboard"), state.dashboard);
+        close(); render("dashboard");
+      });
+      modal.appendChild(picker);
+      const actions = el("div",{class:"modal-actions"});
+      const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
+      closeBtn.addEventListener("click", close);
+      actions.appendChild(closeBtn);
+      modal.appendChild(actions);
+    });
+  });
+  titleWrap.appendChild(iconEl);
+
+  const titleText = el("span",{class:"box-title-text"}, box.title);
+  const titleInput = el("input",{type:"text", class:"box-title-input", value:box.title, style:"display:none;"});
+  const editIcon = el("span",{class:"box-edit-icon", html:ICON_EDIT, title:"Rinomina"});
+  function enterEdit(){
+    titleText.style.display="none"; editIcon.style.display="none"; titleInput.style.display="";
+    titleInput.focus(); titleInput.select();
+  }
+  function exitEdit(save){
+    if(save && titleInput.value.trim()){
+      box.title = titleInput.value.trim();
+      store.set(privKey("dashboard"), state.dashboard);
+      titleText.textContent = box.title;
+    }
+    titleInput.style.display="none"; titleText.style.display=""; editIcon.style.display="";
+  }
+  editIcon.addEventListener("click", enterEdit);
+  titleInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter") exitEdit(true); if(e.key==="Escape") exitEdit(false); });
+  titleInput.addEventListener("blur", ()=>exitEdit(true));
+  titleWrap.appendChild(titleText);
+  titleWrap.appendChild(editIcon);
   titleWrap.appendChild(titleInput);
   head.appendChild(titleWrap);
   const delBtn = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:13px;"});
@@ -963,6 +1127,23 @@ function renderOrto(main){
     store.set("orto", state.orto); render("orto");
   });
   toolbar.appendChild(addBtn);
+
+  const waterField = el("label",{style:"display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);font-weight:600;"});
+  waterField.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
+  waterField.appendChild(document.createTextNode("Ultima annaffiata/pioggia"));
+  const waterInput = el("input",{type:"date", value:state.orto.lastWatered||"", style:"width:auto;"});
+  waterInput.addEventListener("change", ()=>{ state.orto.lastWatered = waterInput.value; store.set("orto", state.orto); render("orto"); });
+  waterField.appendChild(waterInput);
+  toolbar.appendChild(waterField);
+
+  const fertField = el("label",{style:"display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);font-weight:600;"});
+  fertField.appendChild(el("span",{class:"box-icon", html:ICON_SPROUT, style:"color:var(--leaf);"}));
+  fertField.appendChild(document.createTextNode("Ultima concimata"));
+  const fertInput = el("input",{type:"date", value:state.orto.lastFertilized||"", style:"width:auto;"});
+  fertInput.addEventListener("change", ()=>{ state.orto.lastFertilized = fertInput.value; store.set("orto", state.orto); render("orto"); });
+  fertField.appendChild(fertInput);
+  toolbar.appendChild(fertField);
+
   main.appendChild(toolbar);
 
   const board = el("div",{class:"orto-board", id:"orto-board"});
@@ -1296,23 +1477,30 @@ async function ensureCustomTabLoaded(tab){
   return storeKey;
 }
 function renderCustomTabButtons(){
-  const slot = document.getElementById("custom-tabs-slot");
-  slot.innerHTML = "";
-  const all = [...state.customTabs, ...state.customTabsPrivate];
-  all.forEach(tab=>{
-    const btn = el("button",{class:"tab custom-tab", "data-tab":"custom:"+tab.id, style:`background:${tab.color}`});
-    btn.appendChild(el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list}));
-    btn.appendChild(el("span",{class:"tab-label"}, tab.name + (tab.private ? " 🔒" : "")));
-    const delBtn = el("span",{class:"tab-del", html:"✕"});
-    delBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
-        deleteCustomTab(tab);
-      }
-    });
-    btn.appendChild(delBtn);
-    slot.appendChild(btn);
+  const sharedSlot = document.getElementById("custom-tabs-slot-shared");
+  const privateSlot = document.getElementById("custom-tabs-slot-private");
+  sharedSlot.innerHTML = ""; privateSlot.innerHTML = "";
+  document.getElementById("private-group-label").style.display = state.customTabsPrivate.length ? "" : "none";
+  state.customTabs.forEach(tab=>{
+    sharedSlot.appendChild(customTabButton(tab));
   });
+  state.customTabsPrivate.forEach(tab=>{
+    privateSlot.appendChild(customTabButton(tab));
+  });
+}
+function customTabButton(tab){
+  const btn = el("button",{class:"tab custom-tab", "data-tab":"custom:"+tab.id, style:`background:${tab.color}`});
+  btn.appendChild(el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list}));
+  btn.appendChild(el("span",{class:"tab-label"}, tab.name));
+  const delBtn = el("span",{class:"tab-del", html:"✕"});
+  delBtn.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
+      deleteCustomTab(tab);
+    }
+  });
+  btn.appendChild(delBtn);
+  return btn;
 }
 async function deleteCustomTab(tab){
   const contentKey = tab.private ? privKey("custom:"+tab.id) : "custom:"+tab.id;
@@ -1330,9 +1518,38 @@ async function deleteCustomTab(tab){
   document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
   render("dashboard");
 }
+
+/* ---------------- builtin tabs: nascondi / ripristina ---------------- */
+const BUILTIN_TABS = {
+  orto: "Orto", viaggio: "Viaggi", grigliate: "Grigliate", gomme: "Gomme", condivisi: "Condivisi"
+};
+function applyHiddenBuiltins(){
+  Object.keys(BUILTIN_TABS).forEach(key=>{
+    const btn = document.querySelector('.tab[data-builtin="'+key+'"]');
+    if(btn) btn.style.display = state.hiddenBuiltins.includes(key) ? "none" : "";
+  });
+}
+function restoreBuiltin(key){
+  state.hiddenBuiltins = state.hiddenBuiltins.filter(k=>k!==key);
+  store.set(privKey("hiddenBuiltins"), state.hiddenBuiltins);
+  applyHiddenBuiltins();
+}
 function openNewTabModal(){
   openModal((modal, close)=>{
     modal.appendChild(el("h3",{},"Nuova scheda"));
+
+    if(state.hiddenBuiltins.length){
+      modal.appendChild(el("div",{class:"field-label"},"Ripristina una scheda nascosta"));
+      const restoreWrap = el("div",{style:"display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;"});
+      state.hiddenBuiltins.forEach(key=>{
+        const chip = el("button",{type:"button", class:"btn small ghost"}, BUILTIN_TABS[key]+" ↺");
+        chip.addEventListener("click", ()=>{ restoreBuiltin(key); close(); });
+        restoreWrap.appendChild(chip);
+      });
+      modal.appendChild(restoreWrap);
+      modal.appendChild(el("div",{style:"font-size:12px;color:var(--ink-soft);margin:10px 0 16px;"},"— oppure crea una scheda completamente nuova —"));
+    }
+
     const nameInput = el("input",{type:"text", placeholder:"Nome scheda (es. Film da vedere)"});
     modal.appendChild(nameInput);
 
