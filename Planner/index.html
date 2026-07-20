@@ -341,29 +341,62 @@ textarea{resize:vertical; min-height:50px;}
   background:repeating-linear-gradient(0deg, var(--card), var(--card) 39px, var(--line) 40px);
   border-radius:14px;
   border:1px solid var(--line);
-  height:520px;
+  height:560px;
   overflow:hidden;
   box-shadow: inset var(--shadow);
 }
-.bed{
+.orto-obj{
   position:absolute;
-  min-width:110px;
-  min-height:70px;
   border-radius:10px;
   padding:8px 10px;
   color:#fff;
-  font-size:13px;
+  font-size:12.5px;
   font-weight:600;
   cursor:grab;
   box-shadow: 0 3px 8px rgba(0,0,0,0.18);
   user-select:none;
+  overflow:hidden;
 }
-.bed:active{cursor:grabbing;}
-.bed .bed-date{font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:11px; opacity:.9; margin-top:3px;}
-.bed .bed-del{
-  position:absolute; top:4px; right:6px; font-size:12px; opacity:.7; cursor:pointer;
+.orto-obj:active{cursor:grabbing;}
+.orto-obj-head{display:flex; align-items:center; gap:6px; margin-bottom:4px;}
+.orto-obj-icon{width:16px; height:16px; flex-shrink:0; opacity:.95;}
+.orto-obj-icon svg{width:100%; height:100%; display:block;}
+.orto-obj-name{
+  background:transparent; border:none; color:#fff; font-weight:600; font-size:12.5px;
+  padding:0; flex:1; min-width:0;
 }
-.bed .bed-del:hover{opacity:1;}
+.orto-obj-color{
+  width:18px; height:18px; border:none; border-radius:5px; padding:0; cursor:pointer;
+  background:transparent; flex-shrink:0;
+}
+.orto-obj-fields{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
+.orto-obj-mini{
+  background:rgba(255,255,255,0.18); border:none; border-radius:5px; color:#fff;
+  font-size:10.5px; padding:2px 5px; width:100%;
+}
+.orto-obj-mini::placeholder{color:rgba(255,255,255,0.75);}
+.orto-obj-resize{
+  position:absolute; right:2px; bottom:2px; width:12px; height:12px; cursor:nwse-resize;
+  border-right:2px solid rgba(255,255,255,0.6); border-bottom:2px solid rgba(255,255,255,0.6);
+}
+.bed-del{
+  position:absolute; top:4px; right:6px; font-size:12px; opacity:.7; cursor:pointer; color:#fff;
+}
+.bed-del:hover{opacity:1;}
+.orto-comment-pin{
+  position:absolute; width:26px; height:26px; border-radius:7px 7px 7px 2px;
+  background:var(--mustard); color:#fff; display:flex; align-items:center; justify-content:center;
+  cursor:grab; box-shadow:0 2px 6px rgba(0,0,0,0.25); z-index:5;
+}
+.orto-comment-pin:active{cursor:grabbing;}
+.orto-comment-icon{width:15px; height:15px;}
+.orto-comment-icon svg{width:100%; height:100%; display:block;}
+.orto-comment-pop{
+  position:absolute; top:30px; left:0; width:210px; background:var(--card);
+  border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow);
+  padding:10px; z-index:6; cursor:default;
+}
+.orto-comment-pop textarea{font-size:12.5px;}
 
 /* ---- Checklist collections (viaggio / grigliate) ---- */
 .collection{display:flex; gap:22px; align-items:flex-start;}
@@ -670,6 +703,8 @@ const DEFAULTS = {
       {id:"b2", name:"Zucchine", color:"#5B8C5A", x:34, y:4, date:""},
       {id:"b3", name:"Melone", color:"#C68A2E", x:64, y:4, date:""}
     ],
+    objects: null,
+    comments: [],
     lastWatered: "", lastFertilized: ""
   },
   trips: [],
@@ -686,6 +721,25 @@ const ICON_GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const ICON_DROP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3s7 7.5 7 12.5a7 7 0 1 1-14 0C5 10.5 12 3 12 3Z"/></svg>';
 const ICON_SPROUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10C12 6 9 4 5 4c0 4 3 6 7 6Z"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6Z"/></svg>';
+const ICON_LEAF_ORTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg>';
+const ICON_BIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 7h14l-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7Z"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M3 7h18"/></svg>';
+const ICON_DRUM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M5 9h14M5 15h14"/></svg>';
+const ICON_PATH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="7" cy="6" rx="2.4" ry="1.6"/><ellipse cx="14" cy="11" rx="2.4" ry="1.6"/><ellipse cx="8" cy="17" rx="2.4" ry="1.6"/><ellipse cx="17" cy="17" rx="2.4" ry="1.6"/></svg>';
+const ICON_GATE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 21V6l8-3 8 3v15"/><path d="M4 21h16M10 21v-6h4v6"/></svg>';
+const ICON_HEDGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 20V13a4 4 0 0 1 4-4 4 4 0 0 1 8 0 4 4 0 0 1 4 4v7Z"/><path d="M4 20h16"/></svg>';
+const ICON_BENCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 11h18M5 11v7M19 11v7M3 15h18"/></svg>';
+const ICON_PEBBLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="15" r="2.1"/><circle cx="13" cy="17" r="2.5"/><circle cx="18" cy="13" r="1.7"/><circle cx="9" cy="9" r="1.5"/></svg>';
+const ICON_COMMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4V4Z"/></svg>';
+const ORTO_TYPES = {
+  coltura: { label:"Coltura / aiuola", icon:ICON_LEAF_ORTO, color:"#4C7A4C" },
+  compost_aerobica: { label:"Compostiera aerobica", icon:ICON_BIN, color:"#8C3A26" },
+  compost_bokashi: { label:"Compostiera Bokashi", icon:ICON_DRUM, color:"#AD7A22" },
+  camminatoio: { label:"Camminatoio", icon:ICON_PATH, color:"#B8AD8E" },
+  ingresso: { label:"Ingresso", icon:ICON_GATE, color:"#233A46" },
+  siepe: { label:"Siepe", icon:ICON_HEDGE, color:"#2F5B5E" },
+  panca: { label:"Panca", icon:ICON_BENCH, color:"#57394F" },
+  ciottoli: { label:"Ciottoli", icon:ICON_PEBBLES, color:"#9C8B6B" }
+};
 function fmtDateShort(iso){
   if(!iso) return "—";
   const d = new Date(iso);
@@ -816,6 +870,14 @@ async function loadAll(){
   state.orto = await store.get("orto", DEFAULTS.orto);
   if(state.orto.lastWatered===undefined) state.orto.lastWatered = "";
   if(state.orto.lastFertilized===undefined) state.orto.lastFertilized = "";
+  if(!state.orto.objects){
+    state.orto.objects = (state.orto.beds||[]).map(b=>({
+      id:b.id, type:"coltura", name:b.name, color:b.color||ORTO_TYPES.coltura.color,
+      x:b.x, y:b.y, w:130, h:82, plantCount:"", plantDate:b.date||"", harvestDate:""
+    }));
+    store.set("orto", state.orto);
+  }
+  if(!state.orto.comments) state.orto.comments = [];
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
@@ -1384,19 +1446,25 @@ function openNewBoxModal(){
 }
 
 /* ---------------- ORTO ---------------- */
+let activeCommentId = null;
 function renderOrto(main){
   main.appendChild(el("div",{class:"section-head"},[
     el("h1",{},"Progetto orto"),
-    el("span",{class:"tag"},"trascina i riquadri per riorganizzare")
+    el("span",{class:"tag"},"trascina per riorganizzare")
   ]));
   const toolbar = el("div",{class:"orto-toolbar"});
-  const addBtn = el("button",{class:"btn primary"},"+ Nuova coltura");
-  addBtn.addEventListener("click", ()=>{
-    const id = "b"+Date.now();
-    state.orto.beds.push({id, name:"Nuova coltura", color:"#5B8C5A", x:10, y:10, date:""});
+  const addBtn = el("button",{class:"btn primary"},"+ Nuovo elemento");
+  addBtn.addEventListener("click", openNewOrtoObjectModal);
+  toolbar.appendChild(addBtn);
+
+  const addCommentBtn = el("button",{class:"btn ghost"},"+ Commento");
+  addCommentBtn.addEventListener("click", ()=>{
+    const c = {id:"cm"+Date.now(), x:6, y:6, text:""};
+    state.orto.comments.push(c);
+    activeCommentId = c.id;
     store.set("orto", state.orto); render("orto");
   });
-  toolbar.appendChild(addBtn);
+  toolbar.appendChild(addCommentBtn);
 
   const waterField = el("label",{style:"display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);font-weight:600;"});
   waterField.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
@@ -1421,27 +1489,120 @@ function renderOrto(main){
   loadOrtoWeather(weatherBox);
 
   const board = el("div",{class:"orto-board", id:"orto-board"});
-  state.orto.beds.forEach(bed=>{
-    const b = el("div",{class:"bed", style:`left:${bed.x}%; top:${bed.y}%; background:${bed.color}`});
+
+  state.orto.objects.forEach(obj=>{
+    const def = ORTO_TYPES[obj.type] || ORTO_TYPES.coltura;
+    const node = el("div",{class:"orto-obj", style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; background:${obj.color||def.color}`});
+
     const del = el("span",{class:"bed-del", html:"✕"});
     del.addEventListener("click",(e)=>{
       e.stopPropagation();
-      state.orto.beds = state.orto.beds.filter(x=>x.id!==bed.id);
+      state.orto.objects = state.orto.objects.filter(o=>o.id!==obj.id);
       store.set("orto", state.orto); render("orto");
     });
-    const nameInput = el("input",{type:"text", value:bed.name,
-      style:"background:transparent;border:none;color:#fff;font-weight:600;font-size:13px;width:90%;padding:0;"});
+    const head = el("div",{class:"orto-obj-head"});
+    head.appendChild(el("span",{class:"orto-obj-icon", html:def.icon}));
+    const nameInput = el("input",{type:"text", value:obj.name, class:"orto-obj-name"});
     nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-    nameInput.addEventListener("change", ()=>{ bed.name=nameInput.value; store.set("orto", state.orto); });
-    const dateInput = el("input",{type:"date", value:bed.date||"",
-      class:"bed-date", style:"background:transparent;border:none;color:#fff;padding:0;width:90%;"});
-    dateInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-    dateInput.addEventListener("change", ()=>{ bed.date=dateInput.value; store.set("orto", state.orto); });
-    b.appendChild(del); b.appendChild(nameInput); b.appendChild(dateInput);
-    makeDraggable(b, bed, board);
-    board.appendChild(b);
+    nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
+    head.appendChild(nameInput);
+    const colorInput = el("input",{type:"color", value:obj.color||def.color, class:"orto-obj-color"});
+    colorInput.addEventListener("mousedown", ev=>ev.stopPropagation());
+    colorInput.addEventListener("change", ()=>{ obj.color=colorInput.value; node.style.background=colorInput.value; store.set("orto", state.orto); });
+    head.appendChild(colorInput);
+    node.appendChild(del); node.appendChild(head);
+
+    if(obj.type==="coltura"){
+      const fields = el("div",{class:"orto-obj-fields"});
+      const plantCount = el("input",{type:"text", value:obj.plantCount||"", placeholder:"n. piantine", class:"orto-obj-mini"});
+      plantCount.addEventListener("mousedown", ev=>ev.stopPropagation());
+      plantCount.addEventListener("change", ()=>{ obj.plantCount=plantCount.value; store.set("orto", state.orto); });
+      const plantDate = el("input",{type:"date", value:obj.plantDate||"", class:"orto-obj-mini", title:"Data trapianto"});
+      plantDate.addEventListener("mousedown", ev=>ev.stopPropagation());
+      plantDate.addEventListener("change", ()=>{ obj.plantDate=plantDate.value; store.set("orto", state.orto); });
+      const harvestDate = el("input",{type:"date", value:obj.harvestDate||"", class:"orto-obj-mini", title:"Raccolta prevista"});
+      harvestDate.addEventListener("mousedown", ev=>ev.stopPropagation());
+      harvestDate.addEventListener("change", ()=>{ obj.harvestDate=harvestDate.value; store.set("orto", state.orto); });
+      fields.appendChild(plantCount); fields.appendChild(plantDate); fields.appendChild(harvestDate);
+      node.appendChild(fields);
+    }
+
+    const resizeHandle = el("span",{class:"orto-obj-resize"});
+    node.appendChild(resizeHandle);
+
+    makeDraggable(node, obj, board);
+    makeResizable(resizeHandle, node, obj, board);
+    board.appendChild(node);
+  });
+
+  state.orto.comments.forEach(c=>{
+    const pin = el("div",{class:"orto-comment-pin", style:`left:${c.x}%; top:${c.y}%;`});
+    pin.appendChild(el("span",{class:"orto-comment-icon", html:ICON_COMMENT}));
+    pin.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      activeCommentId = (activeCommentId===c.id) ? null : c.id;
+      render("orto");
+    });
+    if(activeCommentId===c.id){
+      const pop = el("div",{class:"orto-comment-pop"});
+      const ta = el("textarea",{rows:"3", placeholder:"Scrivi un commento…"});
+      ta.value = c.text||"";
+      ta.addEventListener("mousedown", ev=>ev.stopPropagation());
+      ta.addEventListener("change", ()=>{ c.text=ta.value; store.set("orto", state.orto); });
+      pop.appendChild(ta);
+      const delC = el("button",{class:"btn small danger", style:"margin-top:6px;"},"Elimina commento");
+      delC.addEventListener("mousedown", ev=>ev.stopPropagation());
+      delC.addEventListener("click", ()=>{
+        state.orto.comments = state.orto.comments.filter(x=>x.id!==c.id);
+        activeCommentId = null;
+        store.set("orto", state.orto); render("orto");
+      });
+      pop.appendChild(delC);
+      pin.appendChild(pop);
+    }
+    makeDraggable(pin, c, board, true);
+    board.appendChild(pin);
+  });
+
+  board.addEventListener("mousedown",(e)=>{
+    if(e.target===board){ activeCommentId=null; }
   });
   main.appendChild(board);
+}
+function openNewOrtoObjectModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Nuovo elemento orto"));
+    modal.appendChild(el("div",{class:"field-label"},"Tipo"));
+    const typeGrid = el("div",{class:"icon-picker"});
+    let selType = "coltura";
+    Object.keys(ORTO_TYPES).forEach(key=>{
+      const btn = el("div",{class:"icon-choice"+(key===selType?" selected":""), html:ORTO_TYPES[key].icon, title:ORTO_TYPES[key].label});
+      btn.addEventListener("click", ()=>{
+        typeGrid.querySelectorAll(".icon-choice").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected"); selType=key;
+      });
+      typeGrid.appendChild(btn);
+    });
+    modal.appendChild(typeGrid);
+    const nameInput = el("input",{type:"text", placeholder:"Nome (es. Pomodori, Ingresso Nord…)", style:"margin-top:14px;"});
+    modal.appendChild(nameInput);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const createBtn = el("button",{class:"btn primary"},"Crea");
+    createBtn.addEventListener("click", ()=>{
+      const def = ORTO_TYPES[selType];
+      state.orto.objects.push({
+        id:"o"+Date.now(), type:selType, name:nameInput.value.trim()||def.label,
+        color:def.color, x:8, y:8, w:130, h:82, plantCount:"", plantDate:"", harvestDate:""
+      });
+      store.set("orto", state.orto);
+      close(); render("orto");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(createBtn);
+    modal.appendChild(actions);
+    nameInput.focus();
+  });
 }
 async function loadOrtoWeather(container){
   // Milano come riferimento (Open-Meteo, nessuna API key richiesta).
@@ -1450,7 +1611,6 @@ async function loadOrtoWeather(container){
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum&timezone=auto`);
     const data = await res.json();
     const temp = Math.round(data.current.temperature_2m);
-    const precipNow = data.current.precipitation;
     const precipToday = data.daily.precipitation_sum[0];
     container.innerHTML = "";
     container.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
@@ -1468,18 +1628,20 @@ async function loadOrtoWeather(container){
     container.appendChild(el("span",{}, "Meteo non disponibile al momento."));
   }
 }
-function makeDraggable(node, bed, board){
+function makeDraggable(node, item, board, isPin){
   node.addEventListener("pointerdown",(e)=>{
-    if(e.target.tagName === "INPUT" || e.target.classList.contains("bed-del")) return;
+    if(e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "BUTTON" ||
+       e.target.classList.contains("bed-del") || e.target.classList.contains("orto-obj-resize")) return;
     e.preventDefault();
     node.setPointerCapture(e.pointerId);
     const rect = board.getBoundingClientRect();
     function move(ev){
       let x = ((ev.clientX - rect.left) / rect.width) * 100;
       let y = ((ev.clientY - rect.top) / rect.height) * 100;
-      x = Math.max(0, Math.min(88, x)); y = Math.max(0, Math.min(88, y));
+      const maxPos = isPin ? 96 : 88;
+      x = Math.max(0, Math.min(maxPos, x)); y = Math.max(0, Math.min(maxPos, y));
       node.style.left = x+"%"; node.style.top = y+"%";
-      bed.x = x; bed.y = y;
+      item.x = x; item.y = y;
     }
     function up(){
       node.removeEventListener("pointermove", move);
@@ -1488,6 +1650,27 @@ function makeDraggable(node, bed, board){
     }
     node.addEventListener("pointermove", move);
     node.addEventListener("pointerup", up);
+  });
+}
+function makeResizable(handle, node, obj, board){
+  handle.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    handle.setPointerCapture(e.pointerId);
+    const startX = e.clientX, startY = e.clientY;
+    const startW = node.offsetWidth, startH = node.offsetHeight;
+    function move(ev){
+      const w = Math.max(90, startW + (ev.clientX - startX));
+      const h = Math.max(60, startH + (ev.clientY - startY));
+      node.style.width = w+"px"; node.style.height = h+"px";
+      obj.w = w; obj.h = h;
+    }
+    function up(){
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      store.set("orto", state.orto);
+    }
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
   });
 }
 
