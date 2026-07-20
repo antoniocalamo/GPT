@@ -317,6 +317,7 @@ textarea{resize:vertical; min-height:50px;}
   border-radius:7px;
   border-bottom:1px dashed var(--line);
   transition: background .15s ease;
+  user-select:none;
 }
 .task-item:last-child{border-bottom:none;}
 .task-item:hover{background:rgba(35,48,42,0.035);}
@@ -324,6 +325,7 @@ textarea{resize:vertical; min-height:50px;}
 .task-item textarea{
   border:none; background:transparent; padding:4px 0; resize:none; overflow:hidden;
   font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); line-height:1.4; flex:1; min-width:0;
+  user-select:text;
 }
 .task-item textarea:focus{outline:none; background:var(--card); border-radius:6px; padding:4px 6px;}
 .task-item.done textarea{text-decoration:line-through; color:var(--ink-soft);}
@@ -339,21 +341,21 @@ textarea{resize:vertical; min-height:50px;}
   width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   font-family:'Fraunces',serif; font-weight:700; font-size:12px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent; margin-top:2px;
+  flex-shrink:0; background:transparent; margin-top:2px; user-select:none;
 }
 .urgent-flag.active{background:var(--rust); border-color:var(--rust); color:#fff;}
 .bold-flag{
   width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
   font-family:'Inter',sans-serif; font-weight:700; font-size:11px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent; margin-top:2px;
+  flex-shrink:0; background:transparent; margin-top:2px; user-select:none;
 }
 .bold-flag.active{background:var(--forest); border-color:var(--forest); color:#fff;}
 .task-item.urgent{background:rgba(140,58,38,0.07); border-radius:7px;}
 .task-item.urgent textarea{color:var(--rust); font-weight:600;}
 .drag-grip{
   width:15px; height:20px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
-  display:flex; align-items:center; justify-content:center; margin-top:2px;
+  display:flex; align-items:center; justify-content:center; margin-top:2px; user-select:none;
 }
 .drag-grip svg{width:100%; height:100%;}
 .drag-grip:hover{opacity:.9;}
@@ -459,7 +461,7 @@ textarea{resize:vertical; min-height:50px;}
 .coll-detail{flex:1; min-width:0;}
 .cat-block{margin-bottom:12px;}
 .cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
-.check-item{display:flex; align-items:flex-start; gap:6px; padding:5px 0;}
+.check-item{display:flex; align-items:flex-start; gap:6px; padding:5px 0; user-select:none;}
 .check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest); flex-shrink:0; margin-top:3px;}
 .check-item.done label{text-decoration:line-through; color:var(--ink-soft);}
 .check-item label{font-size:13.5px; flex:1; min-width:0; padding-top:2px; line-height:1.4;}
@@ -470,7 +472,7 @@ input.pack-num{
   width:24px; flex-shrink:0; border:1px solid var(--line); border-radius:5px;
   padding:2px 3px; font-size:11px; text-align:center; background:var(--card); margin-top:1px;
 }
-.take-flag{width:17px; height:17px; color:var(--ink-soft); opacity:.35; cursor:pointer; flex-shrink:0; margin-top:2px;}
+.take-flag{width:17px; height:17px; color:var(--ink-soft); opacity:.35; cursor:pointer; flex-shrink:0; margin-top:2px; user-select:none;}
 .take-flag svg{width:100%; height:100%; display:block;}
 .take-flag.active{color:var(--leaf); opacity:1;}
 .pack-item.not-needed{opacity:.5;}
@@ -1399,12 +1401,14 @@ function renderTaskBlock(main, day, t, i){
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
   const urgentBtn = el("span",{class:"urgent-flag"+(t.urgent?" active":""), title:"Segna urgente"}, "!");
-  urgentBtn.addEventListener("click", ()=>{
+  urgentBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault(); e.stopPropagation();
     t.urgent = !t.urgent;
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
   const boldBtn = el("span",{class:"bold-flag"+(t.bold?" active":""), title:"Grassetto"}, "B");
-  boldBtn.addEventListener("click", ()=>{
+  boldBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault(); e.stopPropagation();
     t.bold = !t.bold;
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
@@ -1431,12 +1435,14 @@ function renderTaskBlock(main, day, t, i){
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
     const sUrgentBtn = el("span",{class:"urgent-flag"+(s.urgent?" active":""), title:"Segna urgente"}, "!");
-    sUrgentBtn.addEventListener("click", ()=>{
+    sUrgentBtn.addEventListener("pointerdown", (e)=>{
+      e.preventDefault(); e.stopPropagation();
       s.urgent = !s.urgent;
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
     const sBoldBtn = el("span",{class:"bold-flag"+(s.bold?" active":""), title:"Grassetto"}, "B");
-    sBoldBtn.addEventListener("click", ()=>{
+    sBoldBtn.addEventListener("pointerdown", (e)=>{
+      e.preventDefault(); e.stopPropagation();
       s.bold = !s.bold;
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
@@ -1856,7 +1862,7 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   cb.checked = item.done;
   cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(); });
   const takeBtn = el("span",{class:"take-flag"+(item.take!==false?" active":""), html:ICON_CHECK, title:"Da prendere"});
-  takeBtn.addEventListener("click", ()=>{ item.take = !item.take; onSave(); });
+  takeBtn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); e.stopPropagation(); item.take = !item.take; onSave(); });
   const lab = el("label",{for:idPrefix+i}, item.text);
   const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
   del.addEventListener("click", ()=>{ arr.splice(i,1); onSave(); });
