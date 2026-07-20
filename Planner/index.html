@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --paper:#E9E2CF;
+  --paper-2:#F7F3E6;
+  --ink:#23302A;
+  --ink-soft:#5B6459;
+  --forest:#33503F;
+  --leaf:#5B8C5A;
+  --teal:#3C6E71;
+  --rust:#A8462E;
+  --mustard:#C68A2E;
+  --line:#D3C7A9;
+  --card:#FBF8F1;
+  --shadow: 0 2px 10px rgba(35,48,42,0.10);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+h1,h2,h3,.display{font-family:'Fraunces',serif;}
+
+.app{
+  display:flex;
+  min-height:100vh;
+}
+
+/* ---- Sidebar tabs (notebook-tab signature) ---- */
+.tabs{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:32px 0 32px 18px;
+  width:190px;
+  flex-shrink:0;
+}
+.tabs .brand{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:22px;
+  padding:0 18px 18px 4px;
+  color:var(--forest);
+  letter-spacing:-0.01em;
+}
+.tab{
+  position:relative;
+  border:none;
+  cursor:pointer;
+  text-align:left;
+  padding:14px 16px 14px 18px;
+  border-radius:12px 0 0 12px;
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:15px;
+  color:var(--paper-2);
+  background:var(--ink-soft);
+  transform:translateX(0);
+  transition:transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+}
+.tab .sub{
+  display:block;
+  font-family:'Inter',sans-serif;
+  font-weight:400;
+  font-size:11px;
+  opacity:.8;
+  margin-top:2px;
+}
+.tab[data-c="dashboard"]{background:var(--forest);}
+.tab[data-c="orto"]{background:var(--leaf);}
+.tab[data-c="viaggio"]{background:var(--teal);}
+.tab[data-c="grigliate"]{background:var(--rust);}
+.tab[data-c="gomme"]{background:var(--mustard); color:#2b2110;}
+.tab.active{
+  transform:translateX(14px);
+  box-shadow: var(--shadow);
+}
+.tab:not(.active):hover{transform:translateX(6px);}
+
+/* ---- Main content ---- */
+main{
+  flex:1;
+  background:var(--paper-2);
+  border-radius:28px 0 0 28px;
+  margin:14px 14px 14px 0;
+  box-shadow: var(--shadow);
+  padding:38px 44px;
+  overflow-x:hidden;
+  min-width:0;
+}
+.section-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:26px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.section-head h1{
+  font-size:30px;
+  margin:0;
+  color:var(--ink);
+}
+.section-head .tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+button{font-family:'Inter',sans-serif;}
+.btn{
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--ink);
+  padding:8px 14px;
+  border-radius:9px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:600;
+  transition: background .15s ease, transform .1s ease;
+}
+.btn:hover{background:#fff;}
+.btn:active{transform:scale(.97);}
+.btn.primary{background:var(--forest); color:#fff; border-color:var(--forest);}
+.btn.primary:hover{background:#294034;}
+.btn.ghost{background:transparent; border:1px dashed var(--line);}
+.btn.danger{color:var(--rust); border-color:var(--rust); background:transparent;}
+.btn.small{padding:4px 9px; font-size:12px; border-radius:7px;}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px 20px;
+  box-shadow: var(--shadow);
+  border:1px solid var(--line);
+}
+
+input[type=text], textarea, input[type=date]{
+  font-family:'Inter',sans-serif;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:14px;
+  background:#fff;
+  color:var(--ink);
+  width:100%;
+}
+textarea{resize:vertical; min-height:50px;}
+
+/* ---- Dashboard ---- */
+.dash-grid{
+  display:grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap:22px;
+  align-items:start;
+}
+.week-table{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.day-row{
+  display:grid;
+  grid-template-columns:110px 1fr;
+  gap:14px;
+  align-items:start;
+}
+.day-label{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:15px;
+  color:var(--forest);
+  padding-top:10px;
+}
+.day-card{padding:12px 14px;}
+.task-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 0;
+  border-bottom:1px dashed var(--line);
+}
+.task-item:last-child{border-bottom:none;}
+.task-item input[type=text]{border:none; background:transparent; padding:2px 0;}
+.task-item input[type=text]:focus{outline:none; background:#fff;}
+.task-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
+.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:13px; opacity:.5;}
+.task-item .del:hover{opacity:1; color:var(--rust);}
+.add-line{
+  display:flex; gap:8px; margin-top:8px;
+}
+.add-line input{flex:1;}
+
+.side-stack{display:flex; flex-direction:column; gap:18px;}
+.side-card h3{margin:0 0 10px 0; font-size:16px; display:flex; align-items:center; gap:8px;}
+.side-card .dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
+.note-item{
+  padding:6px 0; border-bottom:1px dashed var(--line);
+  display:flex; gap:8px; align-items:flex-start;
+}
+.note-item:last-child{border-bottom:none;}
+.note-item textarea{border:none; background:transparent; font-size:13.5px; padding:2px 0;}
+.note-item textarea:focus{outline:none; background:#fff; border-radius:6px;}
+
+/* ---- Orto board ---- */
+.orto-toolbar{display:flex; gap:10px; margin-bottom:14px;}
+.orto-board{
+  position:relative;
+  background:repeating-linear-gradient(0deg, var(--card), var(--card) 39px, var(--line) 40px);
+  border-radius:14px;
+  border:1px solid var(--line);
+  height:520px;
+  overflow:hidden;
+  box-shadow: inset var(--shadow);
+}
+.bed{
+  position:absolute;
+  min-width:110px;
+  min-height:70px;
+  border-radius:10px;
+  padding:8px 10px;
+  color:#fff;
+  font-size:13px;
+  font-weight:600;
+  cursor:grab;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+  user-select:none;
+}
+.bed:active{cursor:grabbing;}
+.bed .bed-date{font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:11px; opacity:.9; margin-top:3px;}
+.bed .bed-del{
+  position:absolute; top:4px; right:6px; font-size:12px; opacity:.7; cursor:pointer;
+}
+.bed .bed-del:hover{opacity:1;}
+
+/* ---- Checklist collections (viaggio / grigliate) ---- */
+.collection{display:flex; gap:22px; align-items:flex-start;}
+.coll-list{width:230px; flex-shrink:0; display:flex; flex-direction:column; gap:8px;}
+.coll-item{
+  padding:10px 12px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); font-size:13.5px; font-weight:600;
+}
+.coll-item.active{background:var(--forest); color:#fff; border-color:var(--forest);}
+.coll-detail{flex:1; min-width:0;}
+.cat-block{margin-bottom:18px;}
+.cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
+.check-item{display:flex; align-items:center; gap:8px; padding:4px 0;}
+.check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest);}
+.check-item.done label{text-decoration:line-through; color:var(--ink-soft);}
+.check-item label{font-size:13.5px; flex:1;}
+
+/* ---- Gomme table ---- */
+table.tires{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.tires th{
+  text-align:left; font-family:'Fraunces',serif; font-size:13px; color:var(--forest);
+  border-bottom:2px solid var(--line); padding:8px 10px;
+}
+table.tires td{padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+table.tires input[type=text], table.tires input[type=date]{font-size:13px; padding:4px 6px;}
+
+.empty-hint{color:var(--ink-soft); font-size:13px; font-style:italic; padding:12px 0;}
+
+@media (max-width: 880px){
+  .app{flex-direction:column;}
+  .tabs{
+    flex-direction:row; width:100%; padding:14px; gap:8px; overflow-x:auto;
+  }
+  .tabs .brand{display:none;}
+  .tab{border-radius:10px; padding:9px 12px; white-space:nowrap;}
+  .tab.active{transform:translateY(-4px);}
+  main{margin:0; border-radius:20px 20px 0 0; padding:22px 18px;}
+  .dash-grid{grid-template-columns:1fr;}
+  .day-row{grid-template-columns:80px 1fr;}
+  .collection{flex-direction:column;}
+  .coll-list{width:100%; flex-direction:row; flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="tabs" id="tabs">
+    <div class="brand">Le mie giornate</div>
+    <button class="tab active" data-c="dashboard" data-tab="dashboard">Settimana<span class="sub">to-do &amp; note</span></button>
+    <button class="tab" data-c="orto" data-tab="orto">Orto<span class="sub">progetto Maiera</span></button>
+    <button class="tab" data-c="viaggio" data-tab="viaggio">Viaggi<span class="sub">checklist partenza</span></button>
+    <button class="tab" data-c="grigliate" data-tab="grigliate">Grigliate<span class="sub">checklist &amp; note</span></button>
+    <button class="tab" data-c="gomme" data-tab="gomme">Gomme<span class="sub">manutenzione</span></button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ---------------- storage helpers ---------------- */
+const DEFAULTS = {
+  dashboard: {
+    week: {
+      "Lunedì": [], "Martedì": [], "Mercoledì": [], "Giovedì": [],
+      "Venerdì": [], "Sabato": [], "Domenica": []
+    },
+    finance: [], fun: [], note: []
+  },
+  orto: {
+    beds: [
+      {id:"b1", name:"Pomodori", color:"#A8462E", x:4, y:4, date:""},
+      {id:"b2", name:"Zucchine", color:"#5B8C5A", x:34, y:4, date:""},
+      {id:"b3", name:"Melone", color:"#C68A2E", x:64, y:4, date:""}
+    ]
+  },
+  trips: [],
+  bbqs: [],
+  tires: []
+};
+const TRIP_TEMPLATE = () => ([
+  {title:"All season", items:["Documenti e portafoglio","Caricatori e cavi","Beauty case","Cambio biancheria"].map(t=>({text:t, done:false}))},
+  {title:"Se estate", items:["Costume","Crema solare","Occhiali da sole"].map(t=>({text:t, done:false}))},
+  {title:"Se inverno", items:["Giacca pesante","Guanti e sciarpa"].map(t=>({text:t, done:false}))},
+  {title:"Se estero", items:["Passaporto","Adattatore presa"].map(t=>({text:t, done:false}))},
+  {title:"Altro", items:[].map(t=>({text:t, done:false}))}
+]);
+const BBQ_TEMPLATE = () => ([
+  "Griglia e carbone","Accendifuoco/fiammiferi","Pinze e attrezzi","Condimenti (olio, sale, salse)",
+  "Piatti e posate usa e getta","Buste immondizia","Bevande e ghiaccio","Giochi da tavolo/sportivi"
+].map(t=>({text:t, done:false})));
+
+const SUPABASE_URL = "https://ojucknfxtbcjqvjhqljc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_oBGq3W5oMZihk70Mt2KRSA_uKKUJeTb";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const store = {
+  async get(key, fallback){
+    try{
+      const { data, error } = await sb
+        .from("planner_store")
+        .select("value")
+        .eq("key", key)
+        .maybeSingle();
+      if(error || !data) return fallback;
+      return data.value;
+    }catch(e){ console.error("supabase get error", key, e); return fallback; }
+  },
+  async set(key, value){
+    try{
+      const { error } = await sb
+        .from("planner_store")
+        .upsert({ key, value, updated_at: new Date().toISOString() });
+      if(error) console.error("supabase set error", key, error);
+    }catch(e){ console.error("supabase set error", key, e); }
+  }
+};
+
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null };
+let activeTrip = null, activeBbq = null;
+
+async function loadAll(){
+  state.dashboard = await store.get("dashboard", DEFAULTS.dashboard);
+  state.orto = await store.get("orto", DEFAULTS.orto);
+  state.trips = await store.get("trips", DEFAULTS.trips);
+  state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
+  state.tires = await store.get("tires", DEFAULTS.tires);
+}
+
+/* ---------------- tab switching ---------------- */
+document.getElementById("tabs").addEventListener("click", (e)=>{
+  const btn = e.target.closest(".tab");
+  if(!btn) return;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  render(btn.dataset.tab);
+});
+
+function el(tag, attrs={}, children=[]){
+  const n = document.createElement(tag);
+  for(const k in attrs){
+    if(k === "class") n.className = attrs[k];
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2), attrs[k]);
+    else if(k === "html") n.innerHTML = attrs[k];
+    else n.setAttribute(k, attrs[k]);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  });
+  return n;
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(main){
+  main.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},"La mia settimana"),
+    el("span",{class:"tag"},"aggiornata in automatico")
+  ]));
+  const grid = el("div",{class:"dash-grid"});
+  const week = el("div",{class:"week-table"});
+  Object.keys(state.dashboard.week).forEach(day=>{
+    const tasks = state.dashboard.week[day];
+    const dayCard = el("div",{class:"card day-card"});
+    tasks.forEach((t,i)=>{
+      dayCard.appendChild(taskRow(t, ()=>{
+        state.dashboard.week[day][i].done = !t.done;
+        store.set("dashboard", state.dashboard); renderDashboard(clear(main));
+      }, (val)=>{
+        state.dashboard.week[day][i].text = val;
+        store.set("dashboard", state.dashboard);
+      }, ()=>{
+        state.dashboard.week[day].splice(i,1);
+        store.set("dashboard", state.dashboard); renderDashboard(clear(main));
+      }));
+    });
+    const addLine = el("div",{class:"add-line"});
+    const input = el("input",{type:"text", placeholder:"aggiungi task…"});
+    input.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter" && input.value.trim()){
+        state.dashboard.week[day].push({text:input.value.trim(), done:false});
+        store.set("dashboard", state.dashboard); renderDashboard(clear(main));
+      }
+    });
+    addLine.appendChild(input);
+    dayCard.appendChild(addLine);
+    week.appendChild(el("div",{class:"day-row"},[el("div",{class:"day-label"},day), dayCard]));
+  });
+  grid.appendChild(week);
+
+  const side = el("div",{class:"side-stack"});
+  side.appendChild(sideCard("Domestic Finance","#A8462E","finance"));
+  side.appendChild(sideCard("Fun","#3C6E71","fun"));
+  side.appendChild(sideCard("Note","#C68A2E","note"));
+  grid.appendChild(side);
+  main.appendChild(grid);
+}
+function taskRow(t, onToggle, onEdit, onDel){
+  const row = el("div",{class:"task-item"+(t.done?" done":"")});
+  const cb = el("input",{type:"checkbox"});
+  cb.checked = t.done; cb.addEventListener("change", onToggle);
+  const txt = el("input",{type:"text"}); txt.value = t.text;
+  txt.addEventListener("change", ()=>onEdit(txt.value));
+  const del = el("span",{class:"del", html:"✕"});
+  del.addEventListener("click", onDel);
+  row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+  return row;
+}
+function sideCard(title, color, key){
+  const card = el("div",{class:"card side-card"});
+  card.appendChild(el("h3",{},[el("span",{class:"dot", style:`background:${color}`}), title]));
+  state.dashboard[key].forEach((note,i)=>{
+    const row = el("div",{class:"note-item"});
+    const ta = el("textarea",{rows:"1"}); ta.value = note;
+    ta.addEventListener("input", ()=>{ ta.style.height="auto"; ta.style.height = ta.scrollHeight+"px"; });
+    ta.addEventListener("change", ()=>{ state.dashboard[key][i]=ta.value; store.set("dashboard", state.dashboard); });
+    const del = el("span",{class:"del", html:"✕"});
+    del.addEventListener("click", ()=>{ state.dashboard[key].splice(i,1); store.set("dashboard", state.dashboard); render("dashboard"); });
+    row.appendChild(ta); row.appendChild(del);
+    card.appendChild(row);
+  });
+  const addLine = el("div",{class:"add-line"});
+  const input = el("input",{type:"text", placeholder:"aggiungi…"});
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()){
+      state.dashboard[key].push(input.value.trim());
+      store.set("dashboard", state.dashboard); render("dashboard");
+    }
+  });
+  addLine.appendChild(input);
+  card.appendChild(addLine);
+  return card;
+}
+
+/* ---------------- ORTO ---------------- */
+function renderOrto(main){
+  main.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},"Progetto orto"),
+    el("span",{class:"tag"},"trascina i riquadri per riorganizzare")
+  ]));
+  const toolbar = el("div",{class:"orto-toolbar"});
+  const addBtn = el("button",{class:"btn primary"},"+ Nuova coltura");
+  addBtn.addEventListener("click", ()=>{
+    const id = "b"+Date.now();
+    state.orto.beds.push({id, name:"Nuova coltura", color:"#5B8C5A", x:10, y:10, date:""});
+    store.set("orto", state.orto); render("orto");
+  });
+  toolbar.appendChild(addBtn);
+  main.appendChild(toolbar);
+
+  const board = el("div",{class:"orto-board", id:"orto-board"});
+  state.orto.beds.forEach(bed=>{
+    const b = el("div",{class:"bed", style:`left:${bed.x}%; top:${bed.y}%; background:${bed.color}`});
+    const del = el("span",{class:"bed-del", html:"✕"});
+    del.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      state.orto.beds = state.orto.beds.filter(x=>x.id!==bed.id);
+      store.set("orto", state.orto); render("orto");
+    });
+    const nameInput = el("input",{type:"text", value:bed.name,
+      style:"background:transparent;border:none;color:#fff;font-weight:600;font-size:13px;width:90%;padding:0;"});
+    nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
+    nameInput.addEventListener("change", ()=>{ bed.name=nameInput.value; store.set("orto", state.orto); });
+    const dateInput = el("input",{type:"date", value:bed.date||"",
+      class:"bed-date", style:"background:transparent;border:none;color:#fff;padding:0;width:90%;"});
+    dateInput.addEventListener("mousedown", ev=>ev.stopPropagation());
+    dateInput.addEventListener("change", ()=>{ bed.date=dateInput.value; store.set("orto", state.orto); });
+    b.appendChild(del); b.appendChild(nameInput); b.appendChild(dateInput);
+    makeDraggable(b, bed, board);
+    board.appendChild(b);
+  });
+  main.appendChild(board);
+}
+function makeDraggable(node, bed, board){
+  node.addEventListener("pointerdown",(e)=>{
+    if(e.target.tagName === "INPUT" || e.target.classList.contains("bed-del")) return;
+    e.preventDefault();
+    node.setPointerCapture(e.pointerId);
+    const rect = board.getBoundingClientRect();
+    function move(ev){
+      let x = ((ev.clientX - rect.left) / rect.width) * 100;
+      let y = ((ev.clientY - rect.top) / rect.height) * 100;
+      x = Math.max(0, Math.min(88, x)); y = Math.max(0, Math.min(88, y));
+      node.style.left = x+"%"; node.style.top = y+"%";
+      bed.x = x; bed.y = y;
+    }
+    function up(){
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerup", up);
+      store.set("orto", state.orto);
+    }
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerup", up);
+  });
+}
+
+/* ---------------- COLLECTIONS (trips / bbq) ---------------- */
+function renderCollection(main, opts){
+  const { key, title, active, setActive, template, itemsPath } = opts;
+  main.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},title),
+    el("span",{class:"tag"},state[key].length+" checklist salvate")
+  ]));
+  const wrap = el("div",{class:"collection"});
+  const list = el("div",{class:"coll-list"});
+  const newBtn = el("button",{class:"btn primary"},"+ Nuova checklist");
+  newBtn.addEventListener("click", ()=>{
+    const name = prompt("Nome della checklist (es. nome viaggio o evento):");
+    if(!name) return;
+    const item = { id:"c"+Date.now(), name, created:new Date().toLocaleDateString("it-IT"), data: template() };
+    state[key].push(item);
+    store.set(key, state[key]);
+    setActive(item.id); render(opts.tab);
+  });
+  list.appendChild(newBtn);
+  state[key].forEach(c=>{
+    const it = el("div",{class:"coll-item"+(active===c.id?" active":"")}, c.name+" ");
+    it.appendChild(el("div",{style:"font-weight:400;font-size:11px;opacity:.75;margin-top:2px;"}, c.created));
+    it.addEventListener("click", ()=>{ setActive(c.id); render(opts.tab); });
+    list.appendChild(it);
+  });
+  wrap.appendChild(list);
+
+  const detail = el("div",{class:"coll-detail"});
+  const current = state[key].find(c=>c.id===active);
+  if(!current){
+    detail.appendChild(el("div",{class:"empty-hint"},"Seleziona o crea una checklist per iniziare."));
+  } else {
+    const delBtn = el("button",{class:"btn danger small"},"Elimina checklist");
+    delBtn.style.marginBottom="14px";
+    delBtn.addEventListener("click", ()=>{
+      state[key] = state[key].filter(c=>c.id!==current.id);
+      store.set(key, state[key]); setActive(null); render(opts.tab);
+    });
+    detail.appendChild(delBtn);
+    opts.renderDetail(detail, current);
+  }
+  wrap.appendChild(detail);
+  main.appendChild(wrap);
+}
+
+function renderTripDetail(detail, trip){
+  trip.data.forEach(cat=>{
+    const block = el("div",{class:"cat-block"});
+    block.appendChild(el("h4",{},cat.title));
+    cat.items.forEach((it,i)=>{
+      const row = el("div",{class:"check-item"+(it.done?" done":"")});
+      const cb = el("input",{type:"checkbox", id:"t"+trip.id+cat.title+i});
+      cb.checked = it.done;
+      cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set("trips", state.trips); render("viaggio"); });
+      const lab = el("label",{for:"t"+trip.id+cat.title+i}, it.text);
+      const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+      del.addEventListener("click", ()=>{ cat.items.splice(i,1); store.set("trips", state.trips); render("viaggio"); });
+      row.appendChild(cb); row.appendChild(lab); row.appendChild(del);
+      block.appendChild(row);
+    });
+    const addLine = el("div",{class:"add-line"});
+    const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter" && input.value.trim()){
+        cat.items.push({text:input.value.trim(), done:false});
+        store.set("trips", state.trips); render("viaggio");
+      }
+    });
+    addLine.appendChild(input);
+    block.appendChild(addLine);
+    detail.appendChild(block);
+  });
+}
+
+function renderBbqDetail(detail, bbq){
+  const block = el("div",{class:"cat-block"});
+  block.appendChild(el("h4",{},"Cosa portare"));
+  bbq.data.forEach((it,i)=>{
+    const row = el("div",{class:"check-item"+(it.done?" done":"")});
+    const cb = el("input",{type:"checkbox", id:"g"+bbq.id+i});
+    cb.checked = it.done;
+    cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set("bbqs", state.bbqs); render("grigliate"); });
+    const lab = el("label",{for:"g"+bbq.id+i}, it.text);
+    const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+    del.addEventListener("click", ()=>{ bbq.data.splice(i,1); store.set("bbqs", state.bbqs); render("grigliate"); });
+    row.appendChild(cb); row.appendChild(lab); row.appendChild(del);
+    block.appendChild(row);
+  });
+  const addLine = el("div",{class:"add-line"});
+  const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+  input.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && input.value.trim()){
+      bbq.data.push({text:input.value.trim(), done:false});
+      store.set("bbqs", state.bbqs); render("grigliate");
+    }
+  });
+  addLine.appendChild(input);
+  block.appendChild(addLine);
+  detail.appendChild(block);
+
+  const noteBlock = el("div",{class:"cat-block"});
+  noteBlock.appendChild(el("h4",{},"Note / lesson learned"));
+  const ta = el("textarea",{rows:"4", placeholder:"es. iniziare la griglia con 30-45 min di anticipo…"});
+  ta.value = bbq.notes || "";
+  ta.addEventListener("change", ()=>{ bbq.notes = ta.value; store.set("bbqs", state.bbqs); });
+  noteBlock.appendChild(ta);
+  detail.appendChild(noteBlock);
+}
+
+/* ---------------- GOMME ---------------- */
+function renderGomme(main){
+  main.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},"Manutenzione gomme"),
+    el("span",{class:"tag"},state.tires.length+" interventi registrati")
+  ]));
+  const addBtn = el("button",{class:"btn primary"},"+ Nuovo intervento");
+  addBtn.style.marginBottom="14px";
+  addBtn.addEventListener("click", ()=>{
+    state.tires.push({id:"g"+Date.now(), treno:"", intervento:"", data:"", km:"", note:""});
+    store.set("tires", state.tires); render("gomme");
+  });
+  main.appendChild(addBtn);
+
+  const table = el("table",{class:"tires card"});
+  table.appendChild(el("tr",{},[
+    el("th",{},"Treno"), el("th",{},"Intervento"), el("th",{},"Data"),
+    el("th",{},"Km"), el("th",{},"Note"), el("th",{},"")
+  ]));
+  state.tires.forEach((row,i)=>{
+    const tr = el("tr");
+    const fields = [
+      ["treno","text","110px"],["intervento","text","auto"],["data","date","130px"],
+      ["km","text","80px"],["note","text","auto"]
+    ];
+    fields.forEach(([f,type])=>{
+      const td = el("td");
+      const inp = el("input",{type, value:row[f]||""});
+      inp.addEventListener("change", ()=>{ row[f]=inp.value; store.set("tires", state.tires); });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    const del = el("button",{class:"btn small danger"},"✕");
+    del.addEventListener("click", ()=>{
+      state.tires.splice(i,1); store.set("tires", state.tires); render("gomme");
+    });
+    tr.appendChild(el("td",{},del));
+    table.appendChild(tr);
+  });
+  main.appendChild(table);
+}
+
+/* ---------------- render dispatcher ---------------- */
+function clear(main){ main.innerHTML=""; return main; }
+function render(tab){
+  const main = clear(document.getElementById("main"));
+  if(tab==="dashboard") renderDashboard(main);
+  else if(tab==="orto") renderOrto(main);
+  else if(tab==="viaggio") renderCollection(main, {
+    key:"trips", tab:"viaggio", title:"Checklist viaggio", active:activeTrip,
+    setActive:(id)=>activeTrip=id, template:TRIP_TEMPLATE, renderDetail:renderTripDetail
+  });
+  else if(tab==="grigliate") renderCollection(main, {
+    key:"bbqs", tab:"grigliate", title:"Checklist grigliate", active:activeBbq,
+    setActive:(id)=>activeBbq=id, template:BBQ_TEMPLATE, renderDetail:renderBbqDetail
+  });
+  else if(tab==="gomme") renderGomme(main);
+}
+
+loadAll().then(()=>render("dashboard"));
+</script>
+</body>
+</html>
