@@ -523,9 +523,9 @@ const store = {
         .select("value")
         .eq("key", key)
         .maybeSingle();
-      if(error || !data) return fallback;
+      if(error || !data) return structuredClone(fallback);
       return data.value;
-    }catch(e){ console.error("supabase get error", key, e); return fallback; }
+    }catch(e){ console.error("supabase get error", key, e); return structuredClone(fallback); }
   },
   async set(key, value){
     try{
