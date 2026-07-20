@@ -311,8 +311,8 @@ textarea{resize:vertical; min-height:50px;}
 .task-item{
   display:flex;
   align-items:flex-start;
-  gap:8px;
-  padding:5px 6px;
+  gap:6px;
+  padding:3px 6px;
   margin:0 -6px;
   border-radius:7px;
   border-bottom:1px dashed var(--line);
@@ -321,41 +321,41 @@ textarea{resize:vertical; min-height:50px;}
 }
 .task-item:last-child{border-bottom:none;}
 .task-item:hover{background:rgba(35,48,42,0.035);}
-.task-item input[type=checkbox]{margin-top:4px;}
 .task-item textarea{
-  border:none; background:transparent; padding:4px 0; resize:none; overflow:hidden;
-  font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); line-height:1.4; flex:1; min-width:0;
+  border:none; background:transparent; padding:3px 0; resize:none; overflow:hidden;
+  font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); line-height:1.3; flex:1; min-width:0;
   user-select:text;
 }
-.task-item textarea:focus{outline:none; background:var(--card); border-radius:6px; padding:4px 6px;}
+.task-item textarea:focus{outline:none; background:var(--card); border-radius:6px; padding:3px 6px;}
 .task-item.done textarea{text-decoration:line-through; color:var(--ink-soft);}
-.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:13px; opacity:.5; flex-shrink:0; margin-top:4px;}
+.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:12px; opacity:.5; flex-shrink:0; margin-top:3px;}
 .task-item .del:hover{opacity:1; color:var(--rust);}
-.task-block{margin-bottom:2px;}
-.subtask-list{margin-left:22px; margin-top:0; margin-bottom:2px;}
+.task-block{margin-bottom:0;}
+.subtask-list{margin-left:20px; margin-top:0; margin-bottom:0;}
 .subtask-item{padding:2px 6px;}
-.subtask-item textarea{font-size:12.5px; padding:3px 0;}
-.subtask-add{margin-top:1px; margin-bottom:1px; margin-left:2px;}
-.subtask-add input{font-size:11.5px; padding:3px 7px; max-width:220px;}
-.urgent-flag{
-  width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  font-family:'Fraunces',serif; font-weight:700; font-size:12px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent; margin-top:2px; user-select:none;
+.subtask-item textarea{font-size:12.5px; padding:2px 0;}
+.action-grid{
+  display:grid; grid-template-columns:15px 15px; grid-template-rows:15px 15px;
+  gap:2px; flex-shrink:0; margin-top:1px;
 }
+.action-grid-sub{grid-template-columns:15px 15px 15px; grid-template-rows:15px;}
+.urgent-flag, .bold-flag, .add-sub-flag{
+  width:15px; height:15px; border-radius:4px; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  font-size:9.5px; font-weight:700; color:var(--ink-soft);
+  background:transparent; user-select:none; line-height:1;
+}
+.urgent-flag{font-family:'Fraunces',serif;}
+.bold-flag, .add-sub-flag{font-family:'Inter',sans-serif;}
+.action-grid input[type=checkbox]{width:15px; height:15px; margin:0;}
 .urgent-flag.active{background:var(--rust); border-color:var(--rust); color:#fff;}
-.bold-flag{
-  width:18px; height:18px; border-radius:5px; border:1px solid var(--line);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  font-family:'Inter',sans-serif; font-weight:700; font-size:11px; color:var(--ink-soft);
-  flex-shrink:0; background:transparent; margin-top:2px; user-select:none;
-}
 .bold-flag.active{background:var(--forest); border-color:var(--forest); color:#fff;}
+.add-sub-flag:hover{background:var(--teal); border-color:var(--teal); color:#fff;}
 .task-item.urgent{background:rgba(140,58,38,0.07); border-radius:7px;}
 .task-item.urgent textarea{color:var(--rust); font-weight:600;}
 .drag-grip{
-  width:15px; height:20px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
-  display:flex; align-items:center; justify-content:center; margin-top:2px; user-select:none;
+  width:13px; height:15px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
+  display:flex; align-items:center; justify-content:center; margin-top:1px; user-select:none;
 }
 .drag-grip svg{width:100%; height:100%;}
 .drag-grip:hover{opacity:.9;}
@@ -1412,6 +1412,18 @@ function renderTaskBlock(main, day, t, i){
     t.bold = !t.bold;
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
+  const addSubBtn = el("span",{class:"add-sub-flag", title:"Aggiungi sotto-task"}, "+");
+  addSubBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const newSub = {id:"st"+Date.now(), text:"", done:false};
+    t.subtasks.push(newSub);
+    store.set(privKey("dashboard"), state.dashboard);
+    renderDashboard(clear(main));
+    const ta = document.querySelector('textarea[data-subid="'+newSub.id+'"]');
+    if(ta) ta.focus();
+  });
+  const grid = el("div",{class:"action-grid"});
+  grid.appendChild(cb); grid.appendChild(urgentBtn); grid.appendChild(boldBtn); grid.appendChild(addSubBtn);
   const txt = el("textarea",{rows:"1", style: t.bold ? "font-weight:700;" : ""}); txt.value = t.text;
   txt.addEventListener("input", ()=>autoResize(txt));
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
@@ -1420,7 +1432,7 @@ function renderTaskBlock(main, day, t, i){
     state.dashboard.week[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
-  row.appendChild(grip); row.appendChild(cb); row.appendChild(urgentBtn); row.appendChild(boldBtn); row.appendChild(txt); row.appendChild(del);
+  row.appendChild(grip); row.appendChild(grid); row.appendChild(txt); row.appendChild(del);
   attachRowDrag(grip, row, i, tasks, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
   wrap.appendChild(row);
 
@@ -1446,7 +1458,9 @@ function renderTaskBlock(main, day, t, i){
       s.bold = !s.bold;
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    const stxt = el("textarea",{rows:"1", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
+    const sGrid = el("div",{class:"action-grid action-grid-sub"});
+    sGrid.appendChild(scb); sGrid.appendChild(sUrgentBtn); sGrid.appendChild(sBoldBtn);
+    const stxt = el("textarea",{rows:"1", "data-subid":s.id||"", style: s.bold ? "font-weight:700;" : ""}); stxt.value = s.text;
     stxt.addEventListener("input", ()=>autoResize(stxt));
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
@@ -1454,21 +1468,10 @@ function renderTaskBlock(main, day, t, i){
       t.subtasks.splice(si,1); syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
     });
-    srow.appendChild(sGrip); srow.appendChild(scb); srow.appendChild(sUrgentBtn); srow.appendChild(sBoldBtn); srow.appendChild(stxt); srow.appendChild(sdel);
+    srow.appendChild(sGrip); srow.appendChild(sGrid); srow.appendChild(stxt); srow.appendChild(sdel);
     attachRowDrag(sGrip, srow, si, t.subtasks, ()=>{ syncParentDone(t); store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
     subWrap.appendChild(srow);
   });
-  const addSub = el("div",{class:"add-line subtask-add"});
-  const subInput = el("input",{type:"text", placeholder:"+ sotto-task…"});
-  subInput.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter" && subInput.value.trim()){
-      t.subtasks.push({text:subInput.value.trim(), done:false});
-      syncParentDone(t);
-      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-    }
-  });
-  addSub.appendChild(subInput);
-  subWrap.appendChild(addSub);
   wrap.appendChild(subWrap);
   return wrap;
 }
