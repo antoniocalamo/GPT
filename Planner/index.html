@@ -687,6 +687,17 @@ table.tires textarea.gomme-cell{
   color:#fff; background:var(--forest); border-radius:8px; padding:6px 10px; display:inline-block;
 }
 .day-row.today .day-card{border-color:var(--forest); box-shadow:0 0 0 2px rgba(51,80,63,0.15), var(--shadow);}
+.history-toggle{
+  display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft);
+  padding:4px 0 12px 0;
+}
+.history-toggle:hover{color:var(--forest);}
+.history-toggle-arrow{font-size:10px; width:10px; display:inline-block; text-align:center;}
+.history-days{display:flex; flex-direction:column; gap:6px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--line);}
+.day-row-history{opacity:.72;}
+.day-row-history .day-label{color:var(--ink-soft);}
+.day-card-history{border-style:dashed;}
 
 /* ---- Net worth eye toggle ---- */
 .stat-card-head{display:flex; align-items:flex-start; justify-content:space-between;}
@@ -1084,6 +1095,7 @@ let customTabData = {};
 let activeCustomItem = {};
 let currentTagline = "";
 let lastTaskByDay = {};
+let historyExpanded = false;
 let currentRenderedTab = "dashboard";
 const STATE_KEY_MAP_SHARED = {
   orto:"orto", trips:"trips", bbqs:"bbqs", tires:"tires",
@@ -1155,6 +1167,15 @@ async function loadAll(){
   if(!state.dashboard.kpiSelection){
     state.dashboard.kpiSelection = DEFAULT_KPI_SELECTION.slice();
   }
+  if(!state.dashboard.days){
+    state.dashboard.days = {};
+    const ordered = orderedDaysFromToday();
+    ordered.forEach((dayName, idx)=>{
+      const d = new Date(); d.setDate(d.getDate()+idx);
+      state.dashboard.days[isoDate(d)] = (state.dashboard.week && state.dashboard.week[dayName]) || [];
+    });
+  }
+  pruneOldDays(state.dashboard.days);
   store.set(privKey("dashboard"), state.dashboard);
   state.orto = await store.get("orto", DEFAULTS.orto);
   if(state.orto.lastWatered===undefined) state.orto.lastWatered = "";
@@ -1272,12 +1293,13 @@ function attachTaskDrag(handle, row, day, i, refreshFn){
   row.addEventListener("drop",(e)=>{
     e.preventDefault(); e.stopPropagation(); row.classList.remove("drag-over");
     let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
-    if(!data || typeof data.index!=="number" || !state.dashboard.week[data.day]) return;
+    if(!data || typeof data.index!=="number" || !state.dashboard.days[data.day]) return;
     if(data.day===day && data.index===i) return;
-    const sourceArr = state.dashboard.week[data.day];
+    const sourceArr = state.dashboard.days[data.day];
     const [moved] = sourceArr.splice(data.index,1);
     if(!moved) return;
-    state.dashboard.week[day].splice(i,0,moved);
+    if(!state.dashboard.days[day]) state.dashboard.days[day] = [];
+    state.dashboard.days[day].splice(i,0,moved);
     refreshFn();
   });
 }
@@ -1288,11 +1310,12 @@ function attachDayCardDrop(dayCard, day, refreshFn){
     e.preventDefault();
     dayCard.classList.remove("day-card-drop-target");
     let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
-    if(!data || typeof data.index!=="number" || !state.dashboard.week[data.day]) return;
-    const sourceArr = state.dashboard.week[data.day];
+    if(!data || typeof data.index!=="number" || !state.dashboard.days[data.day]) return;
+    const sourceArr = state.dashboard.days[data.day];
     const [moved] = sourceArr.splice(data.index,1);
     if(!moved) return;
-    state.dashboard.week[day].push(moved);
+    if(!state.dashboard.days[day]) state.dashboard.days[day] = [];
+    state.dashboard.days[day].push(moved);
     refreshFn();
   });
 }
@@ -1353,13 +1376,26 @@ function fmtMoneyPlain(n){
 }
 function computeStats(){
   let total=0, done=0;
-  Object.values(state.dashboard.week).forEach(arr=>{ arr.forEach(t=>{ total++; if(t.done) done++; }); });
+  visibleDates().forEach(dateStr=>{
+    const arr = state.dashboard.days[dateStr] || [];
+    arr.forEach(t=>{ total++; if(t.done) done++; });
+  });
   const pct = total ? Math.round(done/total*100) : 0;
   const activeChecklists = state.trips.length + state.bbqs.length;
   let lastTire = "—";
   const dated = state.tires.filter(t=>t.data).sort((a,b)=> new Date(b.data)-new Date(a.data));
   if(dated.length) lastTire = new Date(dated[0].data).toLocaleDateString("it-IT");
   return { pct, activeChecklists, lastTire, net: computeNetWorth() };
+}
+function visibleDates(){
+  const out = [];
+  for(let i=0;i<7;i++) out.push(addDaysISO(new Date(), i));
+  return out;
+}
+function pastDates(){
+  const out = [];
+  for(let i=1;i<=7;i++) out.push(addDaysISO(new Date(), -i));
+  return out;
 }
 let weatherCache = null;
 async function ensureWeatherLoaded(){
@@ -1512,6 +1548,28 @@ function orderedDaysFromToday(){
   const todayIdx = (jsDay + 6) % 7; // 0=Lun..6=Dom
   return DAY_ORDER.slice(todayIdx).concat(DAY_ORDER.slice(0, todayIdx));
 }
+function isoDate(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function weekdayNameFromDate(dateStr){
+  const d = new Date(dateStr+"T12:00:00");
+  const jsDay = d.getDay();
+  return DAY_ORDER[(jsDay+6)%7];
+}
+function fmtDayLabel(dateStr){
+  const d = new Date(dateStr+"T12:00:00");
+  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+}
+function addDaysISO(base, n){
+  const d = new Date(base); d.setDate(d.getDate()+n);
+  return isoDate(d);
+}
+function pruneOldDays(days){
+  const cutoff = addDaysISO(new Date(), -7);
+  Object.keys(days).forEach(dateStr=>{
+    if(dateStr < cutoff) delete days[dateStr];
+  });
+}
 function renderDashboard(main){
   const headerWrap = el("div",{class:"dash-header-sticky"});
   headerWrap.appendChild(el("div",{class:"section-head"},[
@@ -1543,9 +1601,11 @@ function renderDashboard(main){
   toolbar.appendChild(toggleLabel);
   const clearBtn = el("button",{class:"btn danger small"},"Elimina completati");
   clearBtn.addEventListener("click", ()=>{
-    if(confirm("Sei sicuro di voler eliminare definitivamente tutti i task completati di questa settimana? L'azione non è reversibile.")){
-      Object.keys(state.dashboard.week).forEach(day=>{
-        state.dashboard.week[day] = state.dashboard.week[day].filter(t=>!t.done);
+    if(confirm("Sei sicuro di voler eliminare definitivamente tutti i task completati della settimana visibile? L'azione non è reversibile.")){
+      visibleDates().forEach(dateStr=>{
+        if(state.dashboard.days[dateStr]){
+          state.dashboard.days[dateStr] = state.dashboard.days[dateStr].filter(t=>!t.done);
+        }
       });
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
     }
@@ -1556,48 +1616,27 @@ function renderDashboard(main){
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
   week.appendChild(sectionLabel("To Do List", "var(--forest)"));
-  const todayName = orderedDaysFromToday()[0];
-  const todayDate = new Date();
-  orderedDaysFromToday().forEach((day, idx)=>{
-    const tasks = state.dashboard.week[day];
-    const dayCard = el("div",{class:"card day-card", style:`--day-color:${DAY_COLORS[day]}`});
-    tasks.forEach((t,i)=>{
-      if(state.dashboard.showCompleted===false && t.done) return;
-      dayCard.appendChild(renderTaskBlock(main, day, t, i));
-    });
-    const addLine = el("div",{class:"add-line"});
-    const input = el("input",{type:"text", placeholder:"aggiungi task… (Tab per sotto-task)", "data-day":day});
-    input.addEventListener("keydown", (e)=>{
-      if(e.key==="Enter" && input.value.trim()){
-        const newTask = {text:input.value.trim(), done:false, subtasks:[]};
-        state.dashboard.week[day].push(newTask);
-        lastTaskByDay[day] = newTask;
-        store.set(privKey("dashboard"), state.dashboard);
-        renderDashboard(clear(main));
-        focusAddInput(day);
-      } else if(e.key==="Tab" && input.value.trim()){
-        e.preventDefault();
-        const parent = lastTaskByDay[day];
-        if(parent){
-          if(!parent.subtasks) parent.subtasks = [];
-          parent.subtasks.push({text:input.value.trim(), done:false});
-          syncParentDone(parent);
-        } else {
-          state.dashboard.week[day].push({text:input.value.trim(), done:false, subtasks:[]});
-        }
-        store.set(privKey("dashboard"), state.dashboard);
-        renderDashboard(clear(main));
-        focusAddInput(day);
-      }
-    });
-    addLine.appendChild(input);
-    dayCard.appendChild(addLine);
-    attachDayCardDrop(dayCard, day, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
-    const rowClass = "day-row"+(day===todayName?" today":"");
-    const d = new Date(todayDate); d.setDate(todayDate.getDate()+idx);
-    const dateStr = String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
-    const label = day===todayName ? day+" "+dateStr+" · oggi" : day+" "+dateStr;
-    week.appendChild(el("div",{class:rowClass},[el("div",{class:"day-label"},label), dayCard]));
+
+  const past = pastDates().filter(d => state.dashboard.days[d] && state.dashboard.days[d].length);
+  if(past.length){
+    const histToggle = el("div",{class:"history-toggle"});
+    histToggle.appendChild(el("span",{class:"history-toggle-arrow"}, historyExpanded ? "▾" : "▸"));
+    histToggle.appendChild(document.createTextNode(
+      (historyExpanded ? "Nascondi" : "Mostra") + " storico (" + past.length + (past.length===1?" giorno":" giorni") + ")"
+    ));
+    histToggle.addEventListener("click", ()=>{ historyExpanded = !historyExpanded; render("dashboard"); });
+    week.appendChild(histToggle);
+    if(historyExpanded){
+      const histWrap = el("div",{class:"history-days"});
+      past.slice().reverse().forEach(dateStr=>{
+        histWrap.appendChild(buildDayRow(main, dateStr, false, true));
+      });
+      week.appendChild(histWrap);
+    }
+  }
+
+  visibleDates().forEach((dateStr, idx)=>{
+    week.appendChild(buildDayRow(main, dateStr, idx===0, false));
   });
   grid.appendChild(week);
 
@@ -1610,6 +1649,49 @@ function renderDashboard(main){
   });
   grid.appendChild(side);
   main.appendChild(grid);
+}
+function buildDayRow(main, dateStr, isToday, isHistory){
+  if(!state.dashboard.days[dateStr]) state.dashboard.days[dateStr] = [];
+  const dayName = weekdayNameFromDate(dateStr);
+  const tasks = state.dashboard.days[dateStr];
+  const dayCard = el("div",{class:"card day-card"+(isHistory?" day-card-history":""), style:`--day-color:${DAY_COLORS[dayName]}`});
+  tasks.forEach((t,i)=>{
+    if(state.dashboard.showCompleted===false && t.done) return;
+    dayCard.appendChild(renderTaskBlock(main, dateStr, t, i));
+  });
+  if(!isHistory){
+    const addLine = el("div",{class:"add-line"});
+    const input = el("input",{type:"text", placeholder:"aggiungi task… (Tab per sotto-task)", "data-day":dateStr});
+    input.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter" && input.value.trim()){
+        const newTask = {text:input.value.trim(), done:false, subtasks:[]};
+        state.dashboard.days[dateStr].push(newTask);
+        lastTaskByDay[dateStr] = newTask;
+        store.set(privKey("dashboard"), state.dashboard);
+        renderDashboard(clear(main));
+        focusAddInput(dateStr);
+      } else if(e.key==="Tab" && input.value.trim()){
+        e.preventDefault();
+        const parent = lastTaskByDay[dateStr];
+        if(parent){
+          if(!parent.subtasks) parent.subtasks = [];
+          parent.subtasks.push({text:input.value.trim(), done:false});
+          syncParentDone(parent);
+        } else {
+          state.dashboard.days[dateStr].push({text:input.value.trim(), done:false, subtasks:[]});
+        }
+        store.set(privKey("dashboard"), state.dashboard);
+        renderDashboard(clear(main));
+        focusAddInput(dateStr);
+      }
+    });
+    addLine.appendChild(input);
+    dayCard.appendChild(addLine);
+    attachDayCardDrop(dayCard, dateStr, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
+  }
+  const rowClass = "day-row"+(isToday?" today":"")+(isHistory?" day-row-history":"");
+  const label = dayName+" "+fmtDayLabel(dateStr)+(isToday?" · oggi":"");
+  return el("div",{class:rowClass},[el("div",{class:"day-label"},label), dayCard]);
 }
 function sectionLabel(text, color, actionEl){
   const row = el("div",{class:"section-label"},[
@@ -1626,7 +1708,7 @@ function syncParentDone(t){
 }
 function renderTaskBlock(main, day, t, i){
   if(!t.subtasks) t.subtasks = [];
-  const tasks = state.dashboard.week[day];
+  const tasks = state.dashboard.days[day];
   const wrap = el("div",{class:"task-block"});
   const row = el("div",{class:"task-item"+(t.done?" done":"")+(t.urgent?" urgent":"")});
   const grip = el("span",{class:"drag-grip", html:ICON_GRIP});
@@ -1662,7 +1744,7 @@ function renderTaskBlock(main, day, t, i){
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
   const del = el("span",{class:"del", html:"✕"});
   del.addEventListener("click", ()=>{
-    state.dashboard.week[day].splice(i,1);
+    state.dashboard.days[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
   });
   row.appendChild(grip); row.appendChild(grid); row.appendChild(txt); row.appendChild(del);
