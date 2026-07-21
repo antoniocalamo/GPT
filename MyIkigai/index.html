@@ -742,7 +742,12 @@ table.tires textarea.gomme-cell{
 }
 .finance-row input[type=text]{border:none; background:transparent; padding:2px 0;}
 .finance-row input[type=text]:focus{outline:none; background:var(--card); border-radius:6px;}
-.finance-value{max-width:100px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+.finance-item-icon{
+  width:16px; height:16px; flex-shrink:0; cursor:pointer; opacity:.55; color:var(--ink-soft);
+}
+.finance-item-icon svg{width:100%; height:100%; display:block;}
+.finance-item-icon:hover{opacity:1;}
+.finance-value{max-width:128px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
 .finance-value[readonly]{opacity:.75; cursor:not-allowed;}
 .finance-amort-btn{cursor:pointer; font-size:12px; opacity:.4; flex-shrink:0;}
 .finance-amort-btn:hover, .finance-amort-btn.active{opacity:1;}
@@ -769,6 +774,15 @@ table.tires textarea.gomme-cell{
   border-bottom:1px dashed var(--line); font-size:13.5px;
 }
 .history-row:last-child{border-bottom:none;}
+.history-row-head{font-size:11px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+.history-col-date{width:100px; flex-shrink:0;}
+.history-col-num{width:112px; flex-shrink:0; text-align:right;}
+.history-row input.history-col-date, .history-row input.history-col-num{
+  border:none; background:transparent; font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:2px 4px;
+}
+.history-row input.history-col-date:focus, .history-row input.history-col-num:focus{
+  outline:none; background:var(--card); border-radius:6px;
+}
 .history-value{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--slate);}
 
 /* ---- Backlog boxes ---- */
@@ -1632,10 +1646,10 @@ function computeNetWorth(){
   return computeCategoryTotals().net;
 }
 function fmtEUR(n){
-  return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", maximumFractionDigits:0});
+  return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true});
 }
 function fmtMoneyPlain(n){
-  return n.toLocaleString("it-IT",{maximumFractionDigits:0}) + " €";
+  return n.toLocaleString("it-IT",{minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true}) + " €";
 }
 function computeStats(){
   let total=0, done=0;
@@ -3127,11 +3141,11 @@ function openAmortizationModal(item, onSave){
     modal.appendChild(el("h3",{},"Piano di ammortamento"));
     if(!item.amortization || !item.amortization.rows || !item.amortization.rows.length){
       modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;"},
-        'Incolla una riga per ogni rata, nel formato: gg/mm/aaaa;quota capitale;quota interessi;debito residuo capitale;debito residuo interessi — es. 01/01/2026;450;120;99550;28680. Una volta importato, potrai avanzare rata dopo rata e il debito si aggiornerà da solo.'));
-      const ta = el("textarea",{rows:"8", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2026;450;120;99550;28680\n01/02/2026;452;118;99098;28562"});
+        'Incolla una riga per ogni rata, nel formato: scadenza;capitale;interessi;totale rata;capitale residuo — es. 01/01/2026;450;120;570;99550. Una volta importato, potrai avanzare rata dopo rata e il debito si aggiornerà da solo.'));
+      const ta = el("textarea",{rows:"8", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2026;450;120;570;99550\n01/02/2026;452;118;570;99098"});
       modal.appendChild(ta);
       const excelWrap = el("div",{style:"margin-top:12px;"});
-      excelWrap.appendChild(el("div",{class:"field-label"},"oppure carica un file Excel/CSV (stesse 5 colonne, senza intestazione)"));
+      excelWrap.appendChild(el("div",{class:"field-label"},"oppure carica un file Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, capitale residuo — senza intestazione)"));
       const fileInput = el("input",{type:"file", accept:".xlsx,.xls,.csv"});
       let excelRows = null;
       const excelPreview = el("div",{style:"font-size:12px;color:var(--ink-soft);margin-top:6px;"});
@@ -3168,7 +3182,7 @@ function openAmortizationModal(item, onSave){
         const rows = [];
         for(const r of rawRows){
           if(!r || r.length<5 || r.every(c=>c===""||c==null)) continue;
-          let [d, capQ, intQ, capR, intR] = r;
+          let [d, capQ, intQ, totRata, capR] = r;
           let dateStr;
           if(d instanceof Date) dateStr = String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
           else dateStr = String(d).trim();
@@ -3177,8 +3191,8 @@ function openAmortizationModal(item, onSave){
             date:dateStr,
             capQuota: parseFloat(String(capQ).replace(",","."))||0,
             intQuota: parseFloat(String(intQ).replace(",","."))||0,
-            capResiduo: parseFloat(String(capR).replace(",","."))||0,
-            intResiduo: parseFloat(String(intR).replace(",","."))||0
+            totRata: parseFloat(String(totRata).replace(",","."))||0,
+            capResiduo: parseFloat(String(capR).replace(",","."))||0
           });
         }
         if(!rows.length){ errBox.textContent = "Nessuna riga valida trovata."; return; }
@@ -3192,10 +3206,9 @@ function openAmortizationModal(item, onSave){
       const am = item.amortization;
       const row = am.rows[am.idx];
       modal.appendChild(el("div",{style:"font-size:13px; line-height:1.9;"}, [
-        el("div",{},"Rata "+(am.idx+1)+" di "+am.rows.length+" — "+row.date),
-        el("div",{},"Quota capitale: "+fmtEUR(row.capQuota)+" · Quota interessi: "+fmtEUR(row.intQuota)),
-        el("div",{},"Debito residuo capitale: "+fmtEUR(row.capResiduo)),
-        el("div",{},"Debito residuo interessi: "+fmtEUR(row.intResiduo))
+        el("div",{},"Rata "+(am.idx+1)+" di "+am.rows.length+" — scadenza "+row.date),
+        el("div",{},"Capitale: "+fmtEUR(row.capQuota)+" · Interessi: "+fmtEUR(row.intQuota)+" · Totale rata: "+fmtEUR(row.totRata)),
+        el("div",{},"Capitale residuo: "+fmtEUR(row.capResiduo))
       ]));
       const actions = el("div",{class:"modal-actions"});
       const removeBtn = el("button",{class:"btn danger small", style:"margin-right:auto;"},"Rimuovi piano");
@@ -3231,6 +3244,25 @@ function financeBlock(title, key){
   state.finance[key].forEach((item,i)=>{
     const itemWrap = el("div",{class:"finance-item"});
     const row = el("div",{class:"finance-row"});
+    const iconEl = el("span",{class:"finance-item-icon", html: STANDARD_ICONS[item.icon]||STANDARD_ICONS.coin, title:"Cambia icona"});
+    iconEl.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      openModal((modal, close)=>{
+        modal.appendChild(el("h3",{},"Icona voce"));
+        const picker = iconPickerRow(item.icon||"coin", (k)=>{
+          item.icon = k;
+          store.set(privKey("finance"), state.finance);
+          close(); render("finanze");
+        });
+        modal.appendChild(picker);
+        const actions = el("div",{class:"modal-actions"});
+        const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
+        closeBtn.addEventListener("click", close);
+        actions.appendChild(closeBtn);
+        modal.appendChild(actions);
+      });
+    });
+    row.appendChild(iconEl);
     const nameInp = el("input",{type:"text", value:item.name||"", placeholder:"voce"});
     nameInp.addEventListener("change", ()=>{ item.name=nameInp.value; store.set(privKey("finance"), state.finance); });
     row.appendChild(nameInp);
@@ -3292,9 +3324,9 @@ function renderFinanceChart(fullHistory){
     return emptyState("Salva almeno due snapshot nella finestra selezionata per vedere il grafico del trend.", ICON_COIN);
   }
   const series = [
-    {key:"liquidity", color:"#2F5B5E", label:"Liquidità"},
-    {key:"nonliquid", color:"#4C7A4C", label:"Non liquidi"},
-    {key:"debts", color:"#8C3A26", label:"Debiti"},
+    {key:"liquidity", color:"#2F6B2F", label:"Liquidità"},
+    {key:"nonliquid", color:"#1F4A28", label:"Non liquidi"},
+    {key:"debts", color:"#9C3B2E", label:"Debiti"},
     {key:"net", color:"#233A46", label:"Patrimonio netto"}
   ];
 
@@ -3316,20 +3348,28 @@ function renderFinanceChart(fullHistory){
   }
 
   const totalPoints = data.length + (financeChartForecast ? 12 : 0);
-  const w = Math.max(640, totalPoints*46), h = 240, pad = 38;
+  const w = Math.max(640, totalPoints*46), h = 240, pad = 38, padLeft = 62;
   const allActualVals = data.flatMap(d=> series.map(s=> d[s.key]||0));
   const allForecastVals = financeChartForecast ? forecastPoints.liquidity.concat(forecastPoints.net) : [];
   const allVals = allActualVals.concat(allForecastVals).concat([0]);
   const maxV = Math.max(...allVals), minV = Math.min(...allVals);
   const range = (maxV - minV) || 1;
-  const xStep = totalPoints>1 ? (w - pad*2) / (totalPoints - 1) : 0;
+  const xStep = totalPoints>1 ? (w - padLeft - pad) / (totalPoints - 1) : 0;
   function xy(val, i){
-    const x = pad + i*xStep;
+    const x = padLeft + i*xStep;
     const y = h - pad - ((val - minV) / range) * (h - pad*2);
     return [x,y];
   }
   let svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">`;
-  svg += `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4D6AC" stroke-width="1"/>`;
+  // etichette e griglia sull'asse Y (valori in €)
+  const yTicks = 4;
+  for(let t=0; t<=yTicks; t++){
+    const val = minV + (range * t / yTicks);
+    const y = h - pad - (t/yTicks) * (h - pad*2);
+    svg += `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${w-pad}" y2="${y.toFixed(1)}" stroke="#EFE6D4" stroke-width="1"/>`;
+    svg += `<text x="${(padLeft-8).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="9" fill="#8a8065" text-anchor="end">${fmtMoneyPlain(val)}</text>`;
+  }
+  svg += `<line x1="${padLeft}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4D6AC" stroke-width="1"/>`;
   if(financeChartForecast){
     const [sepX] = xy(0, data.length-1);
     svg += `<line x1="${sepX.toFixed(1)}" y1="${pad-6}" x2="${sepX.toFixed(1)}" y2="${h-pad}" stroke="#B8AD8E" stroke-width="1" stroke-dasharray="3,3"/>`;
@@ -3395,7 +3435,11 @@ function renderFinanceChart(fullHistory){
 function commitFinanceImport(parsed, errBox, close){
   if(!parsed.length) return;
   errBox.textContent = "";
-  state.finance.history = state.finance.history.concat(parsed);
+  parsed.forEach(row=>{
+    const existingIdx = state.finance.history.findIndex(h=>h.date===row.date);
+    if(existingIdx>-1) state.finance.history[existingIdx] = row;
+    else state.finance.history.push(row);
+  });
   state.finance.history.sort((a,b)=>{
     const da = a.date.split("/").reverse().join("");
     const db = b.date.split("/").reverse().join("");
@@ -3540,14 +3584,6 @@ function renderFinanze(main){
   const importBtn = el("button",{class:"btn ghost", style:"margin-left:10px;"},"Importa storico");
   importBtn.addEventListener("click", openFinanceImportModal);
   summary.appendChild(importBtn);
-  const clearNonliquidBtn = el("button",{class:"btn ghost", style:"margin-left:10px;"},"🗑️ Cancella storico non liquidi");
-  clearNonliquidBtn.addEventListener("click", ()=>{
-    if(confirm("Azzerare il valore \"non liquidi\" in tutti gli snapshot dello storico? L'azione non è reversibile.")){
-      state.finance.history.forEach(h=>{ h.nonliquid = 0; });
-      store.set(privKey("finance"), state.finance); render("finanze");
-    }
-  });
-  summary.appendChild(clearNonliquidBtn);
   main.appendChild(summary);
 
   const chartBlock = el("div",{class:"card cat-block"});
@@ -3577,15 +3613,38 @@ function renderFinanze(main){
   if(!state.finance.history.length){
     histBlock.appendChild(emptyState("Salva il primo snapshot per iniziare a tracciare l'andamento nel tempo.", ICON_COIN));
   } else {
+    const histTable = el("div",{class:"history-table"});
+    const headRow = el("div",{class:"history-row history-row-head"});
+    headRow.appendChild(el("span",{class:"history-col-date"},"Data"));
+    headRow.appendChild(el("span",{class:"history-col-num"},"Liquidità"));
+    headRow.appendChild(el("span",{class:"history-col-num"},"Non liquidi"));
+    headRow.appendChild(el("span",{class:"history-col-num"},"Debiti"));
+    headRow.appendChild(el("span",{class:"history-col-num"},"Netto"));
+    headRow.appendChild(el("span",{},""));
+    histTable.appendChild(headRow);
     state.finance.history.forEach((h,i)=>{
       const row = el("div",{class:"history-row"});
-      row.appendChild(el("span",{class:"mono"}, h.date));
-      row.appendChild(el("span",{class:"history-value"}, fmtEUR(h.net)));
+      const dateInp = el("input",{type:"text", class:"history-col-date mono", value:h.date});
+      dateInp.addEventListener("change", ()=>{ h.date = dateInp.value; store.set(privKey("finance"), state.finance); render("finanze"); });
+      row.appendChild(dateInp);
+      ["liquidity","nonliquid","debts"].forEach(field=>{
+        const inp = el("input",{type:"text", class:"history-col-num mono", value: fmtMoneyPlain(h[field]||0)});
+        inp.addEventListener("focus", ()=>{ inp.value = h[field]||0; });
+        inp.addEventListener("blur", ()=>{ inp.value = fmtMoneyPlain(h[field]||0); });
+        inp.addEventListener("change", ()=>{
+          h[field] = parseFinanceValue(inp.value);
+          h.net = (h.liquidity||0) + (h.nonliquid||0) - (h.debts||0);
+          store.set(privKey("finance"), state.finance); render("finanze");
+        });
+        row.appendChild(inp);
+      });
+      row.appendChild(el("span",{class:"history-value history-col-num"}, fmtEUR(h.net)));
       const del = el("span",{class:"del", html:"✕"});
       del.addEventListener("click", ()=>{ state.finance.history.splice(i,1); store.set(privKey("finance"), state.finance); render("finanze"); });
       row.appendChild(del);
-      histBlock.appendChild(row);
+      histTable.appendChild(row);
     });
+    histBlock.appendChild(histTable);
   }
   main.appendChild(histBlock);
 }
