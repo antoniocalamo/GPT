@@ -88,9 +88,8 @@ body{
   font-family:'Inter',sans-serif;
   background:var(--paper);
   color:var(--ink);
-  min-height:100vh;
-  overflow-y:auto;
-  overflow-x:hidden;
+  height:100%;
+  overflow:hidden;
   line-height:1.35;
   transition: background .2s ease, color .2s ease;
 }
@@ -99,7 +98,8 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 
 .app{
   display:flex;
-  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
 }
 
 /* ---- Sidebar tabs (notebook-tab signature) ---- */
@@ -236,9 +236,11 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   overflow:hidden;
 }
 .topbar{
-  display:flex; align-items:center; justify-content:flex-end; gap:14px;
-  padding:18px 44px 0 20px; flex-shrink:0;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  padding:16px 44px 12px 20px; flex-shrink:0;
 }
+.topbar-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end;}
+.topbar-row-account{font-size:12px;}
 .theme-select{
   border:1px solid var(--line); background:var(--card); color:var(--ink);
   padding:6px 10px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer;
@@ -563,6 +565,8 @@ textarea{resize:vertical;}
 .cat-block{margin-bottom:12px;}
 .cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
 .cat-block-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+.select-all-cat{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; user-select:none;}
+.select-all-cat input{width:14px; height:14px; accent-color:var(--forest);}
 .cat-title-input{
   border:none; background:transparent; padding:2px 0; flex:1; min-width:0;
   font-size:14px; color:var(--forest); font-family:'Fraunces',serif; font-weight:600;
@@ -713,6 +717,9 @@ table.tires textarea.gomme-cell{
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .stat-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(35,48,42,0.14); }
+.kpi-draggable{cursor:grab;}
+.kpi-draggable.dragging{opacity:.4;}
+.kpi-draggable.drag-over{outline:2px dashed var(--forest); outline-offset:-3px;}
 .stat-icon{width:17px; height:17px; margin-bottom:6px;}
 .stat-icon svg{width:100%; height:100%; display:block;}
 .stat-value{font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--ink); line-height:1.1;}
@@ -722,6 +729,22 @@ table.tires textarea.gomme-cell{
 }
 .stat-label{font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
 .stat-weather{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--teal); margin-top:5px;}
+.stat-weather-3d{display:flex; gap:8px; margin-top:6px;}
+.stat-weather-day{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); text-align:center;}
+.stat-weather-day b{display:block; color:var(--teal); font-size:11px;}
+
+/* ---- Priorities KPI card ---- */
+.stat-card-priorities{grid-column:span 2;}
+.priorities-medal{font-size:16px; line-height:1; animation:medal-pop .4s ease;}
+@keyframes medal-pop{from{transform:scale(0.4) rotate(-15deg); opacity:0;} to{transform:scale(1) rotate(0); opacity:1;}}
+.priorities-inline-list{margin-top:6px; display:flex; flex-direction:column; gap:3px;}
+.priorities-inline-row{display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;}
+.priorities-inline-row input{width:14px; height:14px; accent-color:var(--forest); flex-shrink:0;}
+.priorities-inline-text{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.priorities-inline-row.done .priorities-inline-text{text-decoration:line-through; color:var(--ink-soft);}
+.priorities-empty, .priorities-more{font-size:11.5px; color:var(--ink-soft); font-style:italic;}
+.priorities-progress-bar{height:6px; border-radius:4px; background:var(--paper); margin-top:8px; overflow:hidden;}
+.priorities-progress-fill{height:100%; border-radius:4px; transition:width .3s ease;}
 
 /* ---- Finanze ---- */
 .finance-reminder-banner{
@@ -823,8 +846,8 @@ table.tires textarea.gomme-cell{
   padding:10px 16px 2px 18px; margin-top:4px;
 }
 
-/* ---- Week toolbar / today highlight ---- */
-.week-toolbar{display:flex; align-items:center; gap:18px; margin-bottom:12px; flex-wrap:wrap;}
+/* ---- To Do List header actions / today highlight ---- */
+.todo-header-actions{display:flex; align-items:center; gap:16px; flex-wrap:wrap; text-transform:none; letter-spacing:normal; font-family:'Inter',sans-serif;}
 .toggle-completed{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-soft); cursor:pointer;}
 .toggle-completed input{accent-color:var(--forest); width:15px; height:15px;}
 .day-row.today .day-label{
@@ -832,9 +855,8 @@ table.tires textarea.gomme-cell{
 }
 .day-row.today .day-card{border-color:var(--forest); box-shadow:0 0 0 2px rgba(51,80,63,0.15), var(--shadow);}
 .history-toggle{
-  display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
   font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft);
-  padding:4px 0 12px 0;
 }
 .history-toggle:hover{color:var(--forest);}
 .history-toggle-arrow{font-size:10px; width:10px; display:inline-block; text-align:center;}
@@ -877,31 +899,18 @@ table.tires textarea.gomme-cell{
 
 /* ---- Custom sidebar tabs ---- */
 .custom-tab{position:relative;}
-.custom-tab .tab-icon{cursor:pointer;}
-.custom-tab .tab-icon:hover{opacity:1;}
-.tab-del{
-  position:absolute; right:16px; top:50%; transform:translateY(-50%);
-  opacity:.32; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
+.tab-edit-btn{
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  width:14px; height:14px; opacity:.32; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
 }
-.tab-rename{
-  position:absolute; right:34px; top:50%; transform:translateY(-50%);
-  width:12px; height:12px; opacity:.32; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
-}
-.tab-rename svg{width:100%; height:100%; display:block;}
-.tab-color-edit{
-  position:absolute; right:53px; top:50%; transform:translateY(-50%);
-  width:11px; height:11px; border-radius:50%; opacity:.4; cursor:pointer; transition:opacity .15s ease;
-  border:1.5px solid var(--tab-text); box-sizing:border-box;
-}
-.tab-color-edit:hover{opacity:1 !important;}
+.tab-edit-btn svg{width:100%; height:100%; display:block;}
+.custom-tab:hover .tab-edit-btn{opacity:.8;}
+.tab-edit-btn:hover{opacity:1 !important;}
 .tab-drag-grip{
   width:11px; height:15px; flex-shrink:0; opacity:.4; cursor:grab; color:var(--tab-text);
 }
 .tab-drag-grip svg{width:100%; height:100%; display:block;}
 .tab-drag-grip:hover{opacity:.85;}
-.custom-tab:hover .tab-del, .custom-tab:hover .tab-rename, .custom-tab:hover .tab-color-edit{opacity:.8;}
-.tab-del:hover{opacity:1 !important; color:#fff;}
-.tab-rename:hover{opacity:1 !important;}
 .tab-add{
   border:1px dashed var(--line); background:transparent; color:var(--ink-soft);
   border-radius:12px 0 0 12px; padding:11px 16px; cursor:pointer;
@@ -913,7 +922,8 @@ table.tires textarea.gomme-cell{
 .tab.dragging{opacity:.5;}
 
 @media (max-width: 880px){
-  .app{flex-direction:column; min-height:auto;}
+  html, body{height:auto; overflow:visible;}
+  .app{flex-direction:column; height:auto; overflow:visible;}
   .tabs{
     flex-direction:row; width:100%; padding:12px; gap:8px; overflow-x:auto; overflow-y:hidden;
     position:static; min-height:auto; max-height:none; top:auto;
@@ -937,8 +947,7 @@ table.tires textarea.gomme-cell{
   .finance-grid{grid-template-columns:1fr;}
   /* Tocco più comodo sui controlli piccoli delle schede */
   .tab-drag-grip{width:16px; height:20px;}
-  .tab-del, .tab-rename, .tab-color-edit{opacity:.6;}
-  .tab-del{right:14px;} .tab-rename{width:15px; height:15px; right:32px;} .tab-color-edit{width:14px; height:14px; right:52px;}
+  .tab-edit-btn{opacity:.6; width:18px; height:18px; right:12px;}
   /* Contenuti larghi: scroll orizzontale dedicato invece di schiacciare tutto */
   .gomme-table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   table.tires{min-width:640px;}
@@ -997,38 +1006,26 @@ table.tires textarea.gomme-cell{
     <button class="tab custom-tab" data-c="orto" data-tab="orto" data-builtin="orto">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M6 18C10 14 14 10 19 5" stroke-linecap="round"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Orto</span></span>
-      <span class="tab-rename" data-builtin-rename="orto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="orto">✕</span>
     </button>
     <button class="tab custom-tab" data-c="viaggio" data-tab="viaggio" data-builtin="viaggio">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Viaggi</span></span>
-      <span class="tab-rename" data-builtin-rename="viaggio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="viaggio">✕</span>
     </button>
     <button class="tab custom-tab" data-c="grigliate" data-tab="grigliate" data-builtin="grigliate">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21c4 0 6-2.5 6-6 0-3-2-4.5-3-7 0 2-1.5 3-1.5 3S14 8 12 3c0 4-5 6-5 11 0 .5 0 1 .1 1.5C6.5 14 6 13 6 13c-.5 2 0 8 6 8Z"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Grigliate</span></span>
-      <span class="tab-rename" data-builtin-rename="grigliate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="grigliate">✕</span>
     </button>
     <button class="tab custom-tab" data-c="gomme" data-tab="gomme" data-builtin="gomme">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Gomme</span></span>
-      <span class="tab-rename" data-builtin-rename="gomme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="gomme">✕</span>
     </button>
     <button class="tab custom-tab" data-c="progetti" data-tab="progetti" data-builtin="progetti">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 17h4"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Progetti</span></span>
-      <span class="tab-rename" data-builtin-rename="progetti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="progetti">✕</span>
     </button>
     <button class="tab custom-tab" data-c="condivisi" data-tab="condivisi" data-builtin="condivisi">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 6-5" stroke-linecap="round"/></svg></span>
       <span class="tab-label"><span class="tab-label-main">Condivisi</span></span>
-      <span class="tab-rename" data-builtin-rename="condivisi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      <span class="tab-del" data-builtin-del="condivisi">✕</span>
     </button>
     <div id="custom-tabs-slot-shared"></div>
     <div class="tabs-group-label" id="private-group-label" style="display:none;">Private</div>
@@ -1039,22 +1036,25 @@ table.tires textarea.gomme-cell{
   </nav>
   <div class="main-wrap">
     <div class="topbar">
-      <select id="app-theme-select" class="theme-select" title="Cambia stile grafico">
-        <option value="ikigai">🌸 Ikigai</option>
-        <option value="milano">🏛️ Milano</option>
-        <option value="pirati">🏴‍☠️ Pirati</option>
-        <option value="ninja">⚔️ Ninja</option>
-      </select>
-
-      <div class="zoom-controls">
-        <button id="zoom-out-btn" class="btn ghost small" title="Riduci zoom">−</button>
-        <span id="zoom-level" class="zoom-level">100%</span>
-        <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
+      <div class="topbar-row topbar-row-controls">
+        <select id="app-theme-select" class="theme-select" title="Cambia stile grafico">
+          <option value="ikigai">🌸 Ikigai</option>
+          <option value="milano">🏛️ Milano</option>
+          <option value="pirati">🏴‍☠️ Pirati</option>
+          <option value="ninja">⚔️ Ninja</option>
+        </select>
+        <div class="zoom-controls">
+          <button id="zoom-out-btn" class="btn ghost small" title="Riduci zoom">−</button>
+          <span id="zoom-level" class="zoom-level">100%</span>
+          <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
+        </div>
+        <button id="undo-btn" class="btn ghost small" title="Annulla ultima eliminazione" disabled>↶ Undo</button>
       </div>
-      <button id="undo-btn" class="btn ghost small" title="Annulla ultima eliminazione" disabled>↶ Undo</button>
-      <div id="app-version" class="app-version"></div>
-      <div id="user-email" class="user-email"></div>
-      <button id="logout-btn" class="btn ghost small">Esci</button>
+      <div class="topbar-row topbar-row-account">
+        <div id="app-version" class="app-version"></div>
+        <div id="user-email" class="user-email"></div>
+        <button id="logout-btn" class="btn ghost small">Esci</button>
+      </div>
     </div>
     <main id="main"></main>
   </div>
@@ -1153,7 +1153,7 @@ const KPI_CATALOG = {
     } }
 };
 const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
-const APP_VERSION = "v0.10";
+const APP_VERSION = "v0.40";
 const ADMIN_EMAIL = "antonio.calamo@gmail.com";
 const DEFAULT_TAGLINES = [
   "Siamo li Coooocchiiii",
@@ -1183,7 +1183,32 @@ const STANDARD_ICONS = {
   calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 13h18M12 9v12"/><path d="M12 9C9 9 8 7 8 5.5A2.5 2.5 0 0 1 12 4c0 1.5-1 5-1 5S13.5 9 16 9c2 0 3.5-1 3.5-1"/><path d="M12 9c3 0 4-2 4-3.5A2.5 2.5 0 0 0 12 4"/></svg>',
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
-  wrench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5l-6 6 2.4 2.4 6-6a4 4 0 0 0 5-5.4l-2.7 2.7-2.3-2.3Z"/></svg>'
+  wrench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5l-6 6 2.4 2.4 6-6a4 4 0 0 0 5-5.4l-2.7 2.7-2.3-2.3Z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg>',
+  car: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 16V11l2-4h12l2 4v5"/><path d="M4 16h16M4 16v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2M17 16v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2"/><circle cx="7.5" cy="16" r="1.3"/><circle cx="16.5" cy="16" r="1.3"/></svg>',
+  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 9v6M18 9v6M2 10v4M22 10v4M6 12h12"/></svg>',
+  medkit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M12 11v6M9 14h6"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.2"/></svg>',
+  cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-7.97A5 5 0 0 1 16 8.5a3.5 3.5 0 0 1-.5 6.99"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5Z"/></svg>',
+  paw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="9" r="1.6"/><circle cx="10.5" cy="6" r="1.6"/><circle cx="15.5" cy="6" r="1.6"/><circle cx="20" cy="9" r="1.6"/><path d="M13 12c3 0 5 2 5 4.5S16.5 20 13 20s-5-1-5-3.5S10 12 13 12Z"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M9 20v-2h6v2"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 15h18M3 18v2M21 18v2"/><path d="M6 10V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3"/></svg>',
+  cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20 8H6"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>',
+  bike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17l4-9h4l4 9M10 8h3M9 17h9l-3-6"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9Z"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6 17v-5a6 6 0 0 1 12 0v5l1.5 2h-15L6 17Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v10A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-12Z"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 5h13l-3 4 3 4H5"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2.5 2.5M18.5 13.5 21 16"/></svg>',
+  coffee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 9h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9Z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 5c0 1-1 1-1 2M11 5c0 1-1 1-1 2"/></svg>',
+  umbrella: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0Z"/><path d="M12 12v7a2 2 0 0 1-4 0M12 3v2"/></svg>',
+  tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3h6a1 1 0 0 1 1 1v6L11 18 4 11 12 3Z"/><circle cx="15" cy="8" r="1.3"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4v16h16M8 16v-4M13 16V8M18 16v-7"/></svg>',
+  paint: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 20c1-3 2-5 5-5s3 2 5 2 3-6 6-9"/><circle cx="8" cy="7" r="2"/></svg>',
+  sofa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 12v5h16v-5"/><path d="M4 12a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M6 10V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M4 15v3M20 15v3"/></svg>'
 };
 const TAB_COLORS = ["#2B4638","#4C7A4C","#2F5B5E","#8C3A26","#AD7A22","#233A46","#57394F"];
 const THEME_TAB_PALETTES = {
@@ -1613,6 +1638,55 @@ function iconPickerRow(defaultKey, onSelect){
   });
   return wrap;
 }
+function openTabEditModal(opts){
+  // opts: {getIcon, setIcon, getColor, setColor, getName, setName, onDelete, afterSave}
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Modifica scheda"));
+    if(opts.getName){
+      modal.appendChild(el("div",{class:"field-label"},"Nome"));
+      const nameInput = el("input",{type:"text", value:opts.getName()});
+      modal.appendChild(nameInput);
+      nameInput.addEventListener("change", ()=>{
+        if(nameInput.value.trim()){ opts.setName(nameInput.value.trim()); opts.afterSave(); }
+      });
+    }
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:10px;"},"Icona"));
+    const picker = iconPickerRow(opts.getIcon(), (k)=>{ opts.setIcon(k); opts.afterSave(); });
+    modal.appendChild(picker);
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:10px;"},"Colore"));
+    const colorPicker = el("div",{class:"color-picker"});
+    currentTabPalette().forEach(c=>{
+      const dot = el("div",{class:"color-choice"+(c===opts.getColor()?" selected":""), style:`background:${c}`});
+      dot.addEventListener("click", ()=>{
+        colorPicker.querySelectorAll(".color-choice").forEach(d=>d.classList.remove("selected"));
+        dot.classList.add("selected");
+        opts.setColor(c); opts.afterSave();
+      });
+      colorPicker.appendChild(dot);
+    });
+    modal.appendChild(colorPicker);
+    const actions = el("div",{class:"modal-actions"});
+    if(opts.onResetColor){
+      const resetBtn = el("button",{class:"btn ghost"},"Colore originale");
+      resetBtn.addEventListener("click", ()=>{ opts.onResetColor(); close(); });
+      actions.appendChild(resetBtn);
+    }
+    if(opts.onResetIcon){
+      const resetIconBtn = el("button",{class:"btn ghost"},"Icona originale");
+      resetIconBtn.addEventListener("click", ()=>{ opts.onResetIcon(); close(); });
+      actions.appendChild(resetIconBtn);
+    }
+    if(opts.onDelete){
+      const delBtn = el("button",{class:"btn danger small", style:"margin-right:auto;"},"Elimina scheda");
+      delBtn.addEventListener("click", ()=>{ opts.onDelete(); });
+      actions.appendChild(delBtn);
+    }
+    const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
+    closeBtn.addEventListener("click", close);
+    actions.appendChild(closeBtn);
+    modal.appendChild(actions);
+  });
+}
 function emptyState(text, iconSvg){
   return el("div",{class:"empty-state"},[
     el("div",{class:"empty-icon", html:iconSvg||ICON_EMPTY}),
@@ -1687,9 +1761,14 @@ async function ensureWeatherLoaded(){
   if(weatherCache) return weatherCache;
   try{
     const lat=45.4642, lon=9.19;
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum&timezone=auto`);
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum,precipitation_probability_max,weathercode,time&timezone=auto&forecast_days=4`);
     const data = await res.json();
-    weatherCache = { temp: Math.round(data.current.temperature_2m), precipToday: data.daily.precipitation_sum[0] };
+    const days = (data.daily.time||[]).slice(1,4).map((d,i)=>({
+      date: d,
+      precipMm: data.daily.precipitation_sum ? data.daily.precipitation_sum[i+1] : null,
+      precipProb: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[i+1] : null
+    }));
+    weatherCache = { temp: Math.round(data.current.temperature_2m), precipToday: data.daily.precipitation_sum[0], next3days: days };
   }catch(e){ weatherCache = null; }
   return weatherCache;
 }
@@ -1727,10 +1806,36 @@ function statCard(kpiKey){
     }
     card.appendChild(el("div",{class:"stat-value stat-value-quote"}, goodThingPick ? ("\u201C"+goodThingPick.text+"\u201D") : "—"));
   } else if(kpiKey==="monthlyPriorities"){
-    card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
-    card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
+    const mp = state.dashboard.monthlyPriorities;
+    const total = mp.items.length;
+    const doneCount = mp.items.filter(i=>i.done).length;
+    const allDone = total>0 && doneCount===total;
+    card.classList.add("stat-card-priorities");
+    const head = el("div",{class:"stat-card-head"});
+    head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    if(allDone) head.appendChild(el("span",{class:"priorities-medal", title:"Tutte le priorità del mese raggiunte!"}, "🏆"));
+    card.appendChild(head);
+    const listWrap = el("div",{class:"priorities-inline-list"});
+    if(!total){
+      listWrap.appendChild(el("div",{class:"priorities-empty"},"Nessuna priorità impostata — clicca per aggiungerne"));
+    } else {
+      mp.items.slice(0,5).forEach(it=>{
+        const row = el("label",{class:"priorities-inline-row"+(it.done?" done":"")});
+        const cb = el("input",{type:"checkbox"}); cb.checked = !!it.done;
+        cb.addEventListener("click",(e)=>e.stopPropagation());
+        cb.addEventListener("change", ()=>{ it.done = cb.checked; store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
+        row.appendChild(cb);
+        row.appendChild(el("span",{class:"priorities-inline-text"}, it.text||"(senza titolo)"));
+        listWrap.appendChild(row);
+      });
+      if(total>5) listWrap.appendChild(el("div",{class:"priorities-more"}, "+"+(total-5)+" altre…"));
+    }
+    card.appendChild(listWrap);
+    const barWrap = el("div",{class:"priorities-progress-bar"});
+    barWrap.appendChild(el("div",{class:"priorities-progress-fill", style:`width:${total? Math.round(doneCount/total*100):0}%; background:${def.color}`}));
+    card.appendChild(barWrap);
     card.style.cursor = "pointer";
-    card.addEventListener("click", openMonthlyPrioritiesModal);
+    card.addEventListener("click",(e)=>{ if(e.target.tagName==="INPUT") return; openMonthlyPrioritiesModal(); });
   } else {
     card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
     card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
@@ -1739,8 +1844,21 @@ function statCard(kpiKey){
   if(kpiKey==="ortoWater"){
     const weatherLine = el("div",{class:"stat-weather"}, "meteo…");
     card.appendChild(weatherLine);
+    const forecastRow = el("div",{class:"stat-weather-3d"});
+    card.appendChild(forecastRow);
     ensureWeatherLoaded().then(w=>{
-      weatherLine.textContent = w ? `oggi: ${w.precipToday}mm · ${w.temp}°C` : "meteo non disponibile";
+      if(!w){ weatherLine.textContent = "meteo non disponibile"; return; }
+      weatherLine.textContent = `oggi: ${w.precipToday}mm · ${w.temp}°C`;
+      forecastRow.innerHTML = "";
+      (w.next3days||[]).forEach(d=>{
+        const dayName = new Date(d.date+"T12:00:00").toLocaleDateString("it-IT",{weekday:"short"});
+        const label = dayName.charAt(0).toUpperCase()+dayName.slice(1).replace(".","");
+        const probTxt = (d.precipProb!=null) ? d.precipProb+"%" : (d.precipMm+"mm");
+        forecastRow.appendChild(el("div",{class:"stat-weather-day"}, [
+          el("span",{},label),
+          el("b",{}, "☔ "+probTxt)
+        ]));
+      });
     });
   }
   return card;
@@ -1753,9 +1871,30 @@ function renderStatsBar(main){
   head.appendChild(gear);
   main.appendChild(head);
   const row = el("div",{class:"stats-row"});
-  state.dashboard.kpiSelection.forEach(key=>{
+  state.dashboard.kpiSelection.forEach((key,i)=>{
     const card = statCard(key);
-    if(card) row.appendChild(card);
+    if(!card) return;
+    card.draggable = true;
+    card.classList.add("kpi-draggable");
+    card.addEventListener("dragstart",(e)=>{
+      e.dataTransfer.setData("text/plain", String(i));
+      e.dataTransfer.effectAllowed = "move";
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", ()=> card.classList.remove("dragging"));
+    card.addEventListener("dragover",(e)=>{ e.preventDefault(); card.classList.add("drag-over"); });
+    card.addEventListener("dragleave", ()=> card.classList.remove("drag-over"));
+    card.addEventListener("drop",(e)=>{
+      e.preventDefault(); card.classList.remove("drag-over");
+      const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+      if(isNaN(fromIdx) || fromIdx===i) return;
+      const arr = state.dashboard.kpiSelection;
+      const [moved] = arr.splice(fromIdx,1);
+      arr.splice(i,0,moved);
+      store.set(privKey("dashboard"), state.dashboard);
+      render("dashboard");
+    });
+    row.appendChild(card);
   });
   main.appendChild(row);
 }
@@ -1952,8 +2091,7 @@ function openMonthlyPrioritiesModal(){
 function renderDashboard(main){
   const headerWrap = el("div",{class:"dash-header-sticky"});
   headerWrap.appendChild(el("div",{class:"section-head"},[
-    el("h1",{},"Come siamo messi questa settimana?"),
-    el("span",{class:"tag"},"aggiornata in automatico")
+    el("h1",{},"Come siamo messi questa settimana?")
   ]));
   const subRow = el("div",{class:"dash-subtitle"});
   subRow.appendChild(el("span",{}, currentTagline));
@@ -1966,7 +2104,20 @@ function renderDashboard(main){
   main.appendChild(headerWrap);
   renderStatsBar(main);
 
-  const toolbar = el("div",{class:"week-toolbar"});
+  const grid = el("div",{class:"dash-grid"});
+  const week = el("div",{class:"week-table"});
+
+  const past = pastDates().filter(d => state.dashboard.days[d] && state.dashboard.days[d].length);
+  const todoActions = el("div",{class:"todo-header-actions"});
+  if(past.length){
+    const histToggle = el("span",{class:"history-toggle"});
+    histToggle.appendChild(el("span",{class:"history-toggle-arrow"}, historyExpanded ? "▾" : "▸"));
+    histToggle.appendChild(document.createTextNode(
+      (historyExpanded ? "Nascondi" : "Mostra") + " storico (" + past.length + (past.length===1?" giorno":" giorni") + ")"
+    ));
+    histToggle.addEventListener("click", ()=>{ historyExpanded = !historyExpanded; render("dashboard"); });
+    todoActions.appendChild(histToggle);
+  }
   const toggleLabel = el("label",{class:"toggle-completed"});
   const toggleInput = el("input",{type:"checkbox"});
   toggleInput.checked = state.dashboard.showCompleted !== false;
@@ -1977,7 +2128,7 @@ function renderDashboard(main){
   });
   toggleLabel.appendChild(toggleInput);
   toggleLabel.appendChild(document.createTextNode("Mostra i task completati"));
-  toolbar.appendChild(toggleLabel);
+  todoActions.appendChild(toggleLabel);
   const clearBtn = el("button",{class:"btn danger small"},"Elimina completati");
   clearBtn.addEventListener("click", ()=>{
     if(confirm("Sei sicuro di voler eliminare definitivamente tutti i task completati della settimana visibile? L'azione non è reversibile.")){
@@ -1989,29 +2140,15 @@ function renderDashboard(main){
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
     }
   });
-  toolbar.appendChild(clearBtn);
-  main.appendChild(toolbar);
+  todoActions.appendChild(clearBtn);
+  week.appendChild(sectionLabel("To Do List", "var(--forest)", todoActions));
 
-  const grid = el("div",{class:"dash-grid"});
-  const week = el("div",{class:"week-table"});
-  week.appendChild(sectionLabel("To Do List", "var(--forest)"));
-
-  const past = pastDates().filter(d => state.dashboard.days[d] && state.dashboard.days[d].length);
-  if(past.length){
-    const histToggle = el("div",{class:"history-toggle"});
-    histToggle.appendChild(el("span",{class:"history-toggle-arrow"}, historyExpanded ? "▾" : "▸"));
-    histToggle.appendChild(document.createTextNode(
-      (historyExpanded ? "Nascondi" : "Mostra") + " storico (" + past.length + (past.length===1?" giorno":" giorni") + ")"
-    ));
-    histToggle.addEventListener("click", ()=>{ historyExpanded = !historyExpanded; render("dashboard"); });
-    week.appendChild(histToggle);
-    if(historyExpanded){
-      const histWrap = el("div",{class:"history-days"});
-      past.slice().reverse().forEach(dateStr=>{
-        histWrap.appendChild(buildDayRow(main, dateStr, false, true));
-      });
-      week.appendChild(histWrap);
-    }
+  if(past.length && historyExpanded){
+    const histWrap = el("div",{class:"history-days"});
+    past.slice().reverse().forEach(dateStr=>{
+      histWrap.appendChild(buildDayRow(main, dateStr, false, true));
+    });
+    week.appendChild(histWrap);
   }
 
   visibleDates().forEach((dateStr, idx)=>{
@@ -2690,6 +2827,13 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   });
   row.appendChild(grip); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(txt); row.appendChild(del);
   attachRowDrag(grip, row, i, arr, onSave);
+  row.addEventListener("click", (e)=>{
+    if(e.target===cb || e.target===txt || e.target===numInp || e.target===del || e.target===takeBtn || e.target===grip) return;
+    if(grip.contains(e.target) || takeBtn.contains(e.target) || del.contains(e.target)) return;
+    cb.checked = !cb.checked;
+    item.done = cb.checked;
+    onSave();
+  });
   return row;
 }
 function renderTripDetail(detail, trip){
@@ -2705,10 +2849,18 @@ function renderTripDetail(detail, trip){
         store.set("trips", state.trips); render("viaggio");
       }
     });
-    head.appendChild(titleInput); head.appendChild(delCatBtn);
+    const allDone = cat.items.length>0 && cat.items.every(it=>it.done);
+    const selAllWrap = el("label",{class:"select-all-cat", title:"Seleziona/deseleziona tutte le voci"});
+    const selAllCb = el("input",{type:"checkbox"}); selAllCb.checked = allDone;
+    selAllWrap.appendChild(selAllCb); selAllWrap.appendChild(el("span",{},"Tutto"));
+    const save = ()=>{ store.set("trips", state.trips); render("viaggio"); };
+    selAllCb.addEventListener("change", ()=>{
+      cat.items.forEach(it=>it.done = selAllCb.checked);
+      save();
+    });
+    head.appendChild(titleInput); head.appendChild(selAllWrap); head.appendChild(delCatBtn);
     block.appendChild(head);
     const grid = el("div",{class:"pack-grid"});
-    const save = ()=>{ store.set("trips", state.trips); render("viaggio"); };
     cat.items.forEach((it,i)=>{
       grid.appendChild(renderPackItem(it, i, cat.items, save, "t"+trip.id+ci));
     });
@@ -3136,16 +3288,34 @@ function renderGomme(main){
 }
 
 /* ---------------- FINANZE ---------------- */
+const AMORT_TYPES = {
+  capitale: { label:"Capitale residuo (mutuo)", valueLabel:"Capitale residuo" },
+  interessi: { label:"Interessi passivi residui", valueLabel:"Interessi residui" },
+  deprezzamento: { label:"Deprezzamento bene (es. auto)", valueLabel:"Valore residuo" },
+  rivalutazione: { label:"Rivalutazione bene (es. immobile)", valueLabel:"Valore attuale" }
+};
+function computeAmortValue(am){
+  if(am.type==="interessi"){
+    return am.rows.slice(am.idx).reduce((s,r)=>s+(r.intQuota||0), 0);
+  }
+  return am.rows[am.idx].capResiduo;
+}
 function openAmortizationModal(item, onSave){
   openModal((modal, close)=>{
     modal.appendChild(el("h3",{},"Piano di ammortamento"));
     if(!item.amortization || !item.amortization.rows || !item.amortization.rows.length){
-      modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;"},
-        'Incolla una riga per ogni rata, nel formato: scadenza;capitale;interessi;totale rata;capitale residuo — es. 01/01/2026;450;120;570;99550. Una volta importato, potrai avanzare rata dopo rata e il debito si aggiornerà da solo.'));
+      modal.appendChild(el("div",{class:"field-label"},"Tipo di piano"));
+      const typeSelect = el("select",{});
+      Object.keys(AMORT_TYPES).forEach(k=>{
+        typeSelect.appendChild(el("option",{value:k}, AMORT_TYPES[k].label));
+      });
+      modal.appendChild(typeSelect);
+      modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
+        'Incolla una riga per ogni rata/periodo, nel formato: scadenza;capitale;interessi;totale rata;valore residuo — es. 01/01/2026;450;120;570;99550. Per deprezzamento/rivalutazione puoi lasciare a 0 le colonne capitale/interessi/totale rata e usare solo scadenza e valore. Una volta importato, potrai avanzare periodo dopo periodo e il valore si aggiornerà da solo.'));
       const ta = el("textarea",{rows:"8", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2026;450;120;570;99550\n01/02/2026;452;118;570;99098"});
       modal.appendChild(ta);
       const excelWrap = el("div",{style:"margin-top:12px;"});
-      excelWrap.appendChild(el("div",{class:"field-label"},"oppure carica un file Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, capitale residuo — senza intestazione)"));
+      excelWrap.appendChild(el("div",{class:"field-label"},"oppure carica un file Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, valore residuo — senza intestazione)"));
       const fileInput = el("input",{type:"file", accept:".xlsx,.xls,.csv"});
       let excelRows = null;
       const excelPreview = el("div",{style:"font-size:12px;color:var(--ink-soft);margin-top:6px;"});
@@ -3196,20 +3366,42 @@ function openAmortizationModal(item, onSave){
           });
         }
         if(!rows.length){ errBox.textContent = "Nessuna riga valida trovata."; return; }
-        item.amortization = { rows, idx: 0 };
-        item.value = String(rows[0].capResiduo);
+        item.amortization = { rows, idx: 0, type: typeSelect.value };
+        item.value = String(computeAmortValue(item.amortization));
         onSave(); close(); render("finanze");
       });
       actions.appendChild(cancelBtn); actions.appendChild(importBtn);
       modal.appendChild(actions);
     } else {
       const am = item.amortization;
+      if(!am.type) am.type = "capitale";
+      const typeDef = AMORT_TYPES[am.type] || AMORT_TYPES.capitale;
       const row = am.rows[am.idx];
+      modal.appendChild(el("div",{style:"font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;"}, "Tipo: "+typeDef.label));
       modal.appendChild(el("div",{style:"font-size:13px; line-height:1.9;"}, [
         el("div",{},"Rata "+(am.idx+1)+" di "+am.rows.length+" — scadenza "+row.date),
         el("div",{},"Capitale: "+fmtEUR(row.capQuota)+" · Interessi: "+fmtEUR(row.intQuota)+" · Totale rata: "+fmtEUR(row.totRata)),
-        el("div",{},"Capitale residuo: "+fmtEUR(row.capResiduo))
+        el("div",{},typeDef.valueLabel+": "+fmtEUR(computeAmortValue(am)))
       ]));
+      const gotoWrap = el("div",{style:"display:flex; align-items:center; gap:8px; margin-top:12px;"});
+      gotoWrap.appendChild(el("label",{style:"font-size:12.5px; color:var(--ink-soft);"},"Vai alla rata"));
+      const gotoInput = el("input",{type:"number", min:"1", max:String(am.rows.length), value:String(am.idx+1), style:"width:70px;"});
+      const gotoErr = el("span",{style:"font-size:12px; color:var(--rust);"});
+      const gotoBtn = el("button",{class:"btn small"},"Vai");
+      function doGoto(){
+        const n = parseInt(gotoInput.value, 10);
+        if(!n || n<1 || n>am.rows.length){
+          gotoErr.textContent = "Numero rata non valido (1–"+am.rows.length+").";
+          return;
+        }
+        am.idx = n-1;
+        item.value = String(computeAmortValue(am));
+        onSave(); close(); render("finanze");
+      }
+      gotoBtn.addEventListener("click", doGoto);
+      gotoInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); doGoto(); } });
+      gotoWrap.appendChild(gotoInput); gotoWrap.appendChild(gotoBtn); gotoWrap.appendChild(gotoErr);
+      modal.appendChild(gotoWrap);
       const actions = el("div",{class:"modal-actions"});
       const removeBtn = el("button",{class:"btn danger small", style:"margin-right:auto;"},"Rimuovi piano");
       removeBtn.addEventListener("click", ()=>{
@@ -3226,7 +3418,7 @@ function openAmortizationModal(item, onSave){
         const nextBtn = el("button",{class:"btn primary"},"Avanza al mese successivo →");
         nextBtn.addEventListener("click", ()=>{
           am.idx++;
-          item.value = String(am.rows[am.idx].capResiduo);
+          item.value = String(computeAmortValue(am));
           onSave(); close(); render("finanze");
         });
         actions.appendChild(nextBtn);
@@ -3348,13 +3540,13 @@ function renderFinanceChart(fullHistory){
   }
 
   const totalPoints = data.length + (financeChartForecast ? 12 : 0);
-  const w = Math.max(640, totalPoints*46), h = 240, pad = 38, padLeft = 62;
+  const w = Math.max(640, totalPoints*46), h = 240, pad = 38, padLeft = 62, padRight = 96;
   const allActualVals = data.flatMap(d=> series.map(s=> d[s.key]||0));
   const allForecastVals = financeChartForecast ? forecastPoints.liquidity.concat(forecastPoints.net) : [];
   const allVals = allActualVals.concat(allForecastVals).concat([0]);
   const maxV = Math.max(...allVals), minV = Math.min(...allVals);
   const range = (maxV - minV) || 1;
-  const xStep = totalPoints>1 ? (w - padLeft - pad) / (totalPoints - 1) : 0;
+  const xStep = totalPoints>1 ? (w - padLeft - padRight) / (totalPoints - 1) : 0;
   function xy(val, i){
     const x = padLeft + i*xStep;
     const y = h - pad - ((val - minV) / range) * (h - pad*2);
@@ -3366,10 +3558,10 @@ function renderFinanceChart(fullHistory){
   for(let t=0; t<=yTicks; t++){
     const val = minV + (range * t / yTicks);
     const y = h - pad - (t/yTicks) * (h - pad*2);
-    svg += `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${w-pad}" y2="${y.toFixed(1)}" stroke="#EFE6D4" stroke-width="1"/>`;
+    svg += `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${w-padRight}" y2="${y.toFixed(1)}" stroke="#EFE6D4" stroke-width="1"/>`;
     svg += `<text x="${(padLeft-8).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="9" fill="#8a8065" text-anchor="end">${fmtMoneyPlain(val)}</text>`;
   }
-  svg += `<line x1="${padLeft}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4D6AC" stroke-width="1"/>`;
+  svg += `<line x1="${padLeft}" y1="${h-pad}" x2="${w-padRight}" y2="${h-pad}" stroke="#E4D6AC" stroke-width="1"/>`;
   if(financeChartForecast){
     const [sepX] = xy(0, data.length-1);
     svg += `<line x1="${sepX.toFixed(1)}" y1="${pad-6}" x2="${sepX.toFixed(1)}" y2="${h-pad}" stroke="#B8AD8E" stroke-width="1" stroke-dasharray="3,3"/>`;
@@ -3380,16 +3572,23 @@ function renderFinanceChart(fullHistory){
       const [x,y] = xy(row[s.key]||0, i);
       return (i===0?"M":"L")+x.toFixed(1)+","+y.toFixed(1);
     }).join(" ");
-    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.key==='net'?2.6:1.6}"/>`;
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.key==='net'?2.6:1.6}"><title>${s.label}</title></path>`;
+    let endX, endY;
     if(financeChartForecast && forecastPoints[s.key]){
       const lastActual = xy(data[data.length-1][s.key]||0, data.length-1);
       let fd = "M"+lastActual[0].toFixed(1)+","+lastActual[1].toFixed(1);
       forecastPoints[s.key].forEach((val,fi)=>{
         const [x,y] = xy(val, data.length+fi);
         fd += " L"+x.toFixed(1)+","+y.toFixed(1);
+        endX = x; endY = y;
       });
-      svg += `<path d="${fd}" fill="none" stroke="${s.color}" stroke-width="${s.key==='net'?2.6:1.6}" stroke-dasharray="5,4" opacity="0.65"/>`;
+      svg += `<path d="${fd}" fill="none" stroke="${s.color}" stroke-width="${s.key==='net'?2.6:1.6}" stroke-dasharray="5,4" opacity="0.65"><title>${s.label} (proiezione)</title></path>`;
+    } else {
+      [endX, endY] = xy(data[data.length-1][s.key]||0, data.length-1);
     }
+    // etichetta alla fine della linea, per distinguere subito quale serie è quale
+    svg += `<circle cx="${endX.toFixed(1)}" cy="${endY.toFixed(1)}" r="2.6" fill="${s.color}"/>`;
+    svg += `<text x="${(endX+6).toFixed(1)}" y="${(endY+3).toFixed(1)}" font-size="9.5" font-weight="700" fill="${s.color}">${s.label}<title>${s.label}</title></text>`;
   });
   // etichette mesi sull'asse X (evitando sovraffollamento su tante colonne)
   const labelEvery = Math.max(1, Math.ceil(totalPoints/12));
@@ -3667,7 +3866,16 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
         save();
       }
     });
+    const allDone = cat.items.length>0 && cat.items.every(it=>it.done);
+    const selAllWrap = el("label",{class:"select-all-cat", title:"Seleziona/deseleziona tutte le voci"});
+    const selAllCb = el("input",{type:"checkbox"}); selAllCb.checked = allDone;
+    selAllWrap.appendChild(selAllCb); selAllWrap.appendChild(el("span",{},"Tutto"));
+    selAllCb.addEventListener("change", ()=>{
+      cat.items.forEach(it=>it.done = selAllCb.checked);
+      save();
+    });
     head.appendChild(titleInput);
+    head.appendChild(selAllWrap);
     head.appendChild(delCatBtn);
     block.appendChild(head);
     const grid = el("div",{class:"pack-grid"});
@@ -3739,77 +3947,28 @@ function customTabButton(tab, index, arr){
     store.set(targetKeyFor(), arr);
     renderCustomTabButtons();
   });
-  const iconEl = el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list, title:"Cambia icona"});
-  iconEl.addEventListener("click",(e)=>{
-    e.stopPropagation();
-    openModal((modal, close)=>{
-      modal.appendChild(el("h3",{},"Icona scheda"));
-      const picker = iconPickerRow(tab.icon, (k)=>{
-        tab.icon = k;
-        const targetKey = tab.private ? privKey("customTabs") : "customTabs";
-        const targetArr = tab.private ? state.customTabsPrivate : state.customTabs;
-        store.set(targetKey, targetArr);
-        close(); renderCustomTabButtons();
-      });
-      modal.appendChild(picker);
-      const actions = el("div",{class:"modal-actions"});
-      const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
-      closeBtn.addEventListener("click", close);
-      actions.appendChild(closeBtn);
-      modal.appendChild(actions);
-    });
-  });
+  const iconEl = el("span",{class:"tab-icon", html: STANDARD_ICONS[tab.icon]||STANDARD_ICONS.list});
   btn.appendChild(iconEl);
   const labelEl = el("span",{class:"tab-label"}, tab.name);
   btn.appendChild(labelEl);
-  const colorBtn = el("span",{class:"tab-color-edit", title:"Cambia colore"});
-  colorBtn.addEventListener("click",(e)=>{
+  const editBtn = el("span",{class:"tab-edit-btn", html:ICON_EDIT, title:"Modifica scheda"});
+  editBtn.addEventListener("click",(e)=>{
     e.stopPropagation();
-    openModal((modal, close)=>{
-      modal.appendChild(el("h3",{},"Colore scheda"));
-      const colorPicker = el("div",{class:"color-picker"});
-      currentTabPalette().forEach(c=>{
-        const dot = el("div",{class:"color-choice"+(c===tab.color?" selected":""), style:`background:${c}`});
-        dot.addEventListener("click", ()=>{
-          tab.color = c;
-          btn.style.background = c;
-          const targetKey = tab.private ? privKey("customTabs") : "customTabs";
-          const targetArr = tab.private ? state.customTabsPrivate : state.customTabs;
-          store.set(targetKey, targetArr);
-          close();
-        });
-        colorPicker.appendChild(dot);
-      });
-      modal.appendChild(colorPicker);
-      const actions = el("div",{class:"modal-actions"});
-      const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
-      closeBtn.addEventListener("click", close);
-      actions.appendChild(closeBtn);
-      modal.appendChild(actions);
+    const targetKey = ()=> tab.private ? privKey("customTabs") : "customTabs";
+    const targetArr = ()=> tab.private ? state.customTabsPrivate : state.customTabs;
+    openTabEditModal({
+      getIcon: ()=>tab.icon, setIcon: (k)=>{ tab.icon=k; store.set(targetKey(), targetArr()); },
+      getColor: ()=>tab.color, setColor: (c)=>{ tab.color=c; btn.style.background=c; store.set(targetKey(), targetArr()); },
+      getName: ()=>tab.name, setName: (n)=>{ tab.name=n; store.set(targetKey(), targetArr()); },
+      afterSave: ()=>renderCustomTabButtons(),
+      onDelete: ()=>{
+        if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
+          deleteCustomTab(tab);
+        }
+      }
     });
   });
-  btn.appendChild(colorBtn);
-  const renameBtn = el("span",{class:"tab-rename", html:ICON_EDIT, title:"Rinomina scheda"});
-  renameBtn.addEventListener("click",(e)=>{
-    e.stopPropagation();
-    const newName = prompt("Rinomina scheda:", tab.name);
-    if(newName && newName.trim()){
-      tab.name = newName.trim();
-      const targetKey = tab.private ? privKey("customTabs") : "customTabs";
-      const targetArr = tab.private ? state.customTabsPrivate : state.customTabs;
-      store.set(targetKey, targetArr);
-      renderCustomTabButtons();
-    }
-  });
-  btn.appendChild(renameBtn);
-  const delBtn = el("span",{class:"tab-del", html:"✕"});
-  delBtn.addEventListener("click",(e)=>{
-    e.stopPropagation();
-    if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
-      deleteCustomTab(tab);
-    }
-  });
-  btn.appendChild(delBtn);
+  btn.appendChild(editBtn);
   return btn;
 }
 async function deleteCustomTab(tab){
@@ -3911,78 +4070,29 @@ function enhanceBuiltinTabs(){
       applyBuiltinOrder();
     });
 
-    const iconSpan = btn.querySelector(".tab-icon");
-    if(iconSpan){
-      iconSpan.style.cursor = "pointer";
-      iconSpan.title = "Cambia icona";
-      iconSpan.addEventListener("click",(e)=>{
-        e.stopPropagation();
-        openModal((modal, close)=>{
-          modal.appendChild(el("h3",{},"Icona scheda"));
-          const picker = iconPickerRow(state.builtinIcons[key]||"", (k)=>{
-            state.builtinIcons[key] = k;
-            store.set(privKey("builtinIcons"), state.builtinIcons);
-            applyBuiltinIcons();
-            close();
-          });
-          modal.appendChild(picker);
-          const actions = el("div",{class:"modal-actions"});
-          if(state.builtinIcons[key]){
-            const resetBtn = el("button",{class:"btn ghost"},"Icona originale");
-            resetBtn.addEventListener("click", ()=>{
-              delete state.builtinIcons[key];
-              store.set(privKey("builtinIcons"), state.builtinIcons);
-              applyBuiltinIcons();
-              close();
-            });
-            actions.appendChild(resetBtn);
-          }
-          const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
-          closeBtn.addEventListener("click", close);
-          actions.appendChild(closeBtn);
-          modal.appendChild(actions);
-        });
-      });
-    }
-
-    const colorBtn = el("span",{class:"tab-color-edit", title:"Cambia colore"});
-    colorBtn.addEventListener("click",(e)=>{
+    const editBtn = el("span",{class:"tab-edit-btn", html:ICON_EDIT, title:"Modifica scheda"});
+    editBtn.addEventListener("click",(e)=>{
       e.stopPropagation();
-      openModal((modal, close)=>{
-        modal.appendChild(el("h3",{},"Colore scheda"));
-        const colorPicker = el("div",{class:"color-picker"});
-        currentTabPalette().forEach(c=>{
-          const dot = el("div",{class:"color-choice"+(c===state.builtinColors[key]?" selected":"")}, "");
-          dot.style.background = c;
-          dot.addEventListener("click", ()=>{
-            state.builtinColors[key] = c;
-            store.set(privKey("builtinColors"), state.builtinColors);
-            applyBuiltinColors();
-            close();
-          });
-          colorPicker.appendChild(dot);
-        });
-        modal.appendChild(colorPicker);
-        const actions = el("div",{class:"modal-actions"});
-        if(state.builtinColors[key]){
-          const resetBtn = el("button",{class:"btn ghost"},"Colore originale");
-          resetBtn.addEventListener("click", ()=>{
-            delete state.builtinColors[key];
-            store.set(privKey("builtinColors"), state.builtinColors);
-            applyBuiltinColors();
-            close();
-          });
-          actions.appendChild(resetBtn);
+      openTabEditModal({
+        getIcon: ()=>state.builtinIcons[key]||"", setIcon: (k)=>{ state.builtinIcons[key]=k; store.set(privKey("builtinIcons"), state.builtinIcons); },
+        getColor: ()=>state.builtinColors[key]||currentTabPalette()[idx%currentTabPalette().length], setColor: (c)=>{ state.builtinColors[key]=c; store.set(privKey("builtinColors"), state.builtinColors); },
+        getName: ()=>state.builtinLabels[key]||BUILTIN_TABS[key], setName: (n)=>{ state.builtinLabels[key]=n; store.set(privKey("builtinLabels"), state.builtinLabels); },
+        afterSave: ()=>{ applyBuiltinIcons(); applyBuiltinColors(); applyBuiltinLabels(); },
+        onResetIcon: state.builtinIcons[key] ? ()=>{ delete state.builtinIcons[key]; store.set(privKey("builtinIcons"), state.builtinIcons); applyBuiltinIcons(); } : null,
+        onResetColor: state.builtinColors[key] ? ()=>{ delete state.builtinColors[key]; store.set(privKey("builtinColors"), state.builtinColors); applyBuiltinColors(); } : null,
+        onDelete: ()=>{
+          if(confirm('Nascondere la scheda "'+(state.builtinLabels[key]||BUILTIN_TABS[key])+'"? I dati restano salvati e potrai farla ricomparire da "+ Nuova scheda".')){
+            state.hiddenBuiltins.push(key);
+            store.set(privKey("hiddenBuiltins"), state.hiddenBuiltins);
+            applyHiddenBuiltins();
+            document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+            document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
+            render("dashboard");
+          }
         }
-        const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
-        closeBtn.addEventListener("click", close);
-        actions.appendChild(closeBtn);
-        modal.appendChild(actions);
       });
     });
-    const renameEl = btn.querySelector("[data-builtin-rename]");
-    if(renameEl) btn.insertBefore(colorBtn, renameEl);
-    else btn.appendChild(colorBtn);
+    btn.appendChild(editBtn);
   });
 }
 function restoreBuiltin(key){
