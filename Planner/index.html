@@ -25,15 +25,6 @@
   --tab-text:#FFF6E6;
   --shadow: 0 2px 10px rgba(13,59,62,0.10);
 }
-:root[data-theme="dark"]{
-  --paper:#1A211C;
-  --paper-2:#20281F;
-  --ink:#EDE7D3;
-  --ink-soft:#A9AE9C;
-  --line:#3A4536;
-  --card:#242D24;
-  --shadow: 0 2px 10px rgba(0,0,0,0.35);
-}
 :root[data-app-theme="milano"]{
   --paper:#F7F7F7;
   --paper-2:#FFFFFF;
@@ -69,21 +60,21 @@
   --shadow: 0 2px 10px rgba(14,34,56,0.12);
 }
 :root[data-app-theme="ninja"]{
-  --paper:#EDEDED;
-  --paper-2:#F5F5F5;
-  --ink:#0D0D0D;
-  --ink-soft:#6B6B6B;
-  --forest:#0D0D0D;
+  --paper:#191919;
+  --paper-2:#212121;
+  --ink:#EDEDED;
+  --ink-soft:#9A9A9A;
+  --forest:#2A2A2A;
   --leaf:#4A4A4A;
   --teal:#3F3F3F;
   --rust:#C41E3A;
   --mustard:#8E0F1F;
-  --slate:#2A2A2A;
+  --slate:#1F1F1F;
   --plum:#C41E3A;
-  --line:#BFBFBF;
-  --card:#FFFFFF;
+  --line:#3A3A3A;
+  --card:#252525;
   --tab-text:#EDEDED;
-  --shadow: 0 2px 10px rgba(0,0,0,0.14);
+  --shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 *{box-sizing:border-box;}
 html, body{height:100%;}
@@ -142,7 +133,7 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .brand-tagline{
   font-family:'Inter',sans-serif; font-size:10.5px; font-style:italic;
-  color:var(--ink-soft); margin-top:2px;
+  color:var(--ink-soft); margin-top:2px; line-height:1.35; min-height:28px;
 }
 .brand-footer{
   margin-top:auto;
@@ -252,7 +243,6 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
   opacity:.75; white-space:nowrap;
 }
-#theme-toggle-btn{font-size:14px; padding:5px 9px;}
 main{
   flex:1;
   padding:20px 44px 38px 44px;
@@ -849,7 +839,7 @@ table.tires textarea.gomme-cell{
         <option value="pirati">🏴‍☠️ Pirati</option>
         <option value="ninja">⚔️ Ninja</option>
       </select>
-      <button id="theme-toggle-btn" class="btn ghost small" title="Cambia tema">☾</button>
+
       <div class="zoom-controls">
         <button id="zoom-out-btn" class="btn ghost small" title="Riduci zoom">−</button>
         <span id="zoom-level" class="zoom-level">100%</span>
@@ -1011,13 +1001,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 document.getElementById("login-version").innerHTML = APP_VERSION + "<br>by Antonio Calamo";
 document.getElementById("app-version").textContent = APP_VERSION + " · Antonio Calamo";
 
-let uiTheme = "light";
 let uiZoom = 1;
 let appTheme = "ikigai";
-function applyTheme(){
-  document.documentElement.setAttribute("data-theme", uiTheme);
-  document.getElementById("theme-toggle-btn").textContent = uiTheme==="dark" ? "☀" : "☾";
-}
 function applyAppTheme(){
   document.documentElement.setAttribute("data-app-theme", appTheme);
   const def = THEMES[appTheme] || THEMES.ikigai;
@@ -1046,11 +1031,6 @@ document.addEventListener("keydown", (e)=>{
     }
     performUndo();
   }
-});
-document.getElementById("theme-toggle-btn").addEventListener("click", ()=>{
-  uiTheme = uiTheme==="dark" ? "light" : "dark";
-  applyTheme();
-  store.set(privKey("uiTheme"), uiTheme);
 });
 document.getElementById("zoom-in-btn").addEventListener("click", ()=>{
   uiZoom = Math.min(1.3, +(uiZoom+0.1).toFixed(2)); applyZoom();
@@ -1115,7 +1095,7 @@ const STATE_KEY_MAP_PRIVATE = {
 };
 function restoreSnapshot(storeKey, value, targetTab){
   const privPrefix = "priv:"+(currentUser?currentUser.id:"")+":";
-  if(storeKey === privPrefix+"uiTheme"){ uiTheme = value; applyTheme(); }
+  if(storeKey === privPrefix+"appTheme"){ appTheme = value; applyAppTheme(); }
   else if(storeKey === privPrefix+"uiZoom"){ uiZoom = value; applyZoom(); }
   else if(storeKey.indexOf(privPrefix)===0){
     const stripped = storeKey.slice(privPrefix.length);
@@ -1196,7 +1176,6 @@ async function loadAll(){
   state.customTabsPrivate = await store.get(privKey("customTabs"), []);
   state.hiddenBuiltins = await store.get(privKey("hiddenBuiltins"), []);
   state.gommeLayout = await store.get(privKey("gommeLayout"), {colWidths:{}, rowHeights:{}});
-  uiTheme = await store.get(privKey("uiTheme"), "light");
   uiZoom = await store.get(privKey("uiZoom"), 1);
   appTheme = await store.get(privKey("appTheme"), "ikigai");
   state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
@@ -1227,7 +1206,6 @@ async function startApp(){
   document.getElementById("app-root").style.display="flex";
   document.getElementById("user-email").textContent = currentUser.email + (isGuest ? " (guest)" : "");
   await loadAll();
-  applyTheme();
   applyZoom();
   applyAppTheme();
   currentTagline = state.taglines.length ? state.taglines[Math.floor(Math.random()*state.taglines.length)] : "";
