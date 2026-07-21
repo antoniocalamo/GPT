@@ -536,6 +536,12 @@ textarea{resize:vertical;}
 .coll-detail{flex:1; min-width:0;}
 .cat-block{margin-bottom:12px;}
 .cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
+.cat-block-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+.cat-title-input{
+  border:none; background:transparent; padding:2px 0; flex:1; min-width:0;
+  font-size:14px; color:var(--forest); font-family:'Fraunces',serif; font-weight:600;
+}
+.cat-title-input:focus{outline:none; background:var(--card); border-radius:6px; padding:2px 6px;}
 .check-item{display:flex; align-items:flex-start; gap:6px; padding:5px 0; user-select:none;}
 .check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest); flex-shrink:0; margin-top:3px;}
 .check-item.done .pack-text{text-decoration:line-through; color:var(--ink-soft);}
@@ -986,13 +992,7 @@ const STANDARD_ICONS = {
 };
 const TAB_COLORS = ["#2B4638","#4C7A4C","#2F5B5E","#8C3A26","#AD7A22","#233A46","#57394F"];
 const DAY_COLORS = { "Lunedì":"#2B4638","Martedì":"#4C7A4C","Mercoledì":"#2F5B5E","Giovedì":"#AD7A22","Venerdì":"#8C3A26","Sabato":"#57394F","Domenica":"#233A46" };
-const TRIP_TEMPLATE = () => ([
-  {title:"All season", items:["Documenti e portafoglio","Caricatori e cavi","Beauty case","Cambio biancheria"].map(t=>({text:t, done:false}))},
-  {title:"Se estate", items:["Costume","Crema solare","Occhiali da sole"].map(t=>({text:t, done:false}))},
-  {title:"Se inverno", items:["Giacca pesante","Guanti e sciarpa"].map(t=>({text:t, done:false}))},
-  {title:"Se estero", items:["Passaporto","Adattatore presa"].map(t=>({text:t, done:false}))},
-  {title:"Altro", items:[].map(t=>({text:t, done:false}))}
-]);
+const TRIP_TEMPLATE = () => ([]);
 const BBQ_TEMPLATE = () => ([
   "Griglia e carbone","Accendifuoco/fiammiferi","Pinze e attrezzi","Condimenti (olio, sale, salse)",
   "Piatti e posate usa e getta","Buste immondizia","Bevande e ghiaccio","Giochi da tavolo/sportivi"
@@ -2261,13 +2261,24 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   return row;
 }
 function renderTripDetail(detail, trip){
-  trip.data.forEach(cat=>{
+  trip.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
-    block.appendChild(el("h4",{},cat.title));
+    const head = el("div",{class:"cat-block-head"});
+    const titleInput = el("input",{type:"text", class:"cat-title-input", value:cat.title, placeholder:"Nome categoria"});
+    titleInput.addEventListener("change", ()=>{ cat.title=titleInput.value; store.set("trips", state.trips); });
+    const delCatBtn = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+    delCatBtn.addEventListener("click", ()=>{
+      if(confirm('Eliminare la categoria "'+(cat.title||"senza nome")+'" e tutte le sue voci?')){
+        trip.data.splice(ci,1);
+        store.set("trips", state.trips); render("viaggio");
+      }
+    });
+    head.appendChild(titleInput); head.appendChild(delCatBtn);
+    block.appendChild(head);
     const grid = el("div",{class:"pack-grid"});
     const save = ()=>{ store.set("trips", state.trips); render("viaggio"); };
     cat.items.forEach((it,i)=>{
-      grid.appendChild(renderPackItem(it, i, cat.items, save, "t"+trip.id+cat.title));
+      grid.appendChild(renderPackItem(it, i, cat.items, save, "t"+trip.id+ci));
     });
     block.appendChild(grid);
     const addLine = el("div",{class:"add-line"});
@@ -2282,6 +2293,12 @@ function renderTripDetail(detail, trip){
     block.appendChild(addLine);
     detail.appendChild(block);
   });
+  const addCatBtn = el("button",{class:"btn ghost", style:"margin-top:6px;"},"+ Nuova categoria");
+  addCatBtn.addEventListener("click", ()=>{
+    trip.data.push({title:"Nuova categoria", items:[]});
+    store.set("trips", state.trips); render("viaggio");
+  });
+  detail.appendChild(addCatBtn);
 }
 
 function renderBbqDetail(detail, bbq){
