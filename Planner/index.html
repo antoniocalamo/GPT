@@ -306,11 +306,17 @@ textarea{resize:vertical;}
 .day-card{padding:8px 10px; border-left:4px solid var(--day-color, var(--line)); transition: box-shadow .12s ease;}
 .day-card.day-card-drop-target{box-shadow:0 0 0 2px var(--forest) inset;}
 .section-label{
-  display:flex; align-items:center; gap:9px; min-height:30px;
+  display:flex; align-items:center; gap:9px;
   font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.10em;
   text-transform:uppercase; color:var(--ink-soft); font-weight:600;
   padding-bottom:9px; margin-bottom:12px; border-bottom:1px solid var(--line);
 }
+.section-add-btn{
+  width:17px; height:17px; border-radius:50%; border:1px solid var(--line);
+  background:transparent; color:var(--ink-soft); cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1; padding:0;
+}
+.section-add-btn:hover{background:var(--mustard); border-color:var(--mustard); color:#fff;}
 .section-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
 .task-item{
   display:flex;
@@ -475,6 +481,12 @@ textarea{resize:vertical;}
   padding:10px 12px; border-radius:10px; cursor:pointer;
   border:1px solid var(--line); background:var(--card); font-size:13.5px; font-weight:600;
 }
+.coll-item-name-row{display:flex; align-items:center; gap:8px;}
+.coll-item-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.coll-item-rename{width:12px; height:12px; flex-shrink:0; opacity:.4; cursor:pointer;}
+.coll-item-rename svg{width:100%; height:100%; display:block;}
+.coll-item-rename:hover{opacity:1;}
+.coll-item.active .coll-item-rename{color:#fff;}
 .coll-item.active{background:var(--forest); color:#fff; border-color:var(--forest);}
 .coll-detail{flex:1; min-width:0;}
 .cat-block{margin-bottom:12px;}
@@ -671,8 +683,14 @@ table.tires textarea.gomme-cell{
   position:absolute; right:16px; top:50%; transform:translateY(-50%);
   opacity:0; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
 }
-.custom-tab:hover .tab-del{opacity:.75;}
+.tab-rename{
+  position:absolute; right:34px; top:50%; transform:translateY(-50%);
+  width:12px; height:12px; opacity:0; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
+}
+.tab-rename svg{width:100%; height:100%; display:block;}
+.custom-tab:hover .tab-del, .custom-tab:hover .tab-rename{opacity:.75;}
 .tab-del:hover{opacity:1 !important; color:#fff;}
+.tab-rename:hover{opacity:1 !important;}
 .tab-add{
   border:1px dashed var(--line); background:transparent; color:var(--ink-soft);
   border-radius:12px 0 0 12px; padding:11px 16px; cursor:pointer;
@@ -928,6 +946,15 @@ function applyZoom(){
   document.getElementById("zoom-level").textContent = Math.round(uiZoom*100)+"%";
 }
 document.getElementById("undo-btn").addEventListener("click", performUndo);
+document.addEventListener("keydown", (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="z" && !e.shiftKey){
+    e.preventDefault();
+    if(document.activeElement && (document.activeElement.tagName==="INPUT" || document.activeElement.tagName==="TEXTAREA")){
+      document.activeElement.blur();
+    }
+    performUndo();
+  }
+});
 document.getElementById("theme-toggle-btn").addEventListener("click", ()=>{
   uiTheme = uiTheme==="dark" ? "light" : "dark";
   applyTheme();
@@ -942,6 +969,7 @@ document.getElementById("zoom-out-btn").addEventListener("click", ()=>{
   store.set(privKey("uiZoom"), uiZoom);
 });
 
+let keySnapshots = {};
 const store = {
   async get(key, fallback){
     try{
@@ -950,11 +978,22 @@ const store = {
         .select("value")
         .eq("key", key)
         .maybeSingle();
-      if(error || !data) return structuredClone(fallback);
-      return data.value;
-    }catch(e){ console.error("supabase get error", key, e); return structuredClone(fallback); }
+      const val = (error || !data) ? structuredClone(fallback) : data.value;
+      keySnapshots[key] = structuredClone(val);
+      return val;
+    }catch(e){
+      console.error("supabase get error", key, e);
+      keySnapshots[key] = structuredClone(fallback);
+      return structuredClone(fallback);
+    }
   },
   async set(key, value){
+    const prev = keySnapshots[key];
+    if(prev !== undefined){
+      const prevClone = prev;
+      pushUndo(()=>{ restoreSnapshot(key, structuredClone(prevClone)); });
+    }
+    keySnapshots[key] = structuredClone(value);
     try{
       const { error } = await sb
         .from("planner_store")
@@ -972,6 +1011,36 @@ let customTabData = {};
 let activeCustomItem = {};
 let currentTagline = "";
 let lastTaskByDay = {};
+let currentRenderedTab = "dashboard";
+const STATE_KEY_MAP_SHARED = {
+  orto:"orto", trips:"trips", bbqs:"bbqs", tires:"tires",
+  sharedBoards:"sharedBoards", customTabs:"customTabs", taglines:"taglines"
+};
+const STATE_KEY_MAP_PRIVATE = {
+  dashboard:"dashboard", finance:"finance", hiddenBuiltins:"hiddenBuiltins",
+  gommeLayout:"gommeLayout", customTabs:"customTabsPrivate"
+};
+function restoreSnapshot(storeKey, value){
+  const privPrefix = "priv:"+(currentUser?currentUser.id:"")+":";
+  if(storeKey === privPrefix+"uiTheme"){ uiTheme = value; applyTheme(); }
+  else if(storeKey === privPrefix+"uiZoom"){ uiZoom = value; applyZoom(); }
+  else if(storeKey.indexOf(privPrefix)===0){
+    const stripped = storeKey.slice(privPrefix.length);
+    if(STATE_KEY_MAP_PRIVATE[stripped]) state[STATE_KEY_MAP_PRIVATE[stripped]] = value;
+    else { state[storeKey] = value; updateCustomTabCache(storeKey, value); }
+  } else {
+    if(STATE_KEY_MAP_SHARED[storeKey]) state[STATE_KEY_MAP_SHARED[storeKey]] = value;
+    else { state[storeKey] = value; updateCustomTabCache(storeKey, value); }
+  }
+  if(document.getElementById("app-root").style.display !== "none"){
+    store.set(storeKey, value);
+    render(currentRenderedTab);
+  }
+}
+function updateCustomTabCache(storeKey, value){
+  const m = storeKey.match(/custom:([^:]+)$/);
+  if(m) customTabData[m[1]] = value;
+}
 let undoStack = [];
 function pushUndo(fn){
   undoStack.push(fn);
@@ -1455,7 +1524,7 @@ function renderDashboard(main){
   grid.appendChild(week);
 
   const side = el("div",{class:"side-stack"});
-  const addBoxBtn = el("button",{class:"btn ghost small"},"+ Nuova board");
+  const addBoxBtn = el("button",{class:"section-add-btn", title:"Nuova board"},"+");
   addBoxBtn.addEventListener("click", openNewBoxModal);
   side.appendChild(sectionLabel("Backlog", "var(--mustard)", addBoxBtn));
   state.dashboard.backlogBoxes.forEach(box=>{
@@ -1515,13 +1584,8 @@ function renderTaskBlock(main, day, t, i){
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
   const del = el("span",{class:"del", html:"✕"});
   del.addEventListener("click", ()=>{
-    const removedIdx = i, removedItem = t;
     state.dashboard.week[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-    pushUndo(()=>{
-      state.dashboard.week[day].splice(removedIdx,0,removedItem);
-      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main")));
-    });
   });
   row.appendChild(grip); row.appendChild(grid); row.appendChild(txt); row.appendChild(del);
   attachTaskDrag(grip, row, day, i, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
@@ -1550,13 +1614,8 @@ function renderTaskBlock(main, day, t, i){
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
     sdel.addEventListener("click", ()=>{
-      const removedIdx = si, removedItem = s;
       t.subtasks.splice(si,1); syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
-      pushUndo(()=>{
-        t.subtasks.splice(removedIdx,0,removedItem); syncParentDone(t);
-        store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main")));
-      });
     });
     srow.appendChild(sGrip); srow.appendChild(sGrid); srow.appendChild(stxt); srow.appendChild(sdel);
     attachRowDrag(sGrip, srow, si, t.subtasks, ()=>{ syncParentDone(t); store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
@@ -1614,10 +1673,6 @@ function backlogBoxCard(box){
     if(confirm('Sei sicuro di voler eliminare la board "'+box.title+'"? L\'azione non è reversibile.')){
       state.dashboard.backlogBoxes = state.dashboard.backlogBoxes.filter(b=>b.id!==box.id);
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
-      pushUndo(()=>{
-        state.dashboard.backlogBoxes.push(box);
-        store.set(privKey("dashboard"), state.dashboard); render("dashboard");
-      });
     }
   });
   head.appendChild(delBtn);
@@ -1732,7 +1787,6 @@ function renderOrto(main){
       e.stopPropagation();
       state.orto.objects = state.orto.objects.filter(o=>o.id!==obj.id);
       store.set("orto", state.orto); render("orto");
-      pushUndo(()=>{ state.orto.objects.push(obj); store.set("orto", state.orto); render("orto"); });
     });
     node.appendChild(del);
 
@@ -1949,10 +2003,11 @@ function renderCollection(main, opts){
   });
   list.appendChild(newBtn);
   state[key].forEach(c=>{
-    const it = el("div",{class:"coll-item"+(active===c.id?" active":""), title:"Doppio click per rinominare"}, c.name+" ");
-    it.appendChild(el("div",{style:"font-weight:400;font-size:11px;opacity:.75;margin-top:2px;"}, c.created));
-    it.addEventListener("click", ()=>{ setActive(c.id); render(opts.tab); });
-    it.addEventListener("dblclick",(e)=>{
+    const it = el("div",{class:"coll-item"+(active===c.id?" active":"")});
+    const nameRow = el("div",{class:"coll-item-name-row"});
+    nameRow.appendChild(el("span",{class:"coll-item-name"}, c.name));
+    const renameBtn = el("span",{class:"coll-item-rename", html:ICON_EDIT, title:"Rinomina checklist"});
+    renameBtn.addEventListener("click",(e)=>{
       e.stopPropagation();
       const newName = prompt("Rinomina checklist:", c.name);
       if(newName && newName.trim()){
@@ -1960,6 +2015,10 @@ function renderCollection(main, opts){
         store.set(key, state[key]); render(opts.tab);
       }
     });
+    nameRow.appendChild(renameBtn);
+    it.appendChild(nameRow);
+    it.appendChild(el("div",{style:"font-weight:400;font-size:11px;opacity:.75;margin-top:2px;"}, c.created));
+    it.addEventListener("click", ()=>{ setActive(c.id); render(opts.tab); });
     list.appendChild(it);
   });
   wrap.appendChild(list);
@@ -1972,13 +2031,8 @@ function renderCollection(main, opts){
     const delBtn = el("button",{class:"btn danger small"},"Elimina checklist");
     delBtn.style.marginBottom="14px";
     delBtn.addEventListener("click", ()=>{
-      const removedItem = current;
       state[key] = state[key].filter(c=>c.id!==current.id);
       store.set(key, state[key]); setActive(null); render(opts.tab);
-      pushUndo(()=>{
-        state[key].push(removedItem);
-        store.set(key, state[key]); setActive(removedItem.id); render(opts.tab);
-      });
     });
     detail.appendChild(delBtn);
     opts.renderDetail(detail, current);
@@ -2002,9 +2056,7 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   txt.addEventListener("change", ()=>{ item.text = txt.value; onSave(false); });
   const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
   del.addEventListener("click", ()=>{
-    const removedIdx = i, removedItem = item;
     arr.splice(i,1); onSave();
-    pushUndo(()=>{ arr.splice(removedIdx,0,removedItem); onSave(); });
   });
   row.appendChild(grip); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(txt); row.appendChild(del);
   attachRowDrag(grip, row, i, arr, onSave);
@@ -2446,8 +2498,10 @@ function customTabButton(tab){
     });
   });
   btn.appendChild(iconEl);
-  const labelEl = el("span",{class:"tab-label", title:"Doppio click per rinominare"}, tab.name);
-  labelEl.addEventListener("dblclick",(e)=>{
+  const labelEl = el("span",{class:"tab-label"}, tab.name);
+  btn.appendChild(labelEl);
+  const renameBtn = el("span",{class:"tab-rename", html:ICON_EDIT, title:"Rinomina scheda"});
+  renameBtn.addEventListener("click",(e)=>{
     e.stopPropagation();
     const newName = prompt("Rinomina scheda:", tab.name);
     if(newName && newName.trim()){
@@ -2458,7 +2512,7 @@ function customTabButton(tab){
       renderCustomTabButtons();
     }
   });
-  btn.appendChild(labelEl);
+  btn.appendChild(renameBtn);
   const delBtn = el("span",{class:"tab-del", html:"✕"});
   delBtn.addEventListener("click",(e)=>{
     e.stopPropagation();
@@ -2584,6 +2638,7 @@ function autoResize(ta){
   ta.style.height = ta.scrollHeight + "px";
 }
 function render(tab){
+  currentRenderedTab = tab;
   const main = clear(document.getElementById("main"));
   if(tab==="dashboard") renderDashboard(main);
   else if(tab==="orto") renderOrto(main);
