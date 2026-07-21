@@ -1169,11 +1169,29 @@ async function loadAll(){
   }
   if(!state.dashboard.days){
     state.dashboard.days = {};
-    const ordered = orderedDaysFromToday();
-    ordered.forEach((dayName, idx)=>{
-      const d = new Date(); d.setDate(d.getDate()+idx);
-      state.dashboard.days[isoDate(d)] = (state.dashboard.week && state.dashboard.week[dayName]) || [];
+    const jsDay0 = new Date().getDay();
+    const todayIdx0 = (jsDay0 + 6) % 7; // 0=Lun..6=Dom
+    DAY_ORDER.forEach((dayName, idx)=>{
+      const offset = idx - todayIdx0; // negativo = già passato questa settimana, 0/positivo = oggi/futuro
+      const dateStr = addDaysISO(new Date(), offset);
+      state.dashboard.days[dateStr] = (state.dashboard.week && state.dashboard.week[dayName]) || [];
     });
+    state.dashboard.daysV2 = true;
+  } else if(!state.dashboard.daysV2){
+    // fixup una tantum: la prima versione della migrazione proiettava sempre in avanti
+    // (es. "Lunedì" finiva sul prossimo lunedì invece che su quello appena passato)
+    const ordered = orderedDaysFromToday();
+    const jsDay0 = new Date().getDay();
+    const todayIdx0 = (jsDay0 + 6) % 7;
+    DAY_ORDER.forEach((dayName, idx)=>{
+      const oldDate = addDaysISO(new Date(), ordered.indexOf(dayName));
+      const newDate = addDaysISO(new Date(), idx - todayIdx0);
+      if(oldDate !== newDate && state.dashboard.days[oldDate] && state.dashboard.days[oldDate].length){
+        state.dashboard.days[newDate] = (state.dashboard.days[newDate]||[]).concat(state.dashboard.days[oldDate]);
+        delete state.dashboard.days[oldDate];
+      }
+    });
+    state.dashboard.daysV2 = true;
   }
   pruneOldDays(state.dashboard.days);
   store.set(privKey("dashboard"), state.dashboard);
