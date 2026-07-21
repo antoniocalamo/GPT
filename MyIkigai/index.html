@@ -716,6 +716,10 @@ table.tires textarea.gomme-cell{
 .stat-icon{width:17px; height:17px; margin-bottom:6px;}
 .stat-icon svg{width:100%; height:100%; display:block;}
 .stat-value{font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--ink); line-height:1.1;}
+.stat-value-quote{
+  font-size:12.5px; font-weight:600; font-style:italic; line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
 .stat-label{font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
 .stat-weather{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--teal); margin-top:5px;}
 
@@ -1111,6 +1115,8 @@ const ICON_TIRE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ICON_COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V13M9 19V9M14 19V14M19 19V6"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.5 6.7C4 8.3 2 12 2 12s4 7 10 7c1.3 0 2.5-.3 3.6-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+const ICON_STAR_KPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6Z"/></svg>';
+const ICON_TARGET_KPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>';
 const KPI_CATALOG = {
   taskPct: { label:"task completati questa settimana", icon:ICON_CHECK, color:"var(--forest)",
     compute: ()=> computeStats().pct + "%" },
@@ -1123,7 +1129,14 @@ const KPI_CATALOG = {
   checklistActive: { label:"checklist viaggio/grigliata attive", icon:ICON_SUITCASE, color:"var(--slate)",
     compute: ()=> String(state.trips.length + state.bbqs.length) },
   netWorth: { label:"patrimonio netto", icon:ICON_COIN, color:"var(--slate)",
-    compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true }
+    compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true },
+  goodThing: { label:"una cosa bella fatta di recente", icon:ICON_STAR_KPI, color:"var(--mustard)",
+    compute: ()=> "" },
+  monthlyPriorities: { label:"priorità del mese raggiunte", icon:ICON_TARGET_KPI, color:"var(--forest)",
+    compute: ()=>{
+      const items = state.dashboard.monthlyPriorities.items;
+      return items.length ? (items.filter(i=>i.done).length+"/"+items.length) : "0";
+    } }
 };
 const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
 const APP_VERSION = "v0.10";
@@ -1678,6 +1691,32 @@ function statCard(kpiKey){
     head.appendChild(eye);
     card.appendChild(head);
     card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
+  } else if(kpiKey==="goodThing"){
+    const head = el("div",{class:"stat-card-head"});
+    head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    const candidates = collectGoodThingCandidates();
+    if(candidates.length>1){
+      const shuffleBtn = el("span",{class:"eye-toggle", title:"Un'altra"}, "🔀");
+      shuffleBtn.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        let next;
+        do{ next = candidates[Math.floor(Math.random()*candidates.length)]; }
+        while(candidates.length>1 && goodThingPick && next.text===goodThingPick.text && next.date===goodThingPick.date);
+        goodThingPick = next;
+        render("dashboard");
+      });
+      head.appendChild(shuffleBtn);
+    }
+    card.appendChild(head);
+    if(!goodThingPick || !candidates.some(c=>c.text===goodThingPick.text && c.date===goodThingPick.date)){
+      goodThingPick = candidates.length ? candidates[Math.floor(Math.random()*candidates.length)] : null;
+    }
+    card.appendChild(el("div",{class:"stat-value stat-value-quote"}, goodThingPick ? ("\u201C"+goodThingPick.text+"\u201D") : "—"));
+  } else if(kpiKey==="monthlyPriorities"){
+    card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
+    card.style.cursor = "pointer";
+    card.addEventListener("click", openMonthlyPrioritiesModal);
   } else {
     card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
     card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
@@ -1856,78 +1895,45 @@ function collectGoodThingCandidates(){
   });
   return out;
 }
-function renderGoodThingWidget(){
-  const candidates = collectGoodThingCandidates();
-  const card = el("div",{class:"card good-thing-card"});
-  const head = el("div",{class:"good-thing-head"});
-  head.appendChild(el("span",{class:"good-thing-icon"}, "✨"));
-  head.appendChild(el("span",{class:"good-thing-title"},"Una cosa bella fatta negli ultimi 30 giorni"));
-  if(candidates.length>1){
-    const shuffleBtn = el("span",{class:"good-thing-shuffle", title:"Mostrane un'altra"}, "🔀");
-    shuffleBtn.addEventListener("click", ()=>{
-      let next = goodThingPick;
-      while(candidates.length>1 && next && candidates.some(c=>c.text===next.text && c.date===next.date) && candidates.length>1){
-        const cand = candidates[Math.floor(Math.random()*candidates.length)];
-        if(!(cand.text===goodThingPick.text && cand.date===goodThingPick.date)){ next = cand; break; }
-      }
-      goodThingPick = next;
-      const main = document.getElementById("main");
-      const old = main.querySelector(".good-thing-card");
-      if(old) old.replaceWith(renderGoodThingWidget());
-    });
-    head.appendChild(shuffleBtn);
-  }
-  card.appendChild(head);
-  if(!candidates.length){
-    card.appendChild(el("div",{class:"good-thing-text good-thing-empty"},"Completa qualche task per iniziare a vedere qui i tuoi traguardi."));
-  } else {
-    if(!goodThingPick || !candidates.some(c=>c.text===goodThingPick.text && c.date===goodThingPick.date)){
-      goodThingPick = candidates[Math.floor(Math.random()*candidates.length)];
-    }
-    card.appendChild(el("div",{class:"good-thing-text"}, "\u201C"+goodThingPick.text+"\u201D"));
-    card.appendChild(el("div",{class:"good-thing-date"}, fmtDateShort(goodThingPick.date)));
-  }
-  return card;
-}
-function renderMonthlyPrioritiesWidget(){
+function openMonthlyPrioritiesModal(){
   const mp = state.dashboard.monthlyPriorities;
-  const wrap = el("div",{class:"card monthly-priorities-card"});
-  const head = el("div",{class:"monthly-priorities-head"});
-  head.appendChild(el("span",{class:"monthly-priorities-title"},"🎯 Le mie priorità del mese"));
-  const toggleBtn = el("span",{class:"monthly-priorities-toggle", title: mp.hidden ? "Mostra" : "Nascondi"}, mp.hidden ? "Mostra ▾" : "Nascondi ▴");
-  toggleBtn.addEventListener("click", ()=>{
-    mp.hidden = !mp.hidden;
-    store.set(privKey("dashboard"), state.dashboard);
-    render("dashboard");
-  });
-  head.appendChild(toggleBtn);
-  wrap.appendChild(head);
-  if(!mp.hidden){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"🎯 Le mie priorità del mese"));
     const list = el("div",{class:"monthly-priorities-list"});
-    mp.items.forEach((it,i)=>{
-      const row = el("div",{class:"monthly-priority-row"+(it.done?" done":"")});
-      const cb = el("input",{type:"checkbox"}); cb.checked = !!it.done;
-      cb.addEventListener("change", ()=>{ it.done = cb.checked; store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
-      const txt = el("input",{type:"text", value:it.text||"", placeholder:"obiettivo del mese…"});
-      txt.addEventListener("change", ()=>{ it.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
-      const del = el("span",{class:"del", html:"✕"});
-      del.addEventListener("click", ()=>{ mp.items.splice(i,1); store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
-      row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
-      list.appendChild(row);
-    });
-    wrap.appendChild(list);
+    function redrawList(){
+      list.innerHTML = "";
+      mp.items.forEach((it,i)=>{
+        const row = el("div",{class:"monthly-priority-row"+(it.done?" done":"")});
+        const cb = el("input",{type:"checkbox"}); cb.checked = !!it.done;
+        cb.addEventListener("change", ()=>{ it.done = cb.checked; store.set(privKey("dashboard"), state.dashboard); redrawList(); });
+        const txt = el("input",{type:"text", value:it.text||"", placeholder:"obiettivo del mese…"});
+        txt.addEventListener("change", ()=>{ it.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
+        const del = el("span",{class:"del", html:"✕"});
+        del.addEventListener("click", ()=>{ mp.items.splice(i,1); store.set(privKey("dashboard"), state.dashboard); redrawList(); });
+        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+        list.appendChild(row);
+      });
+    }
+    redrawList();
+    modal.appendChild(list);
     const addLine = el("div",{class:"add-line"});
     const input = el("input",{type:"text", placeholder:"aggiungi una priorità del mese…"});
     input.addEventListener("keydown",(e)=>{
       if(e.key==="Enter" && input.value.trim()){
         mp.items.push({id:"mp"+Date.now(), text:input.value.trim(), done:false});
-        store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+        store.set(privKey("dashboard"), state.dashboard);
+        input.value = "";
+        redrawList();
       }
     });
     addLine.appendChild(input);
-    wrap.appendChild(addLine);
-  }
-  return wrap;
+    modal.appendChild(addLine);
+    const actions = el("div",{class:"modal-actions"});
+    const closeBtn = el("button",{class:"btn primary"},"Chiudi");
+    closeBtn.addEventListener("click", ()=>{ close(); render("dashboard"); });
+    actions.appendChild(closeBtn);
+    modal.appendChild(actions);
+  });
 }
 function renderDashboard(main){
   const headerWrap = el("div",{class:"dash-header-sticky"});
@@ -1945,7 +1951,6 @@ function renderDashboard(main){
   headerWrap.appendChild(subRow);
   main.appendChild(headerWrap);
   renderStatsBar(main);
-  main.appendChild(renderGoodThingWidget());
 
   const toolbar = el("div",{class:"week-toolbar"});
   const toggleLabel = el("label",{class:"toggle-completed"});
@@ -1975,7 +1980,6 @@ function renderDashboard(main){
 
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
-  week.appendChild(renderMonthlyPrioritiesWidget());
   week.appendChild(sectionLabel("To Do List", "var(--forest)"));
 
   const past = pastDates().filter(d => state.dashboard.days[d] && state.dashboard.days[d].length);
@@ -2235,11 +2239,14 @@ function backlogBoxCard(box){
     autoResize(ta);
   });
   const addLine = el("div",{class:"add-line"});
-  const input = el("input",{type:"text", placeholder:"aggiungi…"});
+  const noteAddKey = "boxnote-"+box.id;
+  const input = el("input",{type:"text", placeholder:"aggiungi…", "data-addline":noteAddKey});
   input.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && input.value.trim()){
       box.items.push(input.value.trim());
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+      const again = document.querySelector('[data-addline="'+noteAddKey+'"]');
+      if(again) again.focus();
     }
   });
   addLine.appendChild(input);
@@ -2639,6 +2646,7 @@ function renderCollection(main, opts){
 }
 
 function renderPackItem(item, i, arr, onSave, idPrefix){
+  if(!item.id) item.id = idPrefix+"-"+i+"-"+Math.random().toString(36).slice(2,7);
   const row = el("div",{class:"check-item pack-item"+(item.done?" done":"")+(item.take===false?" not-needed":"")});
   const grip = el("span",{class:"drag-grip", html:ICON_GRIP});
   const numInp = el("input",{type:"text", class:"pack-num", value:item.num||"", placeholder:"#"});
@@ -2648,9 +2656,20 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(); });
   const takeBtn = el("span",{class:"take-flag"+(item.take!==false?" active":""), html:ICON_CHECK, title:"Da prendere"});
   takeBtn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); e.stopPropagation(); item.take = !item.take; onSave(); });
-  const txt = el("textarea",{rows:"1", class:"pack-text"}); txt.value = item.text;
-  txt.addEventListener("input", ()=>autoResize(txt));
+  const txt = el("textarea",{rows:"1", class:"pack-text", "data-packid":item.id}); txt.value = item.text;
+  txt.addEventListener("input", ()=>{ autoResize(txt); item.text = txt.value; });
   txt.addEventListener("change", ()=>{ item.text = txt.value; onSave(false); });
+  txt.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && !e.shiftKey){
+      e.preventDefault();
+      item.text = txt.value;
+      const newItem = {id:"pk"+Date.now()+Math.random().toString(36).slice(2,5), text:"", done:false, take:true};
+      arr.splice(i+1, 0, newItem);
+      onSave();
+      const nta = document.querySelector('[data-packid="'+newItem.id+'"]');
+      if(nta) nta.focus();
+    }
+  });
   const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
   del.addEventListener("click", ()=>{
     arr.splice(i,1); onSave();
@@ -2681,11 +2700,14 @@ function renderTripDetail(detail, trip){
     });
     block.appendChild(grid);
     const addLine = el("div",{class:"add-line"});
-    const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+    const addKey = "trip-"+trip.id+"-"+ci;
+    const input = el("input",{type:"text", placeholder:"aggiungi voce…", "data-addline":addKey});
     input.addEventListener("keydown",(e)=>{
       if(e.key==="Enter" && input.value.trim()){
-        cat.items.push({text:input.value.trim(), done:false, take:true});
+        cat.items.push({id:"pk"+Date.now()+Math.random().toString(36).slice(2,5), text:input.value.trim(), done:false, take:true});
         store.set("trips", state.trips); render("viaggio");
+        const again = document.querySelector('[data-addline="'+addKey+'"]');
+        if(again) again.focus();
       }
     });
     addLine.appendChild(input);
@@ -2965,11 +2987,14 @@ function renderBbqDetail(detail, bbq){
   });
   block.appendChild(grid);
   const addLine = el("div",{class:"add-line"});
-  const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+  const bbqAddKey = "bbq-"+bbq.id;
+  const input = el("input",{type:"text", placeholder:"aggiungi voce…", "data-addline":bbqAddKey});
   input.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && input.value.trim()){
-      bbq.data.push({text:input.value.trim(), done:false, take:true});
+      bbq.data.push({id:"pk"+Date.now()+Math.random().toString(36).slice(2,5), text:input.value.trim(), done:false, take:true});
       store.set("bbqs", state.bbqs); render("grigliate");
+      const again = document.querySelector('[data-addline="'+bbqAddKey+'"]');
+      if(again) again.focus();
     }
   });
   addLine.appendChild(input);
@@ -3565,64 +3590,64 @@ function renderFinanze(main){
   main.appendChild(histBlock);
 }
 
-function renderSharedBoardDetail(detail, board){
-  const block = el("div",{class:"cat-block"});
-  block.appendChild(el("h4",{},"Voci"));
-  board.data.forEach((it,i)=>{
-    const row = el("div",{class:"check-item"+(it.done?" done":"")});
-    const cb = el("input",{type:"checkbox", id:"s"+board.id+i});
-    cb.checked = it.done;
-    cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set("sharedBoards", state.sharedBoards); render("condivisi"); });
-    const txt = el("textarea",{rows:"1", class:"pack-text"}); txt.value = it.text;
-    txt.addEventListener("input", ()=>autoResize(txt));
-    txt.addEventListener("change", ()=>{ it.text = txt.value; store.set("sharedBoards", state.sharedBoards); });
-    const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
-    del.addEventListener("click", ()=>{ board.data.splice(i,1); store.set("sharedBoards", state.sharedBoards); render("condivisi"); });
-    row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
-    block.appendChild(row);
-  });
-  const addLine = el("div",{class:"add-line"});
-  const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
-  input.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter" && input.value.trim()){
-      board.data.push({text:input.value.trim(), done:false});
-      store.set("sharedBoards", state.sharedBoards); render("condivisi");
-    }
-  });
-  addLine.appendChild(input);
-  block.appendChild(addLine);
-  detail.appendChild(block);
-}
-
-/* ---------------- CUSTOM TABS ---------------- */
-function renderGenericChecklistDetail(storeKey, tabName){
-  return function(detail, board){
+function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
+  // migrazione una tantum: da lista piatta (vecchie board condivise / schede custom) a categorie, come in Viaggi
+  if(board.data.length && board.data[0] && board.data[0].items===undefined){
+    board.data = [{title:"Voci", items: board.data}];
+    save();
+  }
+  board.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
-    block.appendChild(el("h4",{},"Voci"));
-    board.data.forEach((it,i)=>{
-      const row = el("div",{class:"check-item"+(it.done?" done":"")});
-      const cb = el("input",{type:"checkbox", id:"c"+board.id+i});
-      cb.checked = it.done;
-      cb.addEventListener("change", ()=>{ it.done=cb.checked; store.set(storeKey, state[storeKey]); render(tabName); });
-      const txt = el("textarea",{rows:"1", class:"pack-text"}); txt.value = it.text;
-      txt.addEventListener("input", ()=>autoResize(txt));
-      txt.addEventListener("change", ()=>{ it.text = txt.value; store.set(storeKey, state[storeKey]); });
-      const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
-      del.addEventListener("click", ()=>{ board.data.splice(i,1); store.set(storeKey, state[storeKey]); render(tabName); });
-      row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
-      block.appendChild(row);
+    const head = el("div",{class:"cat-block-head"});
+    const titleInput = el("input",{type:"text", class:"cat-title-input", value:cat.title, placeholder:"Nome categoria"});
+    titleInput.addEventListener("change", ()=>{ cat.title=titleInput.value; save(); });
+    const delCatBtn = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
+    delCatBtn.addEventListener("click", ()=>{
+      if(confirm('Eliminare la categoria "'+(cat.title||"senza nome")+'" e tutte le sue voci?')){
+        board.data.splice(ci,1);
+        save();
+      }
     });
+    head.appendChild(titleInput);
+    head.appendChild(delCatBtn);
+    block.appendChild(head);
+    const grid = el("div",{class:"pack-grid"});
+    cat.items.forEach((it,i)=>{
+      grid.appendChild(renderPackItem(it, i, cat.items, save, idPrefix+ci));
+    });
+    block.appendChild(grid);
     const addLine = el("div",{class:"add-line"});
-    const input = el("input",{type:"text", placeholder:"aggiungi voce…"});
+    const addKey = idPrefix+ci+"-add";
+    const input = el("input",{type:"text", placeholder:"aggiungi voce…", "data-addline":addKey});
     input.addEventListener("keydown",(e)=>{
       if(e.key==="Enter" && input.value.trim()){
-        board.data.push({text:input.value.trim(), done:false});
-        store.set(storeKey, state[storeKey]); render(tabName);
+        cat.items.push({id:"pk"+Date.now()+Math.random().toString(36).slice(2,5), text:input.value.trim(), done:false, take:true});
+        save();
+        const again = document.querySelector('[data-addline="'+addKey+'"]');
+        if(again) again.focus();
       }
     });
     addLine.appendChild(input);
     block.appendChild(addLine);
     detail.appendChild(block);
+  });
+  const addCatBtn = el("button",{class:"btn ghost", style:"margin-top:6px;"},"+ Nuova categoria");
+  addCatBtn.addEventListener("click", ()=>{
+    board.data.push({title:"Nuova categoria", items:[]});
+    save();
+  });
+  detail.appendChild(addCatBtn);
+}
+function renderSharedBoardDetail(detail, board){
+  const save = ()=>{ store.set("sharedBoards", state.sharedBoards); render("condivisi"); };
+  renderCategorizedChecklist(detail, board, save, "s"+board.id, "condivisi");
+}
+
+/* ---------------- CUSTOM TABS ---------------- */
+function renderGenericChecklistDetail(storeKey, tabName){
+  return function(detail, board){
+    const save = ()=>{ store.set(storeKey, state[storeKey]); render(tabName); };
+    renderCategorizedChecklist(detail, board, save, "c"+board.id, tabName);
   };
 }
 function findCustomTab(id){
