@@ -22,6 +22,7 @@
   --plum:#57394F;
   --line:#E4D6AC;
   --card:#FFFFFB;
+  --tab-text:#F7F3E6;
   --shadow: 0 2px 10px rgba(35,48,42,0.09);
 }
 :root[data-theme="dark"]{
@@ -114,7 +115,7 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   font-family:'Fraunces',serif;
   font-weight:600;
   font-size:15px;
-  color:var(--paper-2);
+  color:var(--tab-text);
   background:var(--ink-soft);
   transform:translateX(0);
   transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
@@ -248,6 +249,7 @@ button{font-family:'Inter',sans-serif;}
 }
 .btn:hover{background:var(--card);}
 .btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
 .btn.primary{background:var(--forest); color:#fff; border-color:var(--forest);}
 .btn.primary:hover{background:#294034;}
 .btn.ghost{background:transparent; border:1px dashed var(--line);}
@@ -273,7 +275,8 @@ input[type=text], textarea, input[type=date]{
   color:var(--ink);
   width:100%;
 }
-textarea{resize:vertical; min-height:50px;}
+textarea{resize:vertical;}
+.note-item textarea, textarea.long-note{min-height:44px;}
 
 /* ---- Dashboard ---- */
 .dash-grid{
@@ -300,9 +303,10 @@ textarea{resize:vertical; min-height:50px;}
   color:var(--forest);
   padding-top:8px;
 }
-.day-card{padding:8px 10px; border-left:4px solid var(--day-color, var(--line));}
+.day-card{padding:8px 10px; border-left:4px solid var(--day-color, var(--line)); transition: box-shadow .12s ease;}
+.day-card.day-card-drop-target{box-shadow:0 0 0 2px var(--forest) inset;}
 .section-label{
-  display:flex; align-items:center; gap:9px;
+  display:flex; align-items:center; gap:9px; min-height:30px;
   font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.10em;
   text-transform:uppercase; color:var(--ink-soft); font-weight:600;
   padding-bottom:9px; margin-bottom:12px; border-bottom:1px solid var(--line);
@@ -414,9 +418,13 @@ textarea{resize:vertical; min-height:50px;}
   background:transparent; border:none; color:#fff; font-weight:600; font-size:10.5px;
   padding:0; flex:1; min-width:0;
 }
-.orto-obj-color{
-  width:13px; height:13px; border:none; border-radius:4px; padding:0; cursor:pointer;
-  background:transparent; flex-shrink:0;
+.color-ball{
+  position:relative; width:14px; height:14px; border-radius:50%; flex-shrink:0; cursor:pointer;
+  background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
+  border:1px solid rgba(255,255,255,0.7); box-shadow:0 0 0 1px rgba(0,0,0,0.15);
+}
+.color-ball input[type=color]{
+  position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; padding:0; border:none;
 }
 .orto-obj-fields{display:flex; flex-direction:column; gap:2px; margin-top:2px;}
 .orto-obj-mini{
@@ -436,6 +444,15 @@ textarea{resize:vertical; min-height:50px;}
 }
 .bed-del.frame-del{color:#1a1a1a; opacity:.5;}
 .bed-del:hover{opacity:1;}
+.orto-frame-controls{
+  position:absolute; top:3px; left:5px; display:flex; align-items:center; gap:5px;
+}
+.frame-transp-toggle{
+  width:14px; height:14px; border-radius:4px; border:1px solid #1a1a1a; opacity:.5;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  font-size:8px; font-weight:700; color:#1a1a1a; background:#fff;
+}
+.frame-transp-toggle.active{opacity:1; background:repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0/6px 6px;}
 .orto-comment-pin{
   position:absolute; width:26px; height:26px; border-radius:7px 7px 7px 2px;
   background:var(--mustard); color:#fff; display:flex; align-items:center; justify-content:center;
@@ -464,8 +481,13 @@ textarea{resize:vertical; min-height:50px;}
 .cat-block h4{margin:0 0 8px 0; font-size:14px; color:var(--forest); font-family:'Fraunces',serif;}
 .check-item{display:flex; align-items:flex-start; gap:6px; padding:5px 0; user-select:none;}
 .check-item input[type=checkbox]{width:16px; height:16px; accent-color: var(--forest); flex-shrink:0; margin-top:3px;}
-.check-item.done label{text-decoration:line-through; color:var(--ink-soft);}
-.check-item label{font-size:13.5px; flex:1; min-width:0; padding-top:2px; line-height:1.4;}
+.check-item.done .pack-text{text-decoration:line-through; color:var(--ink-soft);}
+.pack-text{
+  font-size:13.5px; flex:1; min-width:0; padding:2px 0; line-height:1.4;
+  border:none; background:transparent; resize:none; overflow:hidden;
+  font-family:'Inter',sans-serif; color:var(--ink); user-select:text;
+}
+.pack-text:focus{outline:none; background:var(--card); border-radius:6px; padding:2px 5px;}
 .check-item .del{margin-top:2px;}
 .pack-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 20px;}
 @media (max-width:1100px){ .pack-grid{grid-template-columns:1fr;} }
@@ -486,6 +508,10 @@ table.tires th{
 }
 table.tires td{padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; overflow:hidden;}
 table.tires input[type=text], table.tires input[type=date]{font-size:13px; padding:4px 6px; width:100%;}
+table.tires textarea.gomme-cell{
+  font-size:13px; padding:4px 6px; width:100%; border:1px solid var(--line); border-radius:6px;
+  resize:none; overflow:hidden; font-family:'Inter',sans-serif; color:var(--ink); background:var(--card);
+}
 .col-resize-handle{
   position:absolute; top:0; right:0; width:8px; height:100%; cursor:col-resize;
   border-right:2px solid transparent;
@@ -643,7 +669,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
 .custom-tab .tab-icon:hover{opacity:1;}
 .tab-del{
   position:absolute; right:16px; top:50%; transform:translateY(-50%);
-  opacity:0; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--paper-2);
+  opacity:0; font-size:11px; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
 }
 .custom-tab:hover .tab-del{opacity:.75;}
 .tab-del:hover{opacity:1 !important; color:#fff;}
@@ -747,6 +773,7 @@ table.tires input[type=text], table.tires input[type=date]{font-size:13px; paddi
         <span id="zoom-level" class="zoom-level">100%</span>
         <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
       </div>
+      <button id="undo-btn" class="btn ghost small" title="Annulla ultima eliminazione" disabled>↶ Undo</button>
       <div id="app-version" class="app-version"></div>
       <div id="user-email" class="user-email"></div>
       <button id="logout-btn" class="btn ghost small">Esci</button>
@@ -900,6 +927,7 @@ function applyZoom(){
   document.body.style.zoom = uiZoom;
   document.getElementById("zoom-level").textContent = Math.round(uiZoom*100)+"%";
 }
+document.getElementById("undo-btn").addEventListener("click", performUndo);
 document.getElementById("theme-toggle-btn").addEventListener("click", ()=>{
   uiTheme = uiTheme==="dark" ? "light" : "dark";
   applyTheme();
@@ -944,6 +972,21 @@ let customTabData = {};
 let activeCustomItem = {};
 let currentTagline = "";
 let lastTaskByDay = {};
+let undoStack = [];
+function pushUndo(fn){
+  undoStack.push(fn);
+  if(undoStack.length > 15) undoStack.shift();
+  updateUndoBtn();
+}
+function performUndo(){
+  const fn = undoStack.pop();
+  if(fn) fn();
+  updateUndoBtn();
+}
+function updateUndoBtn(){
+  const btn = document.getElementById("undo-btn");
+  if(btn) btn.disabled = undoStack.length===0;
+}
 function focusAddInput(day){
   const inp = document.querySelector('.add-line input[data-day="'+day+'"]');
   if(inp) inp.focus();
@@ -1069,6 +1112,43 @@ function attachRowDrag(handle, row, i, arr, onSave){
     onSave();
   });
 }
+function attachTaskDrag(handle, row, day, i, refreshFn){
+  handle.draggable = true;
+  handle.addEventListener("dragstart",(e)=>{
+    e.dataTransfer.setData("text/plain", JSON.stringify({day, index:i}));
+    e.dataTransfer.effectAllowed = "move";
+    row.classList.add("dragging");
+  });
+  handle.addEventListener("dragend", ()=> row.classList.remove("dragging"));
+  row.addEventListener("dragover",(e)=>{ e.preventDefault(); e.stopPropagation(); row.classList.add("drag-over"); });
+  row.addEventListener("dragleave", ()=> row.classList.remove("drag-over"));
+  row.addEventListener("drop",(e)=>{
+    e.preventDefault(); e.stopPropagation(); row.classList.remove("drag-over");
+    let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
+    if(!data || typeof data.index!=="number" || !state.dashboard.week[data.day]) return;
+    if(data.day===day && data.index===i) return;
+    const sourceArr = state.dashboard.week[data.day];
+    const [moved] = sourceArr.splice(data.index,1);
+    if(!moved) return;
+    state.dashboard.week[day].splice(i,0,moved);
+    refreshFn();
+  });
+}
+function attachDayCardDrop(dayCard, day, refreshFn){
+  dayCard.addEventListener("dragover",(e)=>{ e.preventDefault(); dayCard.classList.add("day-card-drop-target"); });
+  dayCard.addEventListener("dragleave",(e)=>{ dayCard.classList.remove("day-card-drop-target"); });
+  dayCard.addEventListener("drop",(e)=>{
+    e.preventDefault();
+    dayCard.classList.remove("day-card-drop-target");
+    let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
+    if(!data || typeof data.index!=="number" || !state.dashboard.week[data.day]) return;
+    const sourceArr = state.dashboard.week[data.day];
+    const [moved] = sourceArr.splice(data.index,1);
+    if(!moved) return;
+    state.dashboard.week[day].push(moved);
+    refreshFn();
+  });
+}
 function openModal(contentBuilderFn){
   const overlay = el("div",{class:"modal-overlay"});
   const modal = el("div",{class:"modal-card"});
@@ -1078,6 +1158,14 @@ function openModal(contentBuilderFn){
   overlay.addEventListener("click", (e)=>{ if(e.target===overlay) closeModal(); });
   document.body.appendChild(overlay);
   return closeModal;
+}
+function colorBall(currentColor, onChange){
+  const wrap = el("div",{class:"color-ball", title:"Cambia colore"});
+  const input = el("input",{type:"color", value: (currentColor && currentColor!=="transparent") ? currentColor : "#4C7A4C"});
+  input.addEventListener("mousedown", ev=>ev.stopPropagation());
+  input.addEventListener("change", ()=>{ onChange(input.value); });
+  wrap.appendChild(input);
+  return wrap;
 }
 function iconPickerRow(defaultKey, onSelect){
   const wrap = el("div",{class:"icon-picker"});
@@ -1357,6 +1445,7 @@ function renderDashboard(main){
     });
     addLine.appendChild(input);
     dayCard.appendChild(addLine);
+    attachDayCardDrop(dayCard, day, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
     const rowClass = "day-row"+(day===todayName?" today":"");
     const d = new Date(todayDate); d.setDate(todayDate.getDate()+idx);
     const dateStr = String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
@@ -1426,11 +1515,16 @@ function renderTaskBlock(main, day, t, i){
   txt.addEventListener("change", ()=>{ t.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
   const del = el("span",{class:"del", html:"✕"});
   del.addEventListener("click", ()=>{
+    const removedIdx = i, removedItem = t;
     state.dashboard.week[day].splice(i,1);
     store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+    pushUndo(()=>{
+      state.dashboard.week[day].splice(removedIdx,0,removedItem);
+      store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main")));
+    });
   });
   row.appendChild(grip); row.appendChild(grid); row.appendChild(txt); row.appendChild(del);
-  attachRowDrag(grip, row, i, tasks, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
+  attachTaskDrag(grip, row, day, i, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
   wrap.appendChild(row);
 
   const subWrap = el("div",{class:"subtask-list"});
@@ -1456,8 +1550,13 @@ function renderTaskBlock(main, day, t, i){
     stxt.addEventListener("change", ()=>{ s.text = stxt.value; store.set(privKey("dashboard"), state.dashboard); });
     const sdel = el("span",{class:"del", html:"✕"});
     sdel.addEventListener("click", ()=>{
+      const removedIdx = si, removedItem = s;
       t.subtasks.splice(si,1); syncParentDone(t);
       store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main));
+      pushUndo(()=>{
+        t.subtasks.splice(removedIdx,0,removedItem); syncParentDone(t);
+        store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main")));
+      });
     });
     srow.appendChild(sGrip); srow.appendChild(sGrid); srow.appendChild(stxt); srow.appendChild(sdel);
     attachRowDrag(sGrip, srow, si, t.subtasks, ()=>{ syncParentDone(t); store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(main)); });
@@ -1515,6 +1614,10 @@ function backlogBoxCard(box){
     if(confirm('Sei sicuro di voler eliminare la board "'+box.title+'"? L\'azione non è reversibile.')){
       state.dashboard.backlogBoxes = state.dashboard.backlogBoxes.filter(b=>b.id!==box.id);
       store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+      pushUndo(()=>{
+        state.dashboard.backlogBoxes.push(box);
+        store.set(privKey("dashboard"), state.dashboard); render("dashboard");
+      });
     }
   });
   head.appendChild(delBtn);
@@ -1614,15 +1717,22 @@ function renderOrto(main){
   state.orto.objects.forEach(obj=>{
     const def = ORTO_TYPES[obj.type] || ORTO_TYPES.coltura;
     const isFrame = def.isFrame;
-    const bg = isFrame ? "transparent" : (obj.color||def.color);
-    const extraStyle = isFrame ? "border:2px solid #1a1a1a; box-shadow:none;" : "";
-    const node = el("div",{class:"orto-obj"+(isFrame?" orto-frame":""), style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; background:${bg}; ${extraStyle}`});
+    let bg, borderStyle;
+    if(isFrame){
+      bg = obj.fillTransparent===false ? (obj.fillColor||"#4C7A4C") : "transparent";
+      borderStyle = `border:2px solid ${obj.borderColor||"#1a1a1a"}; box-shadow:none;`;
+    } else {
+      bg = obj.color||def.color;
+      borderStyle = "";
+    }
+    const node = el("div",{class:"orto-obj"+(isFrame?" orto-frame":""), style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; background:${bg}; ${borderStyle}`});
 
     const del = el("span",{class:"bed-del"+(isFrame?" frame-del":""), html:"✕"});
     del.addEventListener("click",(e)=>{
       e.stopPropagation();
       state.orto.objects = state.orto.objects.filter(o=>o.id!==obj.id);
       store.set("orto", state.orto); render("orto");
+      pushUndo(()=>{ state.orto.objects.push(obj); store.set("orto", state.orto); render("orto"); });
     });
     node.appendChild(del);
 
@@ -1633,10 +1743,9 @@ function renderOrto(main){
       nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
       nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
       head.appendChild(nameInput);
-      const colorInput = el("input",{type:"color", value:obj.color||def.color, class:"orto-obj-color"});
-      colorInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-      colorInput.addEventListener("change", ()=>{ obj.color=colorInput.value; node.style.background=colorInput.value; store.set("orto", state.orto); });
-      head.appendChild(colorInput);
+      head.appendChild(colorBall(obj.color||def.color, (val)=>{
+        obj.color=val; node.style.background=val; store.set("orto", state.orto);
+      }));
       node.appendChild(head);
 
       if(obj.type==="coltura"){
@@ -1653,6 +1762,24 @@ function renderOrto(main){
         fields.appendChild(plantCount); fields.appendChild(plantDate); fields.appendChild(harvestDate);
         node.appendChild(fields);
       }
+    } else {
+      const frameControls = el("div",{class:"orto-frame-controls"});
+      const borderBall = colorBall(obj.borderColor||"#1a1a1a", (val)=>{
+        obj.borderColor=val; node.style.border=`2px solid ${val}`; store.set("orto", state.orto);
+      });
+      borderBall.title = "Colore bordo";
+      const fillBall = colorBall(obj.fillColor||"#4C7A4C", (val)=>{
+        obj.fillColor=val; obj.fillTransparent=false; node.style.background=val; store.set("orto", state.orto); render("orto");
+      });
+      fillBall.title = "Colore riempimento";
+      const transpBtn = el("span",{class:"frame-transp-toggle"+(obj.fillTransparent!==false?" active":""), title:"Riempimento trasparente"}, "T");
+      transpBtn.addEventListener("mousedown", ev=>ev.stopPropagation());
+      transpBtn.addEventListener("click", ()=>{
+        obj.fillTransparent = obj.fillTransparent===false ? true : false;
+        store.set("orto", state.orto); render("orto");
+      });
+      frameControls.appendChild(borderBall); frameControls.appendChild(fillBall); frameControls.appendChild(transpBtn);
+      node.appendChild(frameControls);
     }
 
     const resizeHandle = el("span",{class:"orto-obj-resize"+(isFrame?" frame-resize":"")});
@@ -1822,9 +1949,17 @@ function renderCollection(main, opts){
   });
   list.appendChild(newBtn);
   state[key].forEach(c=>{
-    const it = el("div",{class:"coll-item"+(active===c.id?" active":"")}, c.name+" ");
+    const it = el("div",{class:"coll-item"+(active===c.id?" active":""), title:"Doppio click per rinominare"}, c.name+" ");
     it.appendChild(el("div",{style:"font-weight:400;font-size:11px;opacity:.75;margin-top:2px;"}, c.created));
     it.addEventListener("click", ()=>{ setActive(c.id); render(opts.tab); });
+    it.addEventListener("dblclick",(e)=>{
+      e.stopPropagation();
+      const newName = prompt("Rinomina checklist:", c.name);
+      if(newName && newName.trim()){
+        c.name = newName.trim();
+        store.set(key, state[key]); render(opts.tab);
+      }
+    });
     list.appendChild(it);
   });
   wrap.appendChild(list);
@@ -1837,8 +1972,13 @@ function renderCollection(main, opts){
     const delBtn = el("button",{class:"btn danger small"},"Elimina checklist");
     delBtn.style.marginBottom="14px";
     delBtn.addEventListener("click", ()=>{
+      const removedItem = current;
       state[key] = state[key].filter(c=>c.id!==current.id);
       store.set(key, state[key]); setActive(null); render(opts.tab);
+      pushUndo(()=>{
+        state[key].push(removedItem);
+        store.set(key, state[key]); setActive(removedItem.id); render(opts.tab);
+      });
     });
     detail.appendChild(delBtn);
     opts.renderDetail(detail, current);
@@ -1857,10 +1997,16 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(); });
   const takeBtn = el("span",{class:"take-flag"+(item.take!==false?" active":""), html:ICON_CHECK, title:"Da prendere"});
   takeBtn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); e.stopPropagation(); item.take = !item.take; onSave(); });
-  const lab = el("label",{for:idPrefix+i}, item.text);
+  const txt = el("textarea",{rows:"1", class:"pack-text"}); txt.value = item.text;
+  txt.addEventListener("input", ()=>autoResize(txt));
+  txt.addEventListener("change", ()=>{ item.text = txt.value; onSave(false); });
   const del = el("span",{class:"del", html:"✕", style:"cursor:pointer;opacity:.5;font-size:12px;"});
-  del.addEventListener("click", ()=>{ arr.splice(i,1); onSave(); });
-  row.appendChild(grip); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(lab); row.appendChild(del);
+  del.addEventListener("click", ()=>{
+    const removedIdx = i, removedItem = item;
+    arr.splice(i,1); onSave();
+    pushUndo(()=>{ arr.splice(removedIdx,0,removedItem); onSave(); });
+  });
+  row.appendChild(grip); row.appendChild(numInp); row.appendChild(cb); row.appendChild(takeBtn); row.appendChild(txt); row.appendChild(del);
   attachRowDrag(grip, row, i, arr, onSave);
   return row;
 }
@@ -1911,7 +2057,7 @@ function renderBbqDetail(detail, bbq){
 
   const noteBlock = el("div",{class:"cat-block"});
   noteBlock.appendChild(el("h4",{},"Note / lesson learned"));
-  const ta = el("textarea",{rows:"4", placeholder:"es. iniziare la griglia con 30-45 min di anticipo…"});
+  const ta = el("textarea",{rows:"4", class:"long-note", placeholder:"es. iniziare la griglia con 30-45 min di anticipo…"});
   ta.value = bbq.notes || "";
   ta.addEventListener("change", ()=>{ bbq.notes = ta.value; store.set("bbqs", state.bbqs); });
   noteBlock.appendChild(ta);
@@ -1983,8 +2129,16 @@ function renderGomme(main){
     const tr = el("tr",{style: rowH ? `height:${rowH}px;` : ""});
     GOMME_FIELDS.forEach(([f,type])=>{
       const td = el("td",{style:"position:relative;"});
-      const inp = el("input",{type, value:row[f]||""});
-      inp.addEventListener("change", ()=>{ row[f]=inp.value; store.set("tires", state.tires); });
+      let inp;
+      if(type==="date"){
+        inp = el("input",{type, value:row[f]||""});
+        inp.addEventListener("change", ()=>{ row[f]=inp.value; store.set("tires", state.tires); });
+      } else {
+        inp = el("textarea",{rows:"1", class:"gomme-cell"});
+        inp.value = row[f]||"";
+        inp.addEventListener("input", ()=>autoResize(inp));
+        inp.addEventListener("change", ()=>{ row[f]=inp.value; store.set("tires", state.tires); });
+      }
       td.appendChild(inp);
       tr.appendChild(td);
     });
@@ -2102,6 +2256,46 @@ function renderFinanceChart(history){
   wrap.appendChild(legend);
   return wrap;
 }
+function openFinanceImportModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Importa storico finanze"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;"},
+      "Incolla una riga per ogni snapshot, nel formato: gg/mm/aaaa;liquidità;non liquidi;debiti — es. 01/01/2025;30000;150000;130000. Il patrimonio netto si calcola da solo."));
+    const ta = el("textarea",{rows:"10", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2025;30000;150000;130000\n01/02/2025;31000;151000;129000"});
+    modal.appendChild(ta);
+    const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
+    modal.appendChild(errBox);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const importBtn = el("button",{class:"btn primary"},"Importa");
+    importBtn.addEventListener("click", ()=>{
+      const lines = ta.value.split("\n").map(l=>l.trim()).filter(l=>l.length);
+      if(!lines.length) return;
+      const parsed = [];
+      for(const line of lines){
+        const parts = line.split(";").map(p=>p.trim());
+        if(parts.length < 4){ errBox.textContent = 'Riga non valida (servono 4 campi separati da ";"): '+line; return; }
+        const [dateStr, liq, nonliq, debt] = parts;
+        const liquidity = parseFloat(liq.replace(",", ".")) || 0;
+        const nonliquid = parseFloat(nonliq.replace(",", ".")) || 0;
+        const debts = parseFloat(debt.replace(",", ".")) || 0;
+        parsed.push({ date:dateStr, liquidity, nonliquid, debts, net: liquidity+nonliquid-debts });
+      }
+      errBox.textContent = "";
+      state.finance.history = state.finance.history.concat(parsed);
+      state.finance.history.sort((a,b)=>{
+        const da = a.date.split("/").reverse().join("");
+        const db = b.date.split("/").reverse().join("");
+        return db.localeCompare(da);
+      });
+      store.set(privKey("finance"), state.finance);
+      close(); render("finanze");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(importBtn);
+    modal.appendChild(actions);
+  });
+}
 function renderFinanze(main){
   main.appendChild(el("div",{class:"section-head"},[
     el("h1",{},"Finanze"),
@@ -2124,6 +2318,9 @@ function renderFinanze(main){
     store.set(privKey("finance"), state.finance); render("finanze");
   });
   summary.appendChild(snapBtn);
+  const importBtn = el("button",{class:"btn ghost", style:"margin-left:10px;"},"Importa storico");
+  importBtn.addEventListener("click", openFinanceImportModal);
+  summary.appendChild(importBtn);
   main.appendChild(summary);
 
   const chartBlock = el("div",{class:"card cat-block"});
@@ -2249,7 +2446,19 @@ function customTabButton(tab){
     });
   });
   btn.appendChild(iconEl);
-  btn.appendChild(el("span",{class:"tab-label"}, tab.name));
+  const labelEl = el("span",{class:"tab-label", title:"Doppio click per rinominare"}, tab.name);
+  labelEl.addEventListener("dblclick",(e)=>{
+    e.stopPropagation();
+    const newName = prompt("Rinomina scheda:", tab.name);
+    if(newName && newName.trim()){
+      tab.name = newName.trim();
+      const targetKey = tab.private ? privKey("customTabs") : "customTabs";
+      const targetArr = tab.private ? state.customTabsPrivate : state.customTabs;
+      store.set(targetKey, targetArr);
+      renderCustomTabButtons();
+    }
+  });
+  btn.appendChild(labelEl);
   const delBtn = el("span",{class:"tab-del", html:"✕"});
   delBtn.addEventListener("click",(e)=>{
     e.stopPropagation();
