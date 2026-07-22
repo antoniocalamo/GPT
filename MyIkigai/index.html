@@ -424,6 +424,7 @@ textarea{resize:vertical;}
 .drag-grip{
   width:13px; height:15px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
   display:flex; align-items:center; justify-content:center; margin-top:1px; user-select:none;
+  touch-action:none;
 }
 .drag-grip svg{width:100%; height:100%;}
 .drag-grip:hover{opacity:.9;}
@@ -717,7 +718,14 @@ table.tires textarea.gomme-cell{
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .stat-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(35,48,42,0.14); }
-.kpi-draggable{cursor:grab;}
+.kpi-draggable{position:relative;}
+.kpi-drag-grip{
+  position:absolute; top:8px; right:8px; width:14px; height:18px; opacity:.28;
+  cursor:grab; touch-action:none; color:var(--ink-soft);
+}
+.kpi-drag-grip svg{width:100%; height:100%; display:block;}
+.stat-card:hover .kpi-drag-grip{opacity:.7;}
+.kpi-drag-grip:active{opacity:1; cursor:grabbing;}
 .kpi-draggable.dragging{opacity:.4;}
 .kpi-draggable.drag-over{outline:2px dashed var(--forest); outline-offset:-3px;}
 .stat-icon{width:17px; height:17px; margin-bottom:6px;}
@@ -735,6 +743,9 @@ table.tires textarea.gomme-cell{
 
 /* ---- Priorities KPI card ---- */
 .stat-card-priorities{grid-column:span 2;}
+.priorities-level{display:flex; align-items:center; gap:6px;}
+.priorities-level-text{font-family:'Fraunces',serif; font-weight:700; font-size:13.5px; color:var(--ink);}
+.priorities-points-text{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);}
 .priorities-medal{font-size:16px; line-height:1; animation:medal-pop .4s ease;}
 @keyframes medal-pop{from{transform:scale(0.4) rotate(-15deg); opacity:0;} to{transform:scale(1) rotate(0); opacity:1;}}
 .priorities-inline-list{margin-top:6px; display:flex; flex-direction:column; gap:3px;}
@@ -742,9 +753,11 @@ table.tires textarea.gomme-cell{
 .priorities-inline-row input{width:14px; height:14px; accent-color:var(--forest); flex-shrink:0;}
 .priorities-inline-text{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .priorities-inline-row.done .priorities-inline-text{text-decoration:line-through; color:var(--ink-soft);}
+.priorities-pts-badge{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--teal); margin-left:auto; flex-shrink:0;}
 .priorities-empty, .priorities-more{font-size:11.5px; color:var(--ink-soft); font-style:italic;}
 .priorities-progress-bar{height:6px; border-radius:4px; background:var(--paper); margin-top:8px; overflow:hidden;}
 .priorities-progress-fill{height:100%; border-radius:4px; transition:width .3s ease;}
+.priorities-next-level{font-size:10.5px; color:var(--ink-soft); margin-top:5px;}
 
 /* ---- Finanze ---- */
 .finance-reminder-banner{
@@ -898,7 +911,7 @@ table.tires textarea.gomme-cell{
 .modal-radio-row label{display:flex; align-items:center; gap:6px; cursor:pointer;}
 
 /* ---- Custom sidebar tabs ---- */
-.custom-tab{position:relative;}
+.custom-tab{position:relative; padding-right:34px;}
 .tab-edit-btn{
   position:absolute; right:14px; top:50%; transform:translateY(-50%);
   width:14px; height:14px; opacity:.32; cursor:pointer; transition:opacity .15s ease; color:var(--tab-text);
@@ -908,6 +921,7 @@ table.tires textarea.gomme-cell{
 .tab-edit-btn:hover{opacity:1 !important;}
 .tab-drag-grip{
   width:11px; height:15px; flex-shrink:0; opacity:.4; cursor:grab; color:var(--tab-text);
+  touch-action:none;
 }
 .tab-drag-grip svg{width:100%; height:100%; display:block;}
 .tab-drag-grip:hover{opacity:.85;}
@@ -1048,7 +1062,7 @@ table.tires textarea.gomme-cell{
           <span id="zoom-level" class="zoom-level">100%</span>
           <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
         </div>
-        <button id="undo-btn" class="btn ghost small" title="Annulla ultima eliminazione" disabled>↶ Undo</button>
+        <button id="undo-btn" class="btn ghost small" title="Annulla ultima modifica (es. un'eliminazione)" disabled>↶ Undo</button>
       </div>
       <div class="topbar-row topbar-row-account">
         <div id="app-version" class="app-version"></div>
@@ -1328,6 +1342,18 @@ const store = {
         .upsert({ key, value, updated_at: new Date().toISOString() });
       if(error) console.error("supabase set error", key, error);
     }catch(e){ console.error("supabase set error", key, e); }
+  },
+  // come set(), ma non occupa uno slot della cronologia "Undo": da usare per modifiche
+  // frequenti e non distruttive (riordini, toggle, piccole preferenze) che altrimenti
+  // "spingerebbero fuori" dalla cronologia una vera eliminazione che l'utente vuole recuperare.
+  async setQuiet(key, value){
+    keySnapshots[key] = structuredClone(value);
+    try{
+      const { error } = await sb
+        .from("planner_store")
+        .upsert({ key, value, updated_at: new Date().toISOString() });
+      if(error) console.error("supabase set error", key, error);
+    }catch(e){ console.error("supabase set error", key, e); }
   }
 };
 
@@ -1391,7 +1417,7 @@ function updateCustomTabCache(storeKey, value){
 let undoStack = [];
 function pushUndo(fn){
   undoStack.push(fn);
-  if(undoStack.length > 15) undoStack.shift();
+  if(undoStack.length > 30) undoStack.shift();
   updateUndoBtn();
 }
 function performUndo(){
@@ -1549,63 +1575,105 @@ document.getElementById("logout-btn").addEventListener("click", async ()=>{
 });
 
 /* ---------------- helpers ---------------- */
-function attachRowDrag(handle, row, i, arr, onSave){
-  handle.draggable = true;
-  handle.addEventListener("dragstart",(e)=>{
-    e.dataTransfer.setData("text/plain", String(i));
-    e.dataTransfer.effectAllowed = "move";
+// --- Drag & drop per riordino, basato su Pointer Events -------------------------------
+// Sostituisce il vecchio drag&drop HTML5 (che su touch/mobile non risponde) con qualcosa
+// che funziona identicamente con mouse e con il dito. `handle` è l'elemento che avvia il
+// trascinamento (la manetta), `row` è l'elemento che si sposta.
+function bindPointerDragSource(handle, row, onMove, onEnd){
+  let dragging = false;
+  handle.addEventListener("pointerdown",(e)=>{
+    if(e.pointerType==="mouse" && e.button!==0) return;
+    e.preventDefault();
+    dragging = true;
     row.classList.add("dragging");
+    try{ handle.setPointerCapture(e.pointerId); }catch(err){}
   });
-  handle.addEventListener("dragend", ()=> row.classList.remove("dragging"));
-  row.addEventListener("dragover",(e)=>{ e.preventDefault(); row.classList.add("drag-over"); });
-  row.addEventListener("dragleave", ()=> row.classList.remove("drag-over"));
-  row.addEventListener("drop",(e)=>{
-    e.preventDefault(); row.classList.remove("drag-over");
-    const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
-    if(isNaN(fromIdx) || fromIdx===i) return;
-    const [moved] = arr.splice(fromIdx,1);
-    arr.splice(i,0,moved);
+  handle.addEventListener("pointermove",(e)=>{
+    if(!dragging) return;
+    onMove(e);
+  });
+  function finish(e){
+    if(!dragging) return;
+    dragging = false;
+    row.classList.remove("dragging");
+    onEnd(e);
+  }
+  handle.addEventListener("pointerup", finish);
+  handle.addEventListener("pointercancel", finish);
+}
+function attachRowDrag(handle, row, i, arr, onSave){
+  row.dataset.dragIdx = i;
+  function resolveTarget(e){
+    const container = row.parentElement;
+    if(!container) return null;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    let node = under;
+    while(node && node!==container){
+      if(node.parentElement===container && node.dataset && node.dataset.dragIdx!==undefined) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+  bindPointerDragSource(handle, row, (e)=>{
+    const t = resolveTarget(e);
+    const container = row.parentElement;
+    if(container) container.querySelectorAll(":scope > .drag-over").forEach(el=>el.classList.remove("drag-over"));
+    if(t && t!==row) t.classList.add("drag-over");
+  }, (e)=>{
+    const container = row.parentElement;
+    if(container) container.querySelectorAll(":scope > .drag-over").forEach(el=>el.classList.remove("drag-over"));
+    const t = resolveTarget(e);
+    if(!t || t===row) return;
+    const toIdx = Number(t.dataset.dragIdx);
+    if(isNaN(toIdx) || toIdx===i) return;
+    const [moved] = arr.splice(i,1);
+    arr.splice(toIdx,0,moved);
     onSave();
   });
 }
 function attachTaskDrag(handle, row, day, i, refreshFn){
-  handle.draggable = true;
-  handle.addEventListener("dragstart",(e)=>{
-    e.dataTransfer.setData("text/plain", JSON.stringify({day, index:i}));
-    e.dataTransfer.effectAllowed = "move";
-    row.classList.add("dragging");
-  });
-  handle.addEventListener("dragend", ()=> row.classList.remove("dragging"));
-  row.addEventListener("dragover",(e)=>{ e.preventDefault(); e.stopPropagation(); row.classList.add("drag-over"); });
-  row.addEventListener("dragleave", ()=> row.classList.remove("drag-over"));
-  row.addEventListener("drop",(e)=>{
-    e.preventDefault(); e.stopPropagation(); row.classList.remove("drag-over");
-    let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
-    if(!data || typeof data.index!=="number" || !state.dashboard.days[data.day]) return;
-    if(data.day===day && data.index===i) return;
-    const sourceArr = state.dashboard.days[data.day];
-    const [moved] = sourceArr.splice(data.index,1);
-    if(!moved) return;
-    if(!state.dashboard.days[day]) state.dashboard.days[day] = [];
-    state.dashboard.days[day].splice(i,0,moved);
-    refreshFn();
+  row.dataset.taskDrag = day+"|"+i;
+  bindPointerDragSource(handle, row, (e)=>{
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    document.querySelectorAll(".drag-over, .day-card-drop-target").forEach(el=>el.classList.remove("drag-over","day-card-drop-target"));
+    const rowTarget = under && under.closest("[data-task-drag]");
+    const dayTarget = under && under.closest("[data-day-drop]");
+    if(rowTarget && rowTarget!==row) rowTarget.classList.add("drag-over");
+    else if(dayTarget) dayTarget.classList.add("day-card-drop-target");
+  }, (e)=>{
+    document.querySelectorAll(".drag-over, .day-card-drop-target").forEach(el=>el.classList.remove("drag-over","day-card-drop-target"));
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const rowTarget = under && under.closest("[data-task-drag]");
+    if(rowTarget && rowTarget!==row){
+      const parts = rowTarget.dataset.taskDrag.split("|");
+      const targetDay = parts[0], targetIdx = Number(parts[1]);
+      if(targetDay===day && targetIdx===i) return;
+      if(!state.dashboard.days[day]) return;
+      const sourceArr = state.dashboard.days[day];
+      const [moved] = sourceArr.splice(i,1);
+      if(!moved) return;
+      if(!state.dashboard.days[targetDay]) state.dashboard.days[targetDay] = [];
+      state.dashboard.days[targetDay].splice(targetIdx,0,moved);
+      refreshFn();
+      return;
+    }
+    const dayTarget = under && under.closest("[data-day-drop]");
+    if(dayTarget){
+      const targetDay = dayTarget.dataset.dayDrop;
+      if(!state.dashboard.days[day]) return;
+      const sourceArr = state.dashboard.days[day];
+      const [moved] = sourceArr.splice(i,1);
+      if(!moved) return;
+      if(!state.dashboard.days[targetDay]) state.dashboard.days[targetDay] = [];
+      state.dashboard.days[targetDay].push(moved);
+      refreshFn();
+    }
   });
 }
-function attachDayCardDrop(dayCard, day, refreshFn){
-  dayCard.addEventListener("dragover",(e)=>{ e.preventDefault(); dayCard.classList.add("day-card-drop-target"); });
-  dayCard.addEventListener("dragleave",(e)=>{ dayCard.classList.remove("day-card-drop-target"); });
-  dayCard.addEventListener("drop",(e)=>{
-    e.preventDefault();
-    dayCard.classList.remove("day-card-drop-target");
-    let data; try{ data = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(err){ return; }
-    if(!data || typeof data.index!=="number" || !state.dashboard.days[data.day]) return;
-    const sourceArr = state.dashboard.days[data.day];
-    const [moved] = sourceArr.splice(data.index,1);
-    if(!moved) return;
-    if(!state.dashboard.days[day]) state.dashboard.days[day] = [];
-    state.dashboard.days[day].push(moved);
-    refreshFn();
-  });
+function attachDayCardDrop(dayCard, day){
+  // Marcatore usato da attachTaskDrag per riconoscere "hai rilasciato sul contenitore
+  // del giorno" quando non sei sopra una riga specifica (es. spazio vuoto sotto le task).
+  dayCard.dataset.dayDrop = day;
 }
 function openModal(contentBuilderFn){
   const overlay = el("div",{class:"modal-overlay"});
@@ -1772,6 +1840,19 @@ async function ensureWeatherLoaded(){
   }catch(e){ weatherCache = null; }
   return weatherCache;
 }
+function currentMonthKey(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function ensureMonthlyPriorityPoints(mp){
+  const mk = currentMonthKey();
+  if(mp.pointsMonth !== mk){ mp.points = 0; mp.pointsMonth = mk; }
+  if(typeof mp.points !== "number") mp.points = 0;
+}
+function adjustMonthlyPriorityPoints(mp, delta){
+  ensureMonthlyPriorityPoints(mp);
+  mp.points = Math.max(0, mp.points + delta);
+}
 function statCard(kpiKey){
   const def = KPI_CATALOG[kpiKey];
   if(!def) return null;
@@ -1807,12 +1888,19 @@ function statCard(kpiKey){
     card.appendChild(el("div",{class:"stat-value stat-value-quote"}, goodThingPick ? ("\u201C"+goodThingPick.text+"\u201D") : "—"));
   } else if(kpiKey==="monthlyPriorities"){
     const mp = state.dashboard.monthlyPriorities;
+    ensureMonthlyPriorityPoints(mp);
     const total = mp.items.length;
     const doneCount = mp.items.filter(i=>i.done).length;
     const allDone = total>0 && doneCount===total;
+    const level = Math.floor(mp.points/50) + 1;
+    const ptsToNext = 50 - (mp.points % 50);
     card.classList.add("stat-card-priorities");
     const head = el("div",{class:"stat-card-head"});
-    head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    const headLeft = el("div",{class:"priorities-level"});
+    headLeft.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
+    headLeft.appendChild(el("span",{class:"priorities-level-text"}, "Liv. "+level));
+    headLeft.appendChild(el("span",{class:"priorities-points-text"}, "· "+mp.points+" pt"));
+    head.appendChild(headLeft);
     if(allDone) head.appendChild(el("span",{class:"priorities-medal", title:"Tutte le priorità del mese raggiunte!"}, "🏆"));
     card.appendChild(head);
     const listWrap = el("div",{class:"priorities-inline-list"});
@@ -1823,9 +1911,15 @@ function statCard(kpiKey){
         const row = el("label",{class:"priorities-inline-row"+(it.done?" done":"")});
         const cb = el("input",{type:"checkbox"}); cb.checked = !!it.done;
         cb.addEventListener("click",(e)=>e.stopPropagation());
-        cb.addEventListener("change", ()=>{ it.done = cb.checked; store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
+        cb.addEventListener("change", ()=>{
+          it.done = cb.checked;
+          adjustMonthlyPriorityPoints(mp, cb.checked ? 10 : -10);
+          store.setQuiet(privKey("dashboard"), state.dashboard);
+          render("dashboard");
+        });
         row.appendChild(cb);
         row.appendChild(el("span",{class:"priorities-inline-text"}, it.text||"(senza titolo)"));
+        if(it.done) row.appendChild(el("span",{class:"priorities-pts-badge"}, "+10"));
         listWrap.appendChild(row);
       });
       if(total>5) listWrap.appendChild(el("div",{class:"priorities-more"}, "+"+(total-5)+" altre…"));
@@ -1834,6 +1928,7 @@ function statCard(kpiKey){
     const barWrap = el("div",{class:"priorities-progress-bar"});
     barWrap.appendChild(el("div",{class:"priorities-progress-fill", style:`width:${total? Math.round(doneCount/total*100):0}%; background:${def.color}`}));
     card.appendChild(barWrap);
+    card.appendChild(el("div",{class:"priorities-next-level"}, ptsToNext+" pt al livello "+(level+1)));
     card.style.cursor = "pointer";
     card.addEventListener("click",(e)=>{ if(e.target.tagName==="INPUT") return; openMonthlyPrioritiesModal(); });
   } else {
@@ -1874,29 +1969,49 @@ function renderStatsBar(main){
   state.dashboard.kpiSelection.forEach((key,i)=>{
     const card = statCard(key);
     if(!card) return;
-    card.draggable = true;
     card.classList.add("kpi-draggable");
-    card.addEventListener("dragstart",(e)=>{
-      e.dataTransfer.setData("text/plain", String(i));
-      e.dataTransfer.effectAllowed = "move";
-      card.classList.add("dragging");
-    });
-    card.addEventListener("dragend", ()=> card.classList.remove("dragging"));
-    card.addEventListener("dragover",(e)=>{ e.preventDefault(); card.classList.add("drag-over"); });
-    card.addEventListener("dragleave", ()=> card.classList.remove("drag-over"));
-    card.addEventListener("drop",(e)=>{
-      e.preventDefault(); card.classList.remove("drag-over");
-      const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
-      if(isNaN(fromIdx) || fromIdx===i) return;
-      const arr = state.dashboard.kpiSelection;
-      const [moved] = arr.splice(fromIdx,1);
-      arr.splice(i,0,moved);
-      store.set(privKey("dashboard"), state.dashboard);
-      render("dashboard");
-    });
+    const grip = el("span",{class:"kpi-drag-grip", html:ICON_GRIP, title:"Trascina per riordinare"});
+    card.appendChild(grip);
+    attachKpiDrag(grip, card, row, i);
     row.appendChild(card);
   });
   main.appendChild(row);
+}
+// drag basato su Pointer Events (non sul drag&drop HTML5, che su touch/mobile non risponde):
+// funziona quindi sia con mouse che con dito su schermo touch.
+function attachKpiDrag(grip, card, row, fromIdx){
+  let dragging = false;
+  grip.addEventListener("pointerdown",(e)=>{
+    e.preventDefault();
+    dragging = true;
+    card.classList.add("dragging");
+    try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  grip.addEventListener("pointermove",(e)=>{
+    if(!dragging) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const overCard = under && under.closest(".stat-card");
+    row.querySelectorAll(".stat-card").forEach(c=>c.classList.remove("drag-over"));
+    if(overCard && overCard!==card) overCard.classList.add("drag-over");
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging = false;
+    card.classList.remove("dragging");
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const overCard = under && under.closest(".stat-card");
+    row.querySelectorAll(".stat-card").forEach(c=>c.classList.remove("drag-over"));
+    if(overCard && overCard!==card){
+      const toIdx = Array.from(row.children).indexOf(overCard);
+      const arr = state.dashboard.kpiSelection;
+      const [moved] = arr.splice(fromIdx,1);
+      arr.splice(toIdx,0,moved);
+      store.setQuiet(privKey("dashboard"), state.dashboard);
+      render("dashboard");
+    }
+  }
+  grip.addEventListener("pointerup", endDrag);
+  grip.addEventListener("pointercancel", endDrag);
 }
 function openTaglinesModal(){
   openModal((modal, close)=>{
@@ -1951,37 +2066,6 @@ function openKpiSettingsModal(){
 
 /* ---------------- tab switching ---------------- */
 document.getElementById("tabs").addEventListener("click", (e)=>{
-  const renameEl = e.target.closest("[data-builtin-rename]");
-  if(renameEl){
-    e.stopPropagation();
-    const builtinKey = renameEl.dataset.builtinRename;
-    const currentName = state.builtinLabels[builtinKey] || BUILTIN_TABS[builtinKey];
-    const newName = prompt("Rinomina scheda:", currentName);
-    if(newName && newName.trim()){
-      state.builtinLabels[builtinKey] = newName.trim();
-      store.set(privKey("builtinLabels"), state.builtinLabels);
-      applyBuiltinLabels();
-    }
-    return;
-  }
-  const delEl = e.target.closest("[data-builtin-del], .tab-del");
-  if(delEl){
-    e.stopPropagation();
-    const builtinKey = delEl.dataset.builtinDel;
-    if(builtinKey){
-      if(confirm('Nascondere la scheda "'+BUILTIN_TABS[builtinKey]+'"? I dati restano salvati e potrai farla ricomparire da "+ Nuova scheda".')){
-        state.hiddenBuiltins.push(builtinKey);
-        store.set(privKey("hiddenBuiltins"), state.hiddenBuiltins);
-        applyHiddenBuiltins();
-        if(document.querySelector('.tab[data-tab="'+builtinKey+'"]').classList.contains("active")){
-          document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-          document.querySelector('.tab[data-tab="dashboard"]').classList.add("active");
-          render("dashboard");
-        }
-      }
-    }
-    return;
-  }
   const btn = e.target.closest(".tab");
   if(!btn) return;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -2058,7 +2142,12 @@ function openMonthlyPrioritiesModal(){
       mp.items.forEach((it,i)=>{
         const row = el("div",{class:"monthly-priority-row"+(it.done?" done":"")});
         const cb = el("input",{type:"checkbox"}); cb.checked = !!it.done;
-        cb.addEventListener("change", ()=>{ it.done = cb.checked; store.set(privKey("dashboard"), state.dashboard); redrawList(); });
+        cb.addEventListener("change", ()=>{
+          it.done = cb.checked;
+          adjustMonthlyPriorityPoints(mp, cb.checked ? 10 : -10);
+          store.set(privKey("dashboard"), state.dashboard);
+          redrawList();
+        });
         const txt = el("input",{type:"text", value:it.text||"", placeholder:"obiettivo del mese…"});
         txt.addEventListener("change", ()=>{ it.text = txt.value; store.set(privKey("dashboard"), state.dashboard); });
         const del = el("span",{class:"del", html:"✕"});
@@ -2204,7 +2293,7 @@ function buildDayRow(main, dateStr, isToday, isHistory){
     });
     addLine.appendChild(input);
     dayCard.appendChild(addLine);
-    attachDayCardDrop(dayCard, dateStr, ()=>{ store.set(privKey("dashboard"), state.dashboard); renderDashboard(clear(document.getElementById("main"))); });
+    attachDayCardDrop(dayCard, dateStr);
   }
   const rowClass = "day-row"+(isToday?" today":"")+(isHistory?" day-row-history":"");
   const label = dayName+" "+fmtDayLabel(dateStr)+(isToday?" · oggi":"");
@@ -2804,7 +2893,7 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   numInp.addEventListener("change", ()=>{ item.num=numInp.value; onSave(false); });
   const cb = el("input",{type:"checkbox", id:idPrefix+i});
   cb.checked = item.done;
-  cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(); });
+  cb.addEventListener("change", ()=>{ item.done=cb.checked; onSave(true); });
   const takeBtn = el("span",{class:"take-flag"+(item.take!==false?" active":""), html:ICON_CHECK, title:"Da prendere"});
   takeBtn.addEventListener("pointerdown", (e)=>{ e.preventDefault(); e.stopPropagation(); item.take = !item.take; onSave(); });
   const txt = el("textarea",{rows:"1", class:"pack-text", "data-packid":item.id}); txt.value = item.text;
@@ -2832,7 +2921,7 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
     if(grip.contains(e.target) || takeBtn.contains(e.target) || del.contains(e.target)) return;
     cb.checked = !cb.checked;
     item.done = cb.checked;
-    onSave();
+    onSave(true);
   });
   return row;
 }
@@ -2853,10 +2942,10 @@ function renderTripDetail(detail, trip){
     const selAllWrap = el("label",{class:"select-all-cat", title:"Seleziona/deseleziona tutte le voci"});
     const selAllCb = el("input",{type:"checkbox"}); selAllCb.checked = allDone;
     selAllWrap.appendChild(selAllCb); selAllWrap.appendChild(el("span",{},"Tutto"));
-    const save = ()=>{ store.set("trips", state.trips); render("viaggio"); };
+    const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("trips", state.trips); render("viaggio"); };
     selAllCb.addEventListener("change", ()=>{
       cat.items.forEach(it=>it.done = selAllCb.checked);
-      save();
+      save(true);
     });
     head.appendChild(titleInput); head.appendChild(selAllWrap); head.appendChild(delCatBtn);
     block.appendChild(head);
@@ -3147,7 +3236,7 @@ function renderBbqDetail(detail, bbq){
   const block = el("div",{class:"cat-block"});
   block.appendChild(el("h4",{},"Cosa portare"));
   const grid = el("div",{class:"pack-grid"});
-  const save = ()=>{ store.set("bbqs", state.bbqs); render("grigliate"); };
+  const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("bbqs", state.bbqs); render("grigliate"); };
   bbq.data.forEach((it,i)=>{
     grid.appendChild(renderPackItem(it, i, bbq.data, save, "g"+bbq.id));
   });
@@ -3872,7 +3961,7 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
     selAllWrap.appendChild(selAllCb); selAllWrap.appendChild(el("span",{},"Tutto"));
     selAllCb.addEventListener("change", ()=>{
       cat.items.forEach(it=>it.done = selAllCb.checked);
-      save();
+      save(true);
     });
     head.appendChild(titleInput);
     head.appendChild(selAllWrap);
@@ -3906,14 +3995,14 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
   detail.appendChild(addCatBtn);
 }
 function renderSharedBoardDetail(detail, board){
-  const save = ()=>{ store.set("sharedBoards", state.sharedBoards); render("condivisi"); };
+  const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("sharedBoards", state.sharedBoards); render("condivisi"); };
   renderCategorizedChecklist(detail, board, save, "s"+board.id, "condivisi");
 }
 
 /* ---------------- CUSTOM TABS ---------------- */
 function renderGenericChecklistDetail(storeKey, tabName){
   return function(detail, board){
-    const save = ()=>{ store.set(storeKey, state[storeKey]); render(tabName); };
+    const save = (quiet)=>{ (quiet?store.setQuiet:store.set)(storeKey, state[storeKey]); render(tabName); };
     renderCategorizedChecklist(detail, board, save, "c"+board.id, tabName);
   };
 }
@@ -3957,9 +4046,9 @@ function customTabButton(tab, index, arr){
     const targetKey = ()=> tab.private ? privKey("customTabs") : "customTabs";
     const targetArr = ()=> tab.private ? state.customTabsPrivate : state.customTabs;
     openTabEditModal({
-      getIcon: ()=>tab.icon, setIcon: (k)=>{ tab.icon=k; store.set(targetKey(), targetArr()); },
-      getColor: ()=>tab.color, setColor: (c)=>{ tab.color=c; btn.style.background=c; store.set(targetKey(), targetArr()); },
-      getName: ()=>tab.name, setName: (n)=>{ tab.name=n; store.set(targetKey(), targetArr()); },
+      getIcon: ()=>tab.icon, setIcon: (k)=>{ tab.icon=k; store.setQuiet(targetKey(), targetArr()); },
+      getColor: ()=>tab.color, setColor: (c)=>{ tab.color=c; btn.style.background=c; store.setQuiet(targetKey(), targetArr()); },
+      getName: ()=>tab.name, setName: (n)=>{ tab.name=n; store.setQuiet(targetKey(), targetArr()); },
       afterSave: ()=>renderCustomTabButtons(),
       onDelete: ()=>{
         if(confirm('Eliminare la scheda "'+tab.name+'" e tutti i suoi contenuti? Questa azione non è reversibile.')){
@@ -4048,25 +4137,25 @@ function enhanceBuiltinTabs(){
 
     const grip = el("span",{class:"tab-drag-grip", html:ICON_GRIP, title:"Trascina per riordinare"});
     btn.insertBefore(grip, btn.firstChild);
-    grip.draggable = true;
-    grip.addEventListener("dragstart",(e)=>{
-      e.dataTransfer.setData("text/plain", key);
-      e.dataTransfer.effectAllowed = "move";
-      btn.classList.add("dragging");
-    });
-    grip.addEventListener("dragend", ()=> btn.classList.remove("dragging"));
-    btn.addEventListener("dragover",(e)=>{ e.preventDefault(); btn.classList.add("drag-over"); });
-    btn.addEventListener("dragleave", ()=> btn.classList.remove("drag-over"));
-    btn.addEventListener("drop",(e)=>{
-      e.preventDefault(); btn.classList.remove("drag-over");
-      const fromKey = e.dataTransfer.getData("text/plain");
-      if(!fromKey || !BUILTIN_TABS[fromKey] || fromKey===key) return;
+    btn.dataset.builtinDragKey = key;
+    bindPointerDragSource(grip, btn, (e)=>{
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const target = under && under.closest("[data-builtin-drag-key]");
+      document.querySelectorAll(".drag-over").forEach(el=>el.classList.remove("drag-over"));
+      if(target && target!==btn) target.classList.add("drag-over");
+    }, (e)=>{
+      document.querySelectorAll(".drag-over").forEach(el=>el.classList.remove("drag-over"));
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const target = under && under.closest("[data-builtin-drag-key]");
+      if(!target || target===btn) return;
+      const toKey = target.dataset.builtinDragKey;
+      if(!toKey || toKey===key) return;
       let order = (state.builtinOrder && state.builtinOrder.length) ? state.builtinOrder.slice() : Object.keys(BUILTIN_TABS);
-      order = order.filter(k=>k!==fromKey);
-      const toIdx = order.indexOf(key);
-      order.splice(toIdx, 0, fromKey);
+      order = order.filter(k=>k!==key);
+      const toIdx = order.indexOf(toKey);
+      order.splice(toIdx, 0, key);
       state.builtinOrder = order;
-      store.set(privKey("builtinOrder"), order);
+      store.setQuiet(privKey("builtinOrder"), order);
       applyBuiltinOrder();
     });
 
@@ -4074,12 +4163,12 @@ function enhanceBuiltinTabs(){
     editBtn.addEventListener("click",(e)=>{
       e.stopPropagation();
       openTabEditModal({
-        getIcon: ()=>state.builtinIcons[key]||"", setIcon: (k)=>{ state.builtinIcons[key]=k; store.set(privKey("builtinIcons"), state.builtinIcons); },
-        getColor: ()=>state.builtinColors[key]||currentTabPalette()[idx%currentTabPalette().length], setColor: (c)=>{ state.builtinColors[key]=c; store.set(privKey("builtinColors"), state.builtinColors); },
-        getName: ()=>state.builtinLabels[key]||BUILTIN_TABS[key], setName: (n)=>{ state.builtinLabels[key]=n; store.set(privKey("builtinLabels"), state.builtinLabels); },
+        getIcon: ()=>state.builtinIcons[key]||"", setIcon: (k)=>{ state.builtinIcons[key]=k; store.setQuiet(privKey("builtinIcons"), state.builtinIcons); },
+        getColor: ()=>state.builtinColors[key]||currentTabPalette()[idx%currentTabPalette().length], setColor: (c)=>{ state.builtinColors[key]=c; store.setQuiet(privKey("builtinColors"), state.builtinColors); },
+        getName: ()=>state.builtinLabels[key]||BUILTIN_TABS[key], setName: (n)=>{ state.builtinLabels[key]=n; store.setQuiet(privKey("builtinLabels"), state.builtinLabels); },
         afterSave: ()=>{ applyBuiltinIcons(); applyBuiltinColors(); applyBuiltinLabels(); },
-        onResetIcon: state.builtinIcons[key] ? ()=>{ delete state.builtinIcons[key]; store.set(privKey("builtinIcons"), state.builtinIcons); applyBuiltinIcons(); } : null,
-        onResetColor: state.builtinColors[key] ? ()=>{ delete state.builtinColors[key]; store.set(privKey("builtinColors"), state.builtinColors); applyBuiltinColors(); } : null,
+        onResetIcon: state.builtinIcons[key] ? ()=>{ delete state.builtinIcons[key]; store.setQuiet(privKey("builtinIcons"), state.builtinIcons); applyBuiltinIcons(); } : null,
+        onResetColor: state.builtinColors[key] ? ()=>{ delete state.builtinColors[key]; store.setQuiet(privKey("builtinColors"), state.builtinColors); applyBuiltinColors(); } : null,
         onDelete: ()=>{
           if(confirm('Nascondere la scheda "'+(state.builtinLabels[key]||BUILTIN_TABS[key])+'"? I dati restano salvati e potrai farla ricomparire da "+ Nuova scheda".')){
             state.hiddenBuiltins.push(key);
