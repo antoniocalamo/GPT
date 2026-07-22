@@ -135,10 +135,11 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 .brand-name{
   font-family:'Fraunces',serif;
   font-weight:700;
-  font-size:21px;
+  font-size:18px;
   color:var(--forest);
   letter-spacing:-0.01em;
   line-height:1.1;
+  white-space:nowrap;
 }
 .brand-tagline{
   font-family:'Inter',sans-serif; font-size:10.5px; font-style:italic;
@@ -241,6 +242,7 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .topbar-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end;}
 .topbar-row-account{font-size:12px;}
+.topbar-row-version{margin-top:-2px;}
 .theme-select{
   border:1px solid var(--line); background:var(--card); color:var(--ink);
   padding:6px 10px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer;
@@ -575,11 +577,15 @@ textarea{resize:vertical;}
 .cat-block-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
 .select-all-cat{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; user-select:none;}
 .select-all-cat input{width:14px; height:14px; accent-color:var(--forest);}
+.select-all-cat.take input{accent-color:var(--leaf);}
 .select-all-global{
   display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink);
   cursor:pointer; user-select:none; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line);
 }
 .select-all-global input{width:15px; height:15px; accent-color:var(--forest);}
+.select-all-global.take input{accent-color:var(--leaf);}
+.select-all-row{display:flex; align-items:center; flex-wrap:wrap; gap:16px 22px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line);}
+.select-all-row .select-all-global{margin-bottom:0; padding-bottom:0; border-bottom:none;}
 .cat-title-input{
   border:none; background:transparent; padding:2px 0; flex:1; min-width:0;
   font-size:14px; color:var(--forest); font-family:'Fraunces',serif; font-weight:600;
@@ -1079,9 +1085,11 @@ table.tires textarea.gomme-cell{
         <button id="undo-btn" class="btn ghost small" title="Annulla ultima modifica (es. un'eliminazione)" disabled>↶ Undo</button>
       </div>
       <div class="topbar-row topbar-row-account">
-        <div id="app-version" class="app-version"></div>
         <div id="user-email" class="user-email"></div>
         <button id="logout-btn" class="btn ghost small">Esci</button>
+      </div>
+      <div class="topbar-row topbar-row-version">
+        <div id="app-version" class="app-version"></div>
       </div>
     </div>
     <main id="main"></main>
@@ -1267,7 +1275,7 @@ const SUPABASE_KEY = "sb_publishable_oBGq3W5oMZihk70Mt2KRSA_uKKUJeTb";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 document.getElementById("login-version").innerHTML = APP_VERSION + "<br>by Antonio Calamo";
-document.getElementById("app-version").textContent = APP_VERSION + " · Antonio Calamo";
+document.getElementById("app-version").textContent = APP_VERSION + " · by Antonio Calamo with love (and AI)";
 
 let uiZoom = 1;
 let appTheme = "ikigai";
@@ -2246,9 +2254,10 @@ function renderDashboard(main){
   main.appendChild(headerWrap);
   renderStatsBar(main);
 
+  main.appendChild(sectionLabel("To Do List", "var(--forest)", todoActions));
+
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
-  week.appendChild(sectionLabel("To Do List", "var(--forest)", todoActions));
 
   if(past.length && historyExpanded){
     const histWrap = el("div",{class:"history-days"});
@@ -2959,7 +2968,18 @@ function renderTripDetail(detail, trip){
       trip.data.forEach(cat=>cat.items.forEach(it=>it.done = globalCb.checked));
       save(true);
     });
-    detail.appendChild(globalWrap);
+    const allTakeGlobal = allItemsGlobal.every(it=>it.take!==false);
+    const globalTakeWrap = el("label",{class:"select-all-global take", title:"Seleziona/deseleziona tutti i baffi (da prendere) di tutte le categorie"});
+    const globalTakeCb = el("input",{type:"checkbox"}); globalTakeCb.checked = allTakeGlobal;
+    globalTakeWrap.appendChild(globalTakeCb); globalTakeWrap.appendChild(el("span",{},"Seleziona tutti (da prendere)"));
+    globalTakeCb.addEventListener("change", ()=>{
+      trip.data.forEach(cat=>cat.items.forEach(it=>it.take = globalTakeCb.checked));
+      save(true);
+    });
+    const globalRow = el("div",{class:"select-all-row"});
+    globalRow.appendChild(globalWrap);
+    globalRow.appendChild(globalTakeWrap);
+    detail.appendChild(globalRow);
   }
   trip.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
@@ -2981,7 +3001,15 @@ function renderTripDetail(detail, trip){
       cat.items.forEach(it=>it.done = selAllCb.checked);
       save(true);
     });
-    head.appendChild(titleInput); head.appendChild(selAllWrap); head.appendChild(delCatBtn);
+    const allTake = cat.items.length>0 && cat.items.every(it=>it.take!==false);
+    const selAllTakeWrap = el("label",{class:"select-all-cat take", title:"Seleziona/deseleziona tutti i baffi (da prendere)"});
+    const selAllTakeCb = el("input",{type:"checkbox"}); selAllTakeCb.checked = allTake;
+    selAllTakeWrap.appendChild(selAllTakeCb); selAllTakeWrap.appendChild(el("span",{},"Da prendere"));
+    selAllTakeCb.addEventListener("change", ()=>{
+      cat.items.forEach(it=>it.take = selAllTakeCb.checked);
+      save(true);
+    });
+    head.appendChild(titleInput); head.appendChild(selAllWrap); head.appendChild(selAllTakeWrap); head.appendChild(delCatBtn);
     block.appendChild(head);
     const grid = el("div",{class:"pack-grid"});
     cat.items.forEach((it,i)=>{
@@ -3967,7 +3995,18 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
       board.data.forEach(cat=>cat.items.forEach(it=>it.done = globalCb.checked));
       save(true);
     });
-    detail.appendChild(globalWrap);
+    const allTakeGlobal = allItemsGlobal.every(it=>it.take!==false);
+    const globalTakeWrap = el("label",{class:"select-all-global take", title:"Seleziona/deseleziona tutti i baffi (da prendere) di tutte le categorie"});
+    const globalTakeCb = el("input",{type:"checkbox"}); globalTakeCb.checked = allTakeGlobal;
+    globalTakeWrap.appendChild(globalTakeCb); globalTakeWrap.appendChild(el("span",{},"Seleziona tutti (da prendere)"));
+    globalTakeCb.addEventListener("change", ()=>{
+      board.data.forEach(cat=>cat.items.forEach(it=>it.take = globalTakeCb.checked));
+      save(true);
+    });
+    const globalRow = el("div",{class:"select-all-row"});
+    globalRow.appendChild(globalWrap);
+    globalRow.appendChild(globalTakeWrap);
+    detail.appendChild(globalRow);
   }
   board.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
@@ -3989,8 +4028,17 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
       cat.items.forEach(it=>it.done = selAllCb.checked);
       save(true);
     });
+    const allTake = cat.items.length>0 && cat.items.every(it=>it.take!==false);
+    const selAllTakeWrap = el("label",{class:"select-all-cat take", title:"Seleziona/deseleziona tutti i baffi (da prendere)"});
+    const selAllTakeCb = el("input",{type:"checkbox"}); selAllTakeCb.checked = allTake;
+    selAllTakeWrap.appendChild(selAllTakeCb); selAllTakeWrap.appendChild(el("span",{},"Da prendere"));
+    selAllTakeCb.addEventListener("change", ()=>{
+      cat.items.forEach(it=>it.take = selAllTakeCb.checked);
+      save(true);
+    });
     head.appendChild(titleInput);
     head.appendChild(selAllWrap);
+    head.appendChild(selAllTakeWrap);
     head.appendChild(delCatBtn);
     block.appendChild(head);
     const grid = el("div",{class:"pack-grid"});
