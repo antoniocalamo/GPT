@@ -2233,8 +2233,7 @@ function renderDashboard(main){
 
   const headerWrap = el("div",{class:"dash-header-sticky"});
   headerWrap.appendChild(el("div",{class:"section-head"},[
-    el("h1",{},"Come siamo messi questa settimana?"),
-    todoActions
+    el("h1",{},"Come siamo messi questa settimana?")
   ]));
   const subRow = el("div",{class:"dash-subtitle"});
   subRow.appendChild(el("span",{}, currentTagline));
@@ -2249,7 +2248,7 @@ function renderDashboard(main){
 
   const grid = el("div",{class:"dash-grid"});
   const week = el("div",{class:"week-table"});
-  week.appendChild(sectionLabel("To Do List", "var(--forest)"));
+  week.appendChild(sectionLabel("To Do List", "var(--forest)", todoActions));
 
   if(past.length && historyExpanded){
     const histWrap = el("div",{class:"history-days"});
