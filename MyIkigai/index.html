@@ -315,6 +315,7 @@ main{
   margin:0;
   color:var(--ink);
 }
+.dash-title-wrap{display:flex; align-items:center; gap:10px;}
 .tab-detail-title{
   display:flex; align-items:center; gap:12px;
   font-family:'Fraunces',serif; font-size:30px; color:var(--ink); margin:0;
@@ -472,8 +473,8 @@ textarea{resize:vertical;}
 .drag-grip svg{width:100%; height:100%;}
 .drag-grip:hover{opacity:.9;}
 .drag-grip:active{cursor:grabbing;}
-.task-item.dragging, .check-item.pack-item.dragging{opacity:.4;}
-.task-item.drag-over, .check-item.pack-item.drag-over{background:rgba(51,80,63,0.09); border-radius:7px;}
+.task-item.dragging, .check-item.pack-item.dragging, .note-item.dragging{opacity:.4;}
+.task-item.drag-over, .check-item.pack-item.drag-over, .note-item.drag-over{background:rgba(51,80,63,0.09); border-radius:7px;}
 .add-line{
   display:flex; gap:8px; margin-top:8px;
 }
@@ -1223,6 +1224,13 @@ const KPI_CATALOG = {
 const DEFAULT_KPI_SELECTION = ["monthlyPriorities","ortoWater","ortoFertilize","netWorth"];
 const APP_VERSION = "v0.45";
 const ADMIN_EMAIL = "antonio.calamo@gmail.com";
+const USER_NAMES = { "antonio.calamo@gmail.com":"Antonio", "cristinacuna90@gmail.com":"Cri" };
+function getGreeting(){
+  const h = new Date().getHours();
+  if(h>=6 && h<13) return "Buongiorno";
+  if(h>=13 && h<17) return "Buonpomeriggio";
+  return "Buonasera";
+}
 const DEFAULT_TAGLINES = [
   "Siamo li Coooocchiiii",
   "Ho solo dubbi",
@@ -1234,6 +1242,9 @@ const DEFAULT_TAGLINES = [
   "Quando torniamo in Giappone?",
   "ANTONIOOOOOO (cit.)",
   "Facciamo un accordo: tu butti l'umido, io no"
+];
+const DEFAULT_DASH_TITLES = [
+  "Come siamo messi questa settimana?"
 ];
 const STANDARD_ICONS = {
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
@@ -1417,7 +1428,7 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, gommeLayout:null, builtinLabels:null, accountSettings:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, dashTitles:null, gommeLayout:null, builtinLabels:null, accountSettings:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null, activeProject = null;
 let goodThingPick = null;
 let financeChartWindow = "12";
@@ -1437,12 +1448,13 @@ let isGuest = false;
 let customTabData = {};
 let activeCustomItem = {};
 let currentTagline = "";
+let currentDashTitle = "";
 let lastTaskByDay = {};
 let historyExpanded = false;
 let currentRenderedTab = "dashboard";
 const STATE_KEY_MAP_SHARED = {
   orto:"orto", trips:"trips", bbqs:"bbqs", tires:"tires",
-  sharedBoards:"sharedBoards", customTabs:"customTabs", taglines:"taglines"
+  sharedBoards:"sharedBoards", customTabs:"customTabs", taglines:"taglines", dashTitles:"dashTitles"
 };
 const STATE_KEY_MAP_PRIVATE = {
   dashboard:"dashboard", finance:"finance", hiddenBuiltins:"hiddenBuiltins",
@@ -1577,7 +1589,7 @@ async function loadAll(){
     state.dashboard.daysV2 = true;
   }
   pruneOldDays(state.dashboard.days);
-  store.set(privKey("dashboard"), state.dashboard);
+  store.setQuiet(privKey("dashboard"), state.dashboard);
   state.orto = await store.get("orto", DEFAULTS.orto);
   if(state.orto.lastWatered===undefined) state.orto.lastWatered = "";
   if(state.orto.lastFertilized===undefined) state.orto.lastFertilized = "";
@@ -1586,7 +1598,7 @@ async function loadAll(){
       id:b.id, type:"coltura", name:b.name, color:b.color||ORTO_TYPES.coltura.color,
       x:b.x, y:b.y, w:130, h:82, plantCount:"", plantDate:b.date||"", harvestDate:""
     }));
-    store.set("orto", state.orto);
+    store.setQuiet("orto", state.orto);
   }
   if(!state.orto.comments) state.orto.comments = [];
   state.trips = await store.get("trips", DEFAULTS.trips);
@@ -1606,6 +1618,7 @@ async function loadAll(){
   uiZoom = await store.get(privKey("uiZoom"), 1);
   appTheme = await store.get(privKey("appTheme"), "ikigai");
   state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
+  state.dashTitles = await store.get("dashTitles", DEFAULT_DASH_TITLES);
   state.accountSettings = await store.get(privKey("accountSettings"), {notifyFinance27:false});
 }
 
@@ -1632,11 +1645,13 @@ function showLogin(){
 async function startApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app-root").style.display="flex";
-  document.getElementById("user-email").textContent = currentUser.email + (isGuest ? " (guest)" : "");
+  const greetName = USER_NAMES[currentUser.email] || currentUser.email;
+  document.getElementById("user-email").textContent = getGreeting() + ", " + greetName + "!" + (isGuest ? " (guest)" : "");
   await loadAll();
   applyZoom();
   applyAppTheme();
   currentTagline = state.taglines.length ? state.taglines[Math.floor(Math.random()*state.taglines.length)] : "";
+  currentDashTitle = state.dashTitles.length ? state.dashTitles[Math.floor(Math.random()*state.dashTitles.length)] : "";
   applyHiddenBuiltins();
   applyBuiltinLabels();
   enhanceBuiltinTabs();
@@ -2118,6 +2133,28 @@ function attachKpiDrag(grip, card, row, fromIdx){
   grip.addEventListener("pointerup", endDrag);
   grip.addEventListener("pointercancel", endDrag);
 }
+function openDashTitlesModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Titoli casuali della dashboard"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"},"Uno viene scelto a caso a ogni accesso. Un elemento per riga."));
+    const ta = el("textarea",{rows:"10", style:"font-size:13px;"});
+    ta.value = state.dashTitles.join("\n");
+    modal.appendChild(ta);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Salva");
+    saveBtn.addEventListener("click", ()=>{
+      const lines = ta.value.split("\n").map(l=>l.trim()).filter(l=>l.length);
+      if(!lines.length) return;
+      state.dashTitles = lines;
+      store.set("dashTitles", state.dashTitles);
+      close(); render("dashboard");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
 function openTaglinesModal(){
   openModal((modal, close)=>{
     modal.appendChild(el("h3",{},"Sottotitoli casuali"));
@@ -2373,9 +2410,16 @@ function renderDashboard(main){
   todoActions.appendChild(backlogToggleBtn);
 
   const headerWrap = el("div",{class:"dash-header-sticky"});
-  headerWrap.appendChild(el("div",{class:"section-head"},[
-    el("h1",{},"Come siamo messi questa settimana?")
-  ]));
+  const titleRow = el("div",{class:"section-head"});
+  const titleWrap = el("div",{class:"dash-title-wrap"});
+  titleWrap.appendChild(el("h1",{}, currentDashTitle));
+  if(currentUser.email === ADMIN_EMAIL){
+    const editTitle = el("span",{class:"box-edit-icon", html:ICON_EDIT, title:"Modifica titoli"});
+    editTitle.addEventListener("click", openDashTitlesModal);
+    titleWrap.appendChild(editTitle);
+  }
+  titleRow.appendChild(titleWrap);
+  headerWrap.appendChild(titleRow);
   const subRow = el("div",{class:"dash-subtitle"});
   subRow.appendChild(el("span",{}, currentTagline));
   if(currentUser.email === ADMIN_EMAIL){
@@ -2633,12 +2677,14 @@ function backlogBoxCard(box){
   card.appendChild(head);
   box.items.forEach((note,i)=>{
     const row = el("div",{class:"note-item"});
+    const grip = el("span",{class:"drag-grip", html:ICON_GRIP, title:"Trascina per riordinare"});
     const ta = el("textarea",{rows:"1"}); ta.value = note;
     ta.addEventListener("input", ()=>autoResize(ta));
     ta.addEventListener("change", ()=>{ box.items[i]=ta.value; store.set(privKey("dashboard"), state.dashboard); });
     const del = el("span",{class:"del", html:"✕"});
     del.addEventListener("click", ()=>{ box.items.splice(i,1); store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
-    row.appendChild(ta); row.appendChild(del);
+    row.appendChild(grip); row.appendChild(ta); row.appendChild(del);
+    attachRowDrag(grip, row, i, box.items, ()=>{ store.set(privKey("dashboard"), state.dashboard); render("dashboard"); });
     card.appendChild(row);
     autoResize(ta);
   });
@@ -4026,6 +4072,24 @@ function renderFinanze(main){
     const banner = el("div",{class:"finance-reminder-banner"},
       "💰 È quasi/è il giorno dello stipendio (27) — ricordati di aggiornare lo storico qui sotto.");
     main.appendChild(banner);
+  }
+  const noItems = !state.finance.liquidity.length && !state.finance.nonliquid.length && !state.finance.debts.length;
+  if(noItems && state.finance.history.length){
+    const prefillBanner = el("div",{class:"finance-reminder-banner", style:"display:flex; align-items:center; flex-wrap:wrap; gap:10px;"});
+    prefillBanner.appendChild(document.createTextNode(
+      "Non hai ancora voci correnti, ma esiste uno storico: il grafico mostra quello, i blocchi qui sotto restano vuoti finché non aggiungi voci."
+    ));
+    const prefillBtn = el("button",{class:"btn ghost small"},"Precompila dall'ultimo snapshot");
+    prefillBtn.addEventListener("click", ()=>{
+      const last = state.finance.history[0];
+      if(last.liquidity) state.finance.liquidity.push({name:"Liquidità (da snapshot "+last.date+")", value:String(last.liquidity)});
+      if(last.nonliquid) state.finance.nonliquid.push({name:"Asset non liquidi (da snapshot "+last.date+")", value:String(last.nonliquid)});
+      if(last.debts) state.finance.debts.push({name:"Debiti (da snapshot "+last.date+")", value:String(last.debts)});
+      store.set(privKey("finance"), state.finance);
+      render("finanze");
+    });
+    prefillBanner.appendChild(prefillBtn);
+    main.appendChild(prefillBanner);
   }
   const grid = el("div",{class:"finance-grid"});
   grid.appendChild(financeBlock("Liquidità","liquidity"));
