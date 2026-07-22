@@ -3633,13 +3633,13 @@ function openAmortizationModal(item, onSave){
 
       const pasteSection = el("div",{});
       pasteSection.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
-        'Incolla una riga per ogni rata/periodo, nel formato: scadenza;capitale;interessi;totale rata;valore residuo — es. 01/01/2026;450;120;570;99550. Per deprezzamento/rivalutazione puoi lasciare a 0 le colonne capitale/interessi/totale rata e usare solo scadenza e valore. Una volta importato, potrai avanzare periodo dopo periodo e il valore si aggiornerà da solo.'));
+        'Incolla una riga per ogni rata/periodo, nel formato: scadenza;capitale;interessi;totale rata;valore residuo — es. 01/01/2026;450;120;570;99550. La colonna valore residuo è facoltativa (non serve per i piani "Interessi passivi residui", dove si calcola da solo). Per deprezzamento/rivalutazione puoi lasciare a 0 le colonne capitale/interessi/totale rata e usare solo scadenza e valore. Una volta importato, potrai avanzare periodo dopo periodo e il valore si aggiornerà da solo.'));
       const ta = el("textarea",{rows:"8", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2026;450;120;570;99550\n01/02/2026;452;118;570;99098"});
       pasteSection.appendChild(ta);
       modal.appendChild(pasteSection);
 
       const excelSection = el("div",{style:"display:none; margin-top:12px;"});
-      excelSection.appendChild(el("div",{class:"field-label"},"File Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, valore residuo — senza intestazione)"));
+      excelSection.appendChild(el("div",{class:"field-label"},"File Excel/CSV (colonne: scadenza, capitale, interessi, totale rata, e facoltativamente valore residuo — senza intestazione)"));
       const fileInput = el("input",{type:"file", accept:".xlsx,.xls,.csv"});
       let excelRows = null;
       const excelPreview = el("div",{style:"font-size:12px;color:var(--ink-soft);margin-top:6px;"});
@@ -3683,7 +3683,7 @@ function openAmortizationModal(item, onSave){
         }
         const rows = [];
         for(const r of rawRows){
-          if(!r || r.length<5 || r.every(c=>c===""||c==null)) continue;
+          if(!r || r.length<4 || r.every(c=>c===""||c==null)) continue;
           let [d, capQ, intQ, totRata, capR] = r;
           let dateStr;
           if(d instanceof Date) dateStr = String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
