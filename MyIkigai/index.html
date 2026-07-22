@@ -3620,12 +3620,26 @@ function openAmortizationModal(item, onSave){
         typeSelect.appendChild(el("option",{value:k}, AMORT_TYPES[k].label));
       });
       modal.appendChild(typeSelect);
-      modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
+
+      const tabsRow = el("div",{class:"modal-radio-row", style:"margin-top:12px;"});
+      const pasteLabel = el("label",{});
+      const pasteRadio = el("input",{type:"radio", name:"amortimportmode"}); pasteRadio.checked = true;
+      pasteLabel.appendChild(pasteRadio); pasteLabel.appendChild(document.createTextNode("Incolla righe"));
+      const excelLabel = el("label",{});
+      const excelRadio = el("input",{type:"radio", name:"amortimportmode"});
+      excelLabel.appendChild(excelRadio); excelLabel.appendChild(document.createTextNode("File Excel/CSV"));
+      tabsRow.appendChild(pasteLabel); tabsRow.appendChild(excelLabel);
+      modal.appendChild(tabsRow);
+
+      const pasteSection = el("div",{});
+      pasteSection.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
         'Incolla una riga per ogni rata/periodo, nel formato: scadenza;capitale;interessi;totale rata;valore residuo — es. 01/01/2026;450;120;570;99550. Per deprezzamento/rivalutazione puoi lasciare a 0 le colonne capitale/interessi/totale rata e usare solo scadenza e valore. Una volta importato, potrai avanzare periodo dopo periodo e il valore si aggiornerà da solo.'));
       const ta = el("textarea",{rows:"8", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2026;450;120;570;99550\n01/02/2026;452;118;570;99098"});
-      modal.appendChild(ta);
-      const excelWrap = el("div",{style:"margin-top:12px;"});
-      excelWrap.appendChild(el("div",{class:"field-label"},"oppure carica un file Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, valore residuo — senza intestazione)"));
+      pasteSection.appendChild(ta);
+      modal.appendChild(pasteSection);
+
+      const excelSection = el("div",{style:"display:none; margin-top:12px;"});
+      excelSection.appendChild(el("div",{class:"field-label"},"File Excel/CSV (stesse 5 colonne: scadenza, capitale, interessi, totale rata, valore residuo — senza intestazione)"));
       const fileInput = el("input",{type:"file", accept:".xlsx,.xls,.csv"});
       let excelRows = null;
       const excelPreview = el("div",{style:"font-size:12px;color:var(--ink-soft);margin-top:6px;"});
@@ -3637,14 +3651,21 @@ function openAmortizationModal(item, onSave){
           try{
             const wb = XLSX.read(e.target.result, {type:"array", cellDates:true});
             const sheet = wb.Sheets[wb.SheetNames[0]];
-            excelRows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true});
+            excelRows = normalizeSheetRows(XLSX.utils.sheet_to_json(sheet, {header:1, raw:true}));
             excelPreview.textContent = excelRows.length + " righe lette.";
           }catch(err){ excelPreview.textContent = "Errore lettura file: "+err.message; excelRows=null; }
         };
         reader.readAsArrayBuffer(file);
       });
-      excelWrap.appendChild(fileInput); excelWrap.appendChild(excelPreview);
-      modal.appendChild(excelWrap);
+      excelSection.appendChild(fileInput); excelSection.appendChild(excelPreview);
+      modal.appendChild(excelSection);
+
+      function toggleAmortMode(){
+        pasteSection.style.display = pasteRadio.checked ? "" : "none";
+        excelSection.style.display = excelRadio.checked ? "" : "none";
+      }
+      pasteRadio.addEventListener("change", toggleAmortMode);
+      excelRadio.addEventListener("change", toggleAmortMode);
 
       const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
       modal.appendChild(errBox);
@@ -3654,7 +3675,8 @@ function openAmortizationModal(item, onSave){
       const importBtn = el("button",{class:"btn primary"},"Importa piano");
       importBtn.addEventListener("click", ()=>{
         let rawRows;
-        if(excelRows && excelRows.length){
+        if(excelRadio.checked){
+          if(!excelRows || !excelRows.length){ errBox.textContent = "Carica prima un file Excel/CSV valido."; return; }
           rawRows = excelRows;
         } else {
           rawRows = ta.value.split("\n").map(l=>l.trim()).filter(l=>l.length).map(l=>l.split(";").map(p=>p.trim()));
@@ -3941,6 +3963,16 @@ function renderFinanceChart(fullHistory){
   wrap.appendChild(legend);
   return wrap;
 }
+function normalizeSheetRows(rows){
+  // Quando un CSV usa ";" come separatore di campo, XLSX a volte non lo riconosce e
+  // restituisce l'intera riga come un'unica cella: qui la spacchiamo noi nelle colonne reali.
+  return (rows||[]).map(r=>{
+    if(Array.isArray(r) && r.length===1 && typeof r[0]==="string" && r[0].indexOf(";")>-1){
+      return r[0].split(";").map(p=>p.trim());
+    }
+    return r;
+  });
+}
 function commitFinanceImport(parsed, errBox, close){
   if(!parsed.length) return;
   errBox.textContent = "";
@@ -4014,7 +4046,7 @@ function openFinanceImportModal(){
         try{
           const wb = XLSX.read(e.target.result, {type:"array", cellDates:true});
           const sheet = wb.Sheets[wb.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true});
+          const rows = normalizeSheetRows(XLSX.utils.sheet_to_json(sheet, {header:1, raw:true}));
           excelParsedRows = rows;
           excelPreview.textContent = rows.length + " righe lette dal foglio \""+wb.SheetNames[0]+"\".";
         }catch(err){
