@@ -933,6 +933,13 @@ table.tires textarea.gomme-cell{
 .finance-growth-grid .fg-val{text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:var(--ink);}
 .finance-growth-grid .fg-val.positive{color:#2F7A3D;}
 .finance-growth-grid .fg-val.negative{color:#B3352A;}
+.finance-networth-delta-grid{
+  margin-top:16px; padding-top:14px; border-top:1px dashed #BFD9F2;
+  grid-template-columns:1fr auto auto; gap:6px 20px; max-width:420px;
+}
+.finance-networth-delta-grid .fg-label{font-size:12.5px;}
+.finance-networth-delta-grid .fg-val{font-size:13px;}
+.finance-networth-delta-grid .fg-head{font-size:10.5px;}
 .kpi-check-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px;}
 .kpi-check-row:last-child{border-bottom:none;}
 .kpi-check-row input{width:16px; height:16px; accent-color:var(--forest);}
@@ -1974,11 +1981,14 @@ function findClosestHistoryEntry(hist, targetDate){
   return best;
 }
 function computeFinanceDeltas(){
-  const hist = (state.finance.history||[]).slice().sort((a,b)=>{
-    const da = a.date.split("/").reverse().join("");
-    const db = b.date.split("/").reverse().join("");
-    return db.localeCompare(da);
-  });
+  const today = new Date(); today.setHours(23,59,59,999);
+  const hist = (state.finance.history||[])
+    .filter(h=>{ const d = parseItDate(h.date); return d && d<=today; })
+    .sort((a,b)=>{
+      const da = a.date.split("/").reverse().join("");
+      const db = b.date.split("/").reverse().join("");
+      return db.localeCompare(da);
+    });
   if(hist.length < 2) return null;
   const latest = hist[0];
   const latestDate = parseItDate(latest.date);
@@ -2002,6 +2012,28 @@ function computeFinanceDeltas(){
     };
   }
   return { month: rowDeltas(prevMonth), year: rowDeltas(prevYear) };
+}
+function renderFinanceDeltaGrid(){
+  const deltas = computeFinanceDeltas();
+  if(!deltas) return null;
+  const grid = el("div",{class:"finance-growth-grid"});
+  grid.appendChild(el("span",{}));
+  grid.appendChild(el("span",{class:"fg-head"},"Mese prec."));
+  grid.appendChild(el("span",{class:"fg-head"},"Anno prec."));
+  function valCell(val){
+    if(val==null) return el("span",{class:"fg-val"}, "—");
+    return el("span",{class:"fg-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%");
+  }
+  grid.appendChild(el("span",{class:"fg-label"},"Delta % liquidità"));
+  grid.appendChild(valCell(deltas.month.liquidity));
+  grid.appendChild(valCell(deltas.year.liquidity));
+  grid.appendChild(el("span",{class:"fg-label"},"Delta % non liquidi"));
+  grid.appendChild(valCell(deltas.month.nonliquid));
+  grid.appendChild(valCell(deltas.year.nonliquid));
+  grid.appendChild(el("span",{class:"fg-label"},"Delta % patrimonio netto"));
+  grid.appendChild(valCell(deltas.month.net));
+  grid.appendChild(valCell(deltas.year.net));
+  return grid;
 }
 function fmtEUR(n){
   return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true});
@@ -2091,27 +2123,8 @@ function statCard(kpiKey){
     valueRow.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
     card.appendChild(valueRow);
     if(!netWorthHidden){
-      const deltas = computeFinanceDeltas();
-      if(deltas){
-        const grid = el("div",{class:"finance-growth-grid"});
-        grid.appendChild(el("span",{}));
-        grid.appendChild(el("span",{class:"fg-head"},"Mese prec."));
-        grid.appendChild(el("span",{class:"fg-head"},"Anno prec."));
-        function valCell(val){
-          if(val==null) return el("span",{class:"fg-val"}, "—");
-          return el("span",{class:"fg-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%");
-        }
-        grid.appendChild(el("span",{class:"fg-label"},"Delta % liquidità"));
-        grid.appendChild(valCell(deltas.month.liquidity));
-        grid.appendChild(valCell(deltas.year.liquidity));
-        grid.appendChild(el("span",{class:"fg-label"},"Delta % non liquidi"));
-        grid.appendChild(valCell(deltas.month.nonliquid));
-        grid.appendChild(valCell(deltas.year.nonliquid));
-        grid.appendChild(el("span",{class:"fg-label"},"Delta % patrimonio netto"));
-        grid.appendChild(valCell(deltas.month.net));
-        grid.appendChild(valCell(deltas.year.net));
-        card.appendChild(grid);
-      }
+      const grid = renderFinanceDeltaGrid();
+      if(grid) card.appendChild(grid);
     }
   } else if(kpiKey==="goodThing"){
     const head = el("div",{class:"stat-card-head"});
@@ -4301,6 +4314,11 @@ function renderFinanze(main){
     el("span",{class:"finance-total-value"}, fmtEUR(catTotals.debts))
   ]));
   netCard.appendChild(totalsRow);
+  const deltaGrid = renderFinanceDeltaGrid();
+  if(deltaGrid){
+    deltaGrid.classList.add("finance-networth-delta-grid");
+    netCard.appendChild(deltaGrid);
+  }
   main.appendChild(netCard);
   const grid = el("div",{class:"finance-grid"});
   grid.appendChild(financeBlock("Liquidità","liquidity"));
