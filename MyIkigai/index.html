@@ -575,6 +575,11 @@ textarea{resize:vertical;}
 .cat-block-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
 .select-all-cat{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; user-select:none;}
 .select-all-cat input{width:14px; height:14px; accent-color:var(--forest);}
+.select-all-global{
+  display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink);
+  cursor:pointer; user-select:none; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line);
+}
+.select-all-global input{width:15px; height:15px; accent-color:var(--forest);}
 .cat-title-input{
   border:none; background:transparent; padding:2px 0; flex:1; min-width:0;
   font-size:14px; color:var(--forest); font-family:'Fraunces',serif; font-weight:600;
@@ -1176,7 +1181,7 @@ const KPI_CATALOG = {
     } }
 };
 const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
-const APP_VERSION = "v0.40";
+const APP_VERSION = "v0.45";
 const ADMIN_EMAIL = "antonio.calamo@gmail.com";
 const DEFAULT_TAGLINES = [
   "Siamo li Coooocchiiii",
@@ -2184,24 +2189,6 @@ function openMonthlyPrioritiesModal(){
   });
 }
 function renderDashboard(main){
-  const headerWrap = el("div",{class:"dash-header-sticky"});
-  headerWrap.appendChild(el("div",{class:"section-head"},[
-    el("h1",{},"Come siamo messi questa settimana?")
-  ]));
-  const subRow = el("div",{class:"dash-subtitle"});
-  subRow.appendChild(el("span",{}, currentTagline));
-  if(currentUser.email === ADMIN_EMAIL){
-    const editT = el("span",{class:"box-edit-icon", html:ICON_EDIT, title:"Modifica sottotitoli"});
-    editT.addEventListener("click", openTaglinesModal);
-    subRow.appendChild(editT);
-  }
-  headerWrap.appendChild(subRow);
-  main.appendChild(headerWrap);
-  renderStatsBar(main);
-
-  const grid = el("div",{class:"dash-grid"});
-  const week = el("div",{class:"week-table"});
-
   const past = pastDates().filter(d => state.dashboard.days[d] && state.dashboard.days[d].length);
   const todoActions = el("div",{class:"todo-header-actions"});
   if(past.length){
@@ -2243,7 +2230,26 @@ function renderDashboard(main){
     render("dashboard");
   });
   todoActions.appendChild(backlogToggleBtn);
-  week.appendChild(sectionLabel("To Do List", "var(--forest)", todoActions));
+
+  const headerWrap = el("div",{class:"dash-header-sticky"});
+  headerWrap.appendChild(el("div",{class:"section-head"},[
+    el("h1",{},"Come siamo messi questa settimana?"),
+    todoActions
+  ]));
+  const subRow = el("div",{class:"dash-subtitle"});
+  subRow.appendChild(el("span",{}, currentTagline));
+  if(currentUser.email === ADMIN_EMAIL){
+    const editT = el("span",{class:"box-edit-icon", html:ICON_EDIT, title:"Modifica sottotitoli"});
+    editT.addEventListener("click", openTaglinesModal);
+    subRow.appendChild(editT);
+  }
+  headerWrap.appendChild(subRow);
+  main.appendChild(headerWrap);
+  renderStatsBar(main);
+
+  const grid = el("div",{class:"dash-grid"});
+  const week = el("div",{class:"week-table"});
+  week.appendChild(sectionLabel("To Do List", "var(--forest)"));
 
   if(past.length && historyExpanded){
     const histWrap = el("div",{class:"history-days"});
@@ -2943,6 +2949,19 @@ function renderPackItem(item, i, arr, onSave, idPrefix){
   return row;
 }
 function renderTripDetail(detail, trip){
+  const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("trips", state.trips); render("viaggio"); };
+  const allItemsGlobal = trip.data.flatMap(cat=>cat.items);
+  if(allItemsGlobal.length){
+    const allDoneGlobal = allItemsGlobal.every(it=>it.done);
+    const globalWrap = el("label",{class:"select-all-global", title:"Seleziona/deseleziona tutte le voci di tutte le categorie"});
+    const globalCb = el("input",{type:"checkbox"}); globalCb.checked = allDoneGlobal;
+    globalWrap.appendChild(globalCb); globalWrap.appendChild(el("span",{},"Seleziona tutto"));
+    globalCb.addEventListener("change", ()=>{
+      trip.data.forEach(cat=>cat.items.forEach(it=>it.done = globalCb.checked));
+      save(true);
+    });
+    detail.appendChild(globalWrap);
+  }
   trip.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
     const head = el("div",{class:"cat-block-head"});
@@ -2959,7 +2978,6 @@ function renderTripDetail(detail, trip){
     const selAllWrap = el("label",{class:"select-all-cat", title:"Seleziona/deseleziona tutte le voci"});
     const selAllCb = el("input",{type:"checkbox"}); selAllCb.checked = allDone;
     selAllWrap.appendChild(selAllCb); selAllWrap.appendChild(el("span",{},"Tutto"));
-    const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("trips", state.trips); render("viaggio"); };
     selAllCb.addEventListener("change", ()=>{
       cat.items.forEach(it=>it.done = selAllCb.checked);
       save(true);
@@ -3939,6 +3957,18 @@ function renderCategorizedChecklist(detail, board, save, idPrefix, tabName){
   if(board.data.length && board.data[0] && board.data[0].items===undefined){
     board.data = [{title:"Voci", items: board.data}];
     save();
+  }
+  const allItemsGlobal = board.data.flatMap(cat=>cat.items);
+  if(allItemsGlobal.length){
+    const allDoneGlobal = allItemsGlobal.every(it=>it.done);
+    const globalWrap = el("label",{class:"select-all-global", title:"Seleziona/deseleziona tutte le voci di tutte le categorie"});
+    const globalCb = el("input",{type:"checkbox"}); globalCb.checked = allDoneGlobal;
+    globalWrap.appendChild(globalCb); globalWrap.appendChild(el("span",{},"Seleziona tutto"));
+    globalCb.addEventListener("change", ()=>{
+      board.data.forEach(cat=>cat.items.forEach(it=>it.done = globalCb.checked));
+      save(true);
+    });
+    detail.appendChild(globalWrap);
   }
   board.data.forEach((cat,ci)=>{
     const block = el("div",{class:"cat-block"});
