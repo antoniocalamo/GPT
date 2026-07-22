@@ -857,7 +857,7 @@ table.tires textarea.gomme-cell{
   line-height:1.4; display:block;
 }
 .finance-note:focus{outline:none; background:var(--card); border-radius:6px; padding:2px 4px;}
-.chart-legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:11.5px; color:var(--ink-soft);}
+.chart-legend{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:10px; font-size:11.5px; color:var(--ink-soft);}
 .chart-legend-item{display:flex; align-items:center; gap:6px;}
 .chart-legend-toggle{cursor:pointer; user-select:none; transition:opacity .15s ease;}
 .chart-legend-toggle:hover{opacity:.75;}
@@ -913,11 +913,14 @@ table.tires textarea.gomme-cell{
 .box-edit-icon svg{width:100%; height:100%;}
 
 /* ---- KPI settings ---- */
-.finance-growth-rows{display:flex; flex-direction:column; gap:5px; margin-top:6px;}
-.finance-growth-row{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--ink-soft);}
-.finance-growth-val{font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--ink);}
-.finance-growth-val.positive{color:#2F7A3D;}
-.finance-growth-val.negative{color:#B3352A;}
+.finance-networth-kpi-row{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+.finance-networth-kpi-label{font-family:'Fraunces',serif; font-size:13px; font-weight:600; color:var(--ink-soft);}
+.finance-growth-grid{display:grid; grid-template-columns:auto 1fr 1fr; gap:4px 10px; margin-top:10px; align-items:center;}
+.finance-growth-grid .fg-head{font-size:10px; color:var(--ink-soft); text-align:right; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+.finance-growth-grid .fg-label{font-size:11.5px; color:var(--ink-soft);}
+.finance-growth-grid .fg-val{text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:var(--ink);}
+.finance-growth-grid .fg-val.positive{color:#2F7A3D;}
+.finance-growth-grid .fg-val.negative{color:#B3352A;}
 .kpi-check-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px;}
 .kpi-check-row:last-child{border-bottom:none;}
 .kpi-check-row input{width:16px; height:16px; accent-color:var(--forest);}
@@ -1948,6 +1951,16 @@ function computeCategoryTotals(){
 function computeNetWorth(){
   return computeCategoryTotals().net;
 }
+function findClosestHistoryEntry(hist, targetDate){
+  let best=null, bestDiff=Infinity;
+  hist.forEach(h=>{
+    const d = parseItDate(h.date);
+    if(!d) return;
+    const diff = Math.abs(d - targetDate);
+    if(diff<bestDiff){ bestDiff=diff; best=h; }
+  });
+  return best;
+}
 function computeFinanceDeltas(){
   const hist = (state.finance.history||[]).slice().sort((a,b)=>{
     const da = a.date.split("/").reverse().join("");
@@ -1955,16 +1968,28 @@ function computeFinanceDeltas(){
     return db.localeCompare(da);
   });
   if(hist.length < 2) return null;
-  const latest = hist[0], prev = hist[1];
+  const latest = hist[0];
+  const latestDate = parseItDate(latest.date);
+  const prevMonth = hist[1];
+  let prevYear = null;
+  if(latestDate){
+    const targetDate = new Date(latestDate); targetDate.setFullYear(targetDate.getFullYear()-1);
+    const candidates = hist.filter(h=>h!==latest);
+    prevYear = candidates.length ? findClosestHistoryEntry(candidates, targetDate) : null;
+  }
   function pct(curr, old){
     if(!old) return null;
     return ((curr-old) / Math.abs(old)) * 100;
   }
-  return {
-    liquidity: pct(latest.liquidity||0, prev.liquidity||0),
-    nonliquid: pct(latest.nonliquid||0, prev.nonliquid||0),
-    net: pct(latest.net||0, prev.net||0)
-  };
+  function rowDeltas(oldEntry){
+    if(!oldEntry) return {liquidity:null, nonliquid:null, net:null};
+    return {
+      liquidity: pct(latest.liquidity||0, oldEntry.liquidity||0),
+      nonliquid: pct(latest.nonliquid||0, oldEntry.nonliquid||0),
+      net: pct(latest.net||0, oldEntry.net||0)
+    };
+  }
+  return { month: rowDeltas(prevMonth), year: rowDeltas(prevYear) };
 }
 function fmtEUR(n){
   return n.toLocaleString("it-IT",{style:"currency", currency:"EUR", minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true});
@@ -2049,25 +2074,31 @@ function statCard(kpiKey){
     });
     head.appendChild(eye);
     card.appendChild(head);
-    card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
+    const valueRow = el("div",{class:"finance-networth-kpi-row"});
+    valueRow.appendChild(el("span",{class:"finance-networth-kpi-label"},"Patrimonio netto"));
+    valueRow.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
+    card.appendChild(valueRow);
     if(!netWorthHidden){
       const deltas = computeFinanceDeltas();
       if(deltas){
-        const rowsWrap = el("div",{class:"finance-growth-rows"});
-        function deltaRow(label, val){
-          const row = el("div",{class:"finance-growth-row"});
-          row.appendChild(el("span",{}, label));
-          if(val==null){
-            row.appendChild(el("span",{class:"finance-growth-val"}, "—"));
-          } else {
-            row.appendChild(el("span",{class:"finance-growth-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%"));
-          }
-          return row;
+        const grid = el("div",{class:"finance-growth-grid"});
+        grid.appendChild(el("span",{}));
+        grid.appendChild(el("span",{class:"fg-head"},"Mese prec."));
+        grid.appendChild(el("span",{class:"fg-head"},"Anno prec."));
+        function valCell(val){
+          if(val==null) return el("span",{class:"fg-val"}, "—");
+          return el("span",{class:"fg-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%");
         }
-        rowsWrap.appendChild(deltaRow("Liquidità", deltas.liquidity));
-        rowsWrap.appendChild(deltaRow("Non liquidi", deltas.nonliquid));
-        rowsWrap.appendChild(deltaRow("Patrimonio netto", deltas.net));
-        card.appendChild(rowsWrap);
+        grid.appendChild(el("span",{class:"fg-label"},"Delta % liquidità"));
+        grid.appendChild(valCell(deltas.month.liquidity));
+        grid.appendChild(valCell(deltas.year.liquidity));
+        grid.appendChild(el("span",{class:"fg-label"},"Delta % non liquidi"));
+        grid.appendChild(valCell(deltas.month.nonliquid));
+        grid.appendChild(valCell(deltas.year.nonliquid));
+        grid.appendChild(el("span",{class:"fg-label"},"Delta % patrimonio netto"));
+        grid.appendChild(valCell(deltas.month.net));
+        grid.appendChild(valCell(deltas.year.net));
+        card.appendChild(grid);
       }
     }
   } else if(kpiKey==="goodThing"){
@@ -2146,7 +2177,7 @@ function statCard(kpiKey){
     card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
     card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
   }
-  card.appendChild(el("div",{class:"stat-label"}, def.label));
+  if(!def.isNetWorth) card.appendChild(el("div",{class:"stat-label"}, def.label));
   if(kpiKey==="ortoWater"){
     const weatherLine = el("div",{class:"stat-weather"}, "meteo…");
     card.appendChild(weatherLine);
@@ -3850,7 +3881,6 @@ function openAmortizationModal(item, onSave){
 function financeBlock(title, key){
   const colorClass = key==="liquidity" ? "finance-block-liquidity" : key==="nonliquid" ? "finance-block-nonliquid" : "finance-block-debts";
   const block = el("div",{class:"card cat-block "+colorClass});
-  block.appendChild(el("h4",{},title));
   state.finance[key].forEach((item,i)=>{
     const itemWrap = el("div",{class:"finance-item"});
     const row = el("div",{class:"finance-row"});
@@ -4085,11 +4115,11 @@ function commitFinanceImport(parsed, errBox, close){
   close(); render("finanze");
 }
 function parseFinanceRows(rows, errBox){
-  // rows: array di array [dateStr|Date, liq, nonliq, debt] già "grezzi"
+  // rows: array di array [dateStr|Date, liq, nonliq, debt, note?] già "grezzi" (nota facoltativa)
   const parsed = [];
   for(const row of rows){
     if(!row || row.length < 4 || row.every(c=>c===""||c==null)) continue;
-    let [rawDate, liq, nonliq, debt] = row;
+    let [rawDate, liq, nonliq, debt, note] = row;
     let dateStr;
     if(rawDate instanceof Date){
       dateStr = String(rawDate.getDate()).padStart(2,"0")+"/"+String(rawDate.getMonth()+1).padStart(2,"0")+"/"+rawDate.getFullYear();
@@ -4100,7 +4130,7 @@ function parseFinanceRows(rows, errBox){
     const liquidity = parseItalianNumber(liq);
     const nonliquid = parseItalianNumber(nonliq);
     const debts = parseItalianNumber(debt);
-    parsed.push({ date:dateStr, liquidity, nonliquid, debts, net: liquidity+nonliquid-debts });
+    parsed.push({ date:dateStr, liquidity, nonliquid, debts, net: liquidity+nonliquid-debts, note: note!=null ? String(note).trim() : "" });
   }
   return parsed;
 }
@@ -4120,14 +4150,14 @@ function openFinanceImportModal(){
 
     const pasteSection = el("div",{});
     pasteSection.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
-      "Incolla una riga per ogni snapshot, nel formato: gg/mm/aaaa;liquidità;non liquidi;debiti — es. 01/01/2025;30000;150000;130000. Il patrimonio netto si calcola da solo."));
+      "Incolla una riga per ogni snapshot, nel formato: gg/mm/aaaa;liquidità;non liquidi;debiti;nota — es. 01/01/2025;30000;150000;130000;bonus annuale. La nota è facoltativa, il patrimonio netto si calcola da solo."));
     const ta = el("textarea",{rows:"10", style:"font-size:12.5px; font-family:'IBM Plex Mono',monospace;", placeholder:"01/01/2025;30000;150000;130000\n01/02/2025;31000;151000;129000"});
     pasteSection.appendChild(ta);
     modal.appendChild(pasteSection);
 
     const excelSection = el("div",{style:"display:none;"});
     excelSection.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin:10px 0;line-height:1.5;"},
-      "Carica un file .xlsx/.xls con 4 colonne per riga (senza intestazione): data, liquidità, non liquidi, debiti. La data può essere testo gg/mm/aaaa o una cella data di Excel."));
+      "Carica un file .xlsx/.xls con 4 o 5 colonne per riga (senza intestazione): data, liquidità, non liquidi, debiti, e facoltativamente una nota. La data può essere testo gg/mm/aaaa o una cella data di Excel."));
     const fileInput = el("input",{type:"file", accept:".xlsx,.xls,.csv"});
     excelSection.appendChild(fileInput);
     let excelParsedRows = null;
@@ -4229,7 +4259,17 @@ function renderFinanze(main){
   const snapBtn = el("button",{class:"btn primary"},"+ Salva snapshot");
   snapBtn.addEventListener("click", ()=>{
     const totals = computeCategoryTotals();
-    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), ...totals});
+    const now = new Date();
+    const todayStr = now.toLocaleDateString("it-IT");
+    const existingIdx = state.finance.history.findIndex(h=>{
+      const d = parseItDate(h.date);
+      return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    });
+    if(existingIdx>-1){
+      state.finance.history[existingIdx] = { ...state.finance.history[existingIdx], date: todayStr, ...totals };
+    } else {
+      state.finance.history.unshift({date: todayStr, ...totals, note:""});
+    }
     store.set(privKey("finance"), state.finance); render("finanze");
   });
   netActions.appendChild(snapBtn);
