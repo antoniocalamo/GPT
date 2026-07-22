@@ -1997,7 +1997,12 @@ function computeFinanceDeltas(){
   if(latestDate){
     const targetDate = new Date(latestDate); targetDate.setFullYear(targetDate.getFullYear()-1);
     const candidates = hist.filter(h=>h!==latest);
-    prevYear = candidates.length ? findClosestHistoryEntry(candidates, targetDate) : null;
+    const closest = candidates.length ? findClosestHistoryEntry(candidates, targetDate) : null;
+    if(closest){
+      const cd = parseItDate(closest.date);
+      const diffDays = cd ? Math.abs(cd - targetDate) / 86400000 : Infinity;
+      prevYear = diffDays <= 45 ? closest : null;
+    }
   }
   function pct(curr, old){
     if(!old) return null;
@@ -4086,7 +4091,7 @@ function renderFinanceChart(fullHistory){
   }
   svg += `</svg>`;
   const wrap = el("div",{});
-  const scrollWrap = el("div",{style:"overflow-x:auto;"});
+  const scrollWrap = el("div",{style:"overflow-x:auto; display:flex; justify-content:center;"});
   scrollWrap.appendChild(el("div",{html:svg}));
   wrap.appendChild(scrollWrap);
   const legend = el("div",{class:"chart-legend"});
@@ -4295,6 +4300,11 @@ function renderFinanze(main){
     } else {
       state.finance.history.unshift({date: todayStr, ...totals, note:""});
     }
+    state.finance.history.sort((a,b)=>{
+      const da = a.date.split("/").reverse().join("");
+      const db = b.date.split("/").reverse().join("");
+      return db.localeCompare(da);
+    });
     store.set(privKey("finance"), state.finance); render("finanze");
   });
   netActions.appendChild(snapBtn);
@@ -4368,6 +4378,17 @@ function renderFinanze(main){
         const total = state.finance.history.length;
         if(!confirm("Cancellare definitivamente tutti i "+total+" snapshot dello storico? L'azione non è reversibile.")) return;
         state.finance.history = [];
+      } else if(scope==="future"){
+        const now = new Date(); now.setHours(23,59,59,999);
+        const before = state.finance.history.length;
+        const kept = state.finance.history.filter(h=>{
+          const d = parseItDate(h.date);
+          return d && d<=now;
+        });
+        const removed = before - kept.length;
+        if(!removed){ alert("Nessuno snapshot con data futura da cancellare."); return; }
+        if(!confirm("Cancellare "+removed+" snapshot con data futura (oltre oggi)? L'azione non è reversibile.")) return;
+        state.finance.history = kept;
       } else {
         const cutoff = new Date();
         if(scope==="month") cutoff.setMonth(cutoff.getMonth()-1);
@@ -4384,7 +4405,7 @@ function renderFinanze(main){
       }
       store.set(privKey("finance"), state.finance); render("finanze");
     }
-    [["month","Ultimo mese"],["year","Ultimo anno"],["all","Tutto"]].forEach(([scope,label])=>{
+    [["month","Ultimo mese"],["year","Ultimo anno"],["future","Date future"],["all","Tutto"]].forEach(([scope,label])=>{
       const item = el("div",{class:"dropdown-item"}, label);
       item.addEventListener("click", ()=>{ closeMenu(); doClear(scope); });
       menu.appendChild(item);
