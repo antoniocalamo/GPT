@@ -1829,15 +1829,16 @@ async function ensureWeatherLoaded(){
   if(weatherCache) return weatherCache;
   try{
     const lat=45.4642, lon=9.19;
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum,precipitation_probability_max,weathercode,time&timezone=auto&forecast_days=4`);
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=precipitation_sum,precipitation_probability_max,weathercode&timezone=auto&forecast_days=4`);
     const data = await res.json();
+    if(data.error || !data.daily || !data.current){ console.error("meteo: risposta inattesa", data); weatherCache = null; return weatherCache; }
     const days = (data.daily.time||[]).slice(1,4).map((d,i)=>({
       date: d,
       precipMm: data.daily.precipitation_sum ? data.daily.precipitation_sum[i+1] : null,
       precipProb: data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[i+1] : null
     }));
     weatherCache = { temp: Math.round(data.current.temperature_2m), precipToday: data.daily.precipitation_sum[0], next3days: days };
-  }catch(e){ weatherCache = null; }
+  }catch(e){ console.error("meteo: errore fetch", e); weatherCache = null; }
   return weatherCache;
 }
 function currentMonthKey(){
