@@ -824,7 +824,7 @@ table.tires textarea.gomme-cell{
   border-radius:10px; padding:10px 14px; margin-bottom:14px;
 }
 .finance-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px; align-items:start;}
-.finance-totals-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;}
+.finance-totals-row{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:0 -24px;}
 .finance-total-card{display:flex; flex-direction:column; gap:4px; padding:14px 18px;}
 .finance-total-label{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
 .finance-total-value{font-family:'Fraunces',serif; font-weight:700; font-size:22px; color:var(--ink);}
@@ -864,8 +864,18 @@ table.tires textarea.gomme-cell{
 .chart-legend-toggle.hidden-series{opacity:.4; text-decoration:line-through;}
 .chart-legend-dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
 .chart-legend-hint{text-align:center; font-size:10.5px; color:#B8AD8E; margin-top:4px;}
+.finance-hist-actions{display:flex; align-items:center; gap:8px;}
+.dropdown-wrap{position:relative;}
+.dropdown-menu{
+  display:none; position:absolute; top:calc(100% + 6px); right:0; z-index:50;
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 6px 18px rgba(35,48,42,0.15); min-width:150px; overflow:hidden; padding:4px 0;
+}
+.dropdown-menu.open{display:block;}
+.dropdown-item{padding:8px 14px; font-size:12.5px; cursor:pointer; color:var(--ink);}
+.dropdown-item:hover{background:var(--paper-2);}
 .finance-networth-card{
-  background:#EAF2FB; border-color:#BFD9F2; padding:22px 24px 20px 24px; margin-bottom:22px;
+  background:#EAF2FB; border-color:#BFD9F2; padding:22px 24px 20px 24px; margin-bottom:10px;
 }
 .finance-networth-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
 .finance-networth-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
@@ -874,7 +884,7 @@ table.tires textarea.gomme-cell{
 .net-value.positive{color:#2F7A3D;}
 .net-value.negative{color:#B3352A;}
 .history-row{
-  display:flex; align-items:center; gap:12px; padding:7px 0;
+  display:flex; align-items:flex-start; gap:12px; padding:7px 0;
   border-bottom:1px dashed var(--line); font-size:13.5px;
 }
 .history-row:last-child{border-bottom:none;}
@@ -890,10 +900,12 @@ table.tires textarea.gomme-cell{
 .history-row input.history-col-date:focus, .history-row input.history-col-num:focus{
   outline:none; background:var(--card); border-radius:6px;
 }
-.history-row input.history-col-note{
+.history-row textarea.history-col-note{
   border:none; background:transparent; font-family:'Inter',sans-serif; font-size:12.5px; padding:2px 4px; width:100%;
+  resize:none; overflow:hidden; line-height:1.4; display:block; font-style:italic; color:var(--ink-soft);
 }
-.history-row input.history-col-note:focus{ outline:none; background:var(--card); border-radius:6px; }
+.history-row textarea.history-col-note:focus{ outline:none; background:var(--card); border-radius:6px; color:var(--ink); }
+.history-row .history-value, .history-row input.history-col-num{ margin-top:2px; }
 .history-value{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--slate);}
 
 /* ---- Backlog boxes ---- */
@@ -4001,7 +4013,7 @@ function renderFinanceChart(fullHistory){
     const y = h - pad - ((val - minV) / range) * (h - pad*2);
     return [x,y];
   }
-  let svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">`;
+  let svg = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block;">`;
   // etichette e griglia sull'asse Y (valori in €)
   const yTicks = 4;
   for(let t=0; t<=yTicks; t++){
@@ -4273,9 +4285,6 @@ function renderFinanze(main){
     store.set(privKey("finance"), state.finance); render("finanze");
   });
   netActions.appendChild(snapBtn);
-  const importBtn = el("button",{class:"btn ghost"},"Importa storico");
-  importBtn.addEventListener("click", openFinanceImportModal);
-  netActions.appendChild(importBtn);
   netHead.appendChild(netActions);
   netCard.appendChild(netHead);
   const totalsRow = el("div",{class:"finance-totals-row"});
@@ -4324,16 +4333,52 @@ function renderFinanze(main){
   const histBlock = el("div",{class:"card cat-block"});
   const histHead = el("div",{style:"display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;"});
   histHead.appendChild(el("h4",{style:"margin:0;"},"Storico snapshot"));
+  const histActions = el("div",{class:"finance-hist-actions"});
   if(state.finance.history.length){
-    const clearHistBtn = el("button",{class:"btn danger small"},"Cancella tutto lo storico");
-    clearHistBtn.addEventListener("click", ()=>{
-      if(confirm("Cancellare definitivamente tutti i "+state.finance.history.length+" snapshot dello storico? L'azione non è reversibile — potrai reimportarli in seguito.")){
-        state.finance.history = [];
-        store.set(privKey("finance"), state.finance); render("finanze");
-      }
+    const clearWrap = el("div",{class:"dropdown-wrap"});
+    const clearBtn = el("button",{class:"btn danger small"},"Cancella lo storico ▾");
+    const menu = el("div",{class:"dropdown-menu"});
+    function closeMenu(){ menu.classList.remove("open"); document.removeEventListener("click", onDocClick); }
+    function onDocClick(e){ if(!clearWrap.contains(e.target)) closeMenu(); }
+    clearBtn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      if(menu.classList.contains("open")){ closeMenu(); }
+      else { menu.classList.add("open"); document.addEventListener("click", onDocClick); }
     });
-    histHead.appendChild(clearHistBtn);
+    function doClear(scope){
+      if(scope==="all"){
+        const total = state.finance.history.length;
+        if(!confirm("Cancellare definitivamente tutti i "+total+" snapshot dello storico? L'azione non è reversibile.")) return;
+        state.finance.history = [];
+      } else {
+        const cutoff = new Date();
+        if(scope==="month") cutoff.setMonth(cutoff.getMonth()-1);
+        else cutoff.setFullYear(cutoff.getFullYear()-1);
+        const before = state.finance.history.length;
+        const kept = state.finance.history.filter(h=>{
+          const d = parseItDate(h.date);
+          return d && d < cutoff;
+        });
+        const removed = before - kept.length;
+        if(!removed){ alert("Nessuno snapshot da cancellare in quell'intervallo."); return; }
+        if(!confirm("Cancellare "+removed+" snapshot degli ultimi "+(scope==="month"?"30 giorni":"12 mesi")+"? L'azione non è reversibile.")) return;
+        state.finance.history = kept;
+      }
+      store.set(privKey("finance"), state.finance); render("finanze");
+    }
+    [["month","Ultimo mese"],["year","Ultimo anno"],["all","Tutto"]].forEach(([scope,label])=>{
+      const item = el("div",{class:"dropdown-item"}, label);
+      item.addEventListener("click", ()=>{ closeMenu(); doClear(scope); });
+      menu.appendChild(item);
+    });
+    clearWrap.appendChild(clearBtn);
+    clearWrap.appendChild(menu);
+    histActions.appendChild(clearWrap);
   }
+  const importHistBtn = el("button",{class:"btn ghost small"},"Importa storico");
+  importHistBtn.addEventListener("click", openFinanceImportModal);
+  histActions.appendChild(importHistBtn);
+  histHead.appendChild(histActions);
   histBlock.appendChild(histHead);
   if(!state.finance.history.length){
     histBlock.appendChild(emptyState("Salva il primo snapshot per iniziare a tracciare l'andamento nel tempo.", ICON_COIN));
@@ -4365,9 +4410,12 @@ function renderFinanze(main){
         row.appendChild(inp);
       });
       row.appendChild(el("span",{class:"history-value history-col-num"}, fmtEUR(h.net)));
-      const noteInp = el("input",{type:"text", class:"history-col-note", value:h.note||"", placeholder:"nota…"});
+      const noteInp = el("textarea",{rows:"1", class:"history-col-note", placeholder:"nota…"});
+      noteInp.value = h.note||"";
+      noteInp.addEventListener("input", ()=>autoResize(noteInp));
       noteInp.addEventListener("change", ()=>{ h.note = noteInp.value; store.set(privKey("finance"), state.finance); });
       row.appendChild(noteInp);
+      autoResize(noteInp);
       const del = el("span",{class:"del", html:"✕"});
       del.addEventListener("click", ()=>{ state.finance.history.splice(i,1); store.set(privKey("finance"), state.finance); render("finanze"); });
       row.appendChild(del);
