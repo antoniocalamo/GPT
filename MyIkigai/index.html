@@ -129,8 +129,8 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   gap:10px;
 }
 .brand-mark{
-  width:38px; height:38px; flex-shrink:0;
-  border-radius:11px;
+  width:42px; height:42px; flex-shrink:0;
+  border-radius:12px;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden;
 }
@@ -140,7 +140,7 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 .brand-name{
   font-family:'Fraunces',serif;
   font-weight:700;
-  font-size:18px;
+  font-size:19.5px;
   color:var(--forest);
   letter-spacing:-0.01em;
   line-height:1.1;
@@ -230,6 +230,12 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--forest); font-weight:600;
   word-break:break-all;
 }
+.account-settings-btn{
+  cursor:pointer; width:16px; height:16px; color:var(--ink-soft); opacity:.6; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.account-settings-btn svg{width:100%; height:100%; display:block;}
+.account-settings-btn:hover{opacity:1; color:var(--forest);}
 
 /* ---- Main content ---- */
 .main-wrap{
@@ -408,7 +414,7 @@ textarea{resize:vertical;}
 .section-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
 .task-item{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   gap:6px;
   padding:3px 6px;
   margin:0 -6px;
@@ -426,14 +432,14 @@ textarea{resize:vertical;}
 }
 .task-item textarea:focus{outline:none; background:var(--card); border-radius:6px; padding:3px 6px;}
 .task-item.done textarea{text-decoration:line-through; color:var(--ink-soft);}
-.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:12px; opacity:.5; flex-shrink:0; margin-top:3px;}
+.task-item .del{cursor:pointer; color:var(--ink-soft); font-size:12px; opacity:.5; flex-shrink:0;}
 .task-item .del:hover{opacity:1; color:var(--rust);}
 .task-block{margin-bottom:0;}
 .subtask-list{margin-left:20px; margin-top:0; margin-bottom:0;}
 .subtask-item{padding:2px 6px;}
 .subtask-item textarea{font-size:12.5px; padding:2px 0;}
 .action-grid{
-  display:flex; flex-direction:column; gap:2px; flex-shrink:0; margin-top:1px;
+  display:flex; flex-direction:column; gap:2px; flex-shrink:0;
 }
 .action-grid-row{display:flex; gap:2px;}
 .action-grid-sub{display:flex; gap:2px; flex-shrink:0; margin-top:1px;}
@@ -454,7 +460,7 @@ textarea{resize:vertical;}
 .day-row.today .task-item textarea{font-weight:700;}
 .drag-grip{
   width:13px; height:15px; flex-shrink:0; opacity:.3; cursor:grab; color:var(--ink-soft);
-  display:flex; align-items:center; justify-content:center; margin-top:1px; user-select:none;
+  display:flex; align-items:center; justify-content:center; user-select:none;
   touch-action:none;
 }
 .drag-grip svg{width:100%; height:100%;}
@@ -883,7 +889,7 @@ table.tires textarea.gomme-cell{
 .box-edit-icon svg{width:100%; height:100%;}
 
 /* ---- KPI settings ---- */
-.stats-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+.stats-head{display:flex; align-items:center; justify-content:flex-end; margin-bottom:12px;}
 .kpi-gear{cursor:pointer; width:18px; height:18px; color:var(--ink-soft); opacity:.6;}
 .kpi-gear:hover{opacity:1;}
 .kpi-gear svg{width:100%; height:100%;}
@@ -1110,6 +1116,7 @@ table.tires textarea.gomme-cell{
       </div>
       <div class="topbar-row topbar-row-account">
         <div id="user-email" class="user-email"></div>
+        <span id="account-settings-btn" class="account-settings-btn" title="Impostazioni account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span>
         <button id="logout-btn" class="btn ghost small">Esci</button>
       </div>
       <div class="topbar-row topbar-row-version">
@@ -1399,7 +1406,7 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, gommeLayout:null, builtinLabels:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, gommeLayout:null, builtinLabels:null, accountSettings:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null, activeProject = null;
 let goodThingPick = null;
 let financeChartWindow = "12";
@@ -1555,6 +1562,7 @@ async function loadAll(){
   uiZoom = await store.get(privKey("uiZoom"), 1);
   appTheme = await store.get(privKey("appTheme"), "ikigai");
   state.taglines = await store.get("taglines", DEFAULT_TAGLINES);
+  state.accountSettings = await store.get(privKey("accountSettings"), {notifyFinance27:false});
 }
 
 /* ---------------- auth ---------------- */
@@ -1619,6 +1627,7 @@ document.getElementById("logout-btn").addEventListener("click", async ()=>{
     await sb.auth.signOut();
   }
 });
+document.getElementById("account-settings-btn").addEventListener("click", openAccountSettingsModal);
 
 /* ---------------- helpers ---------------- */
 // --- Drag & drop per riordino, basato su Pointer Events -------------------------------
@@ -2013,7 +2022,6 @@ function statCard(kpiKey){
 }
 function renderStatsBar(main){
   const head = el("div",{class:"stats-head"});
-  head.appendChild(el("div",{class:"tag"},"i tuoi indicatori"));
   const gear = el("span",{class:"kpi-gear", html:ICON_GEAR, title:"Configura indicatori"});
   gear.addEventListener("click", openKpiSettingsModal);
   head.appendChild(gear);
@@ -2085,6 +2093,50 @@ function openTaglinesModal(){
       close(); render("dashboard");
     });
     actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
+function openAccountSettingsModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Impostazioni account"));
+
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:4px;"},"Cambia password"));
+    if(isGuest){
+      modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;"},"Non disponibile in modalità ospite."));
+    } else {
+      const pw1 = el("input",{type:"password", placeholder:"nuova password", autocomplete:"new-password"});
+      const pw2 = el("input",{type:"password", placeholder:"conferma nuova password", autocomplete:"new-password", style:"margin-top:8px;"});
+      const pwMsg = el("div",{style:"font-size:12px; min-height:16px; margin-top:6px;"});
+      const pwBtn = el("button",{class:"btn ghost", style:"margin-top:8px;"},"Aggiorna password");
+      pwBtn.addEventListener("click", async ()=>{
+        pwMsg.textContent = ""; pwMsg.style.color = "var(--rust)";
+        if(pw1.value.length < 6){ pwMsg.textContent = "Almeno 6 caratteri."; return; }
+        if(pw1.value !== pw2.value){ pwMsg.textContent = "Le due password non coincidono."; return; }
+        pwBtn.disabled = true; pwBtn.textContent = "Aggiornamento…";
+        const { error } = await sb.auth.updateUser({ password: pw1.value });
+        pwBtn.disabled = false; pwBtn.textContent = "Aggiorna password";
+        if(error){ pwMsg.style.color = "var(--rust)"; pwMsg.textContent = "Errore: " + error.message; }
+        else{ pwMsg.style.color = "var(--forest)"; pwMsg.textContent = "Password aggiornata."; pw1.value = ""; pw2.value = ""; }
+      });
+      modal.appendChild(pw1); modal.appendChild(pw2); modal.appendChild(pwMsg); modal.appendChild(pwBtn);
+    }
+
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:18px;"},"Notifiche email"));
+    const notifyLabel = el("label",{class:"toggle-completed", style:"margin-top:6px;"});
+    const notifyCb = el("input",{type:"checkbox"});
+    notifyCb.checked = !!state.accountSettings.notifyFinance27;
+    notifyCb.addEventListener("change", ()=>{
+      state.accountSettings.notifyFinance27 = notifyCb.checked;
+      store.setQuiet(privKey("accountSettings"), state.accountSettings);
+    });
+    notifyLabel.appendChild(notifyCb);
+    notifyLabel.appendChild(document.createTextNode("Ricevimi un'email il 27 del mese per aggiornare la scheda Finanze"));
+    modal.appendChild(notifyLabel);
+
+    const actions = el("div",{class:"modal-actions"});
+    const closeBtn = el("button",{class:"btn primary"},"Chiudi");
+    closeBtn.addEventListener("click", close);
+    actions.appendChild(closeBtn);
     modal.appendChild(actions);
   });
 }
