@@ -249,8 +249,11 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   box-shadow: var(--shadow);
   overflow:hidden;
 }
-.undo-float{
+.undo-redo-wrap{
   position:fixed; right:26px; bottom:22px; z-index:400;
+  display:flex; align-items:center; gap:8px;
+}
+.undo-float{
   display:flex; align-items:center; gap:6px;
   background:var(--card); color:var(--ink-soft);
   border:1px solid var(--line); border-radius:999px;
@@ -263,7 +266,10 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .undo-float.visible{ opacity:.85; transform:translateY(0) scale(1); pointer-events:auto; }
 .undo-float:hover{ opacity:1; color:var(--forest); border-color:var(--forest); }
-@media (max-width:760px){ .undo-float{ right:14px; bottom:14px; padding:7px 13px; font-size:11.5px; } }
+@media (max-width:760px){
+  .undo-redo-wrap{ right:14px; bottom:14px; gap:6px; }
+  .undo-float{ padding:7px 13px; font-size:11.5px; }
+}
 .topbar{
   display:flex; flex-direction:column; align-items:flex-end; gap:6px;
   padding:12px 44px 8px 20px; flex-shrink:0;
@@ -1127,7 +1133,10 @@ table.tires textarea.gomme-cell{
     <main id="main"></main>
   </div>
 </div>
-<button id="undo-btn" class="undo-float" title="Annulla ultima modifica (es. un'eliminazione)">↶ Annulla</button>
+<div class="undo-redo-wrap">
+  <button id="undo-btn" class="undo-float" title="Annulla ultima modifica (es. un'eliminazione)">↶ Undo</button>
+  <button id="redo-btn" class="undo-float" title="Ripristina la modifica annullata">↷ Redo</button>
+</div>
 
 <script>
 /* ---------------- storage helpers ---------------- */
@@ -1342,6 +1351,7 @@ document.getElementById("login-theme-select").addEventListener("change", (e)=>{
   try{ window.localStorage.setItem("myikigai_theme_pref", appTheme); }catch(err){}
 });
 document.getElementById("undo-btn").addEventListener("click", performUndo);
+document.getElementById("redo-btn").addEventListener("click", performRedo);
 document.addEventListener("keydown", (e)=>{
   if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="z" && !e.shiftKey){
     e.preventDefault();
@@ -1349,6 +1359,13 @@ document.addEventListener("keydown", (e)=>{
       document.activeElement.blur();
     }
     performUndo();
+  }
+  if((e.ctrlKey || e.metaKey) && ((e.key.toLowerCase()==="z" && e.shiftKey) || e.key.toLowerCase()==="y")){
+    e.preventDefault();
+    if(document.activeElement && (document.activeElement.tagName==="INPUT" || document.activeElement.tagName==="TEXTAREA")){
+      document.activeElement.blur();
+    }
+    performRedo();
   }
 });
 document.getElementById("zoom-in-btn").addEventListener("click", ()=>{
@@ -1382,8 +1399,9 @@ const store = {
     const prev = keySnapshots[key];
     if(prev !== undefined){
       const prevClone = prev;
+      const newClone = structuredClone(value);
       const tabAtChange = currentRenderedTab;
-      pushUndo(()=>{ restoreSnapshot(key, structuredClone(prevClone), tabAtChange); });
+      pushUndo(makeUndoRedoPair(key, prevClone, newClone, tabAtChange));
     }
     keySnapshots[key] = structuredClone(value);
     try{
@@ -1451,7 +1469,7 @@ function restoreSnapshot(storeKey, value, targetTab){
     else { state[storeKey] = value; updateCustomTabCache(storeKey, value); }
   }
   if(document.getElementById("app-root").style.display !== "none"){
-    store.set(storeKey, value);
+    store.setQuiet(storeKey, value);
     if(targetTab && targetTab !== currentRenderedTab){
       document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
       const btn = document.querySelector('.tab[data-tab="'+targetTab+'"]');
@@ -1465,19 +1483,53 @@ function updateCustomTabCache(storeKey, value){
   if(m) customTabData[m[1]] = value;
 }
 let undoStack = [];
-function pushUndo(fn){
+let redoStack = [];
+// Costruisce una coppia di funzioni undo/redo per una singola modifica: eseguire l'undo
+// ripristina il valore precedente e "rimette in coda" il redo corrispondente (e viceversa),
+// così Undo e Redo restano disponibili per più passaggi avanti/indietro sulla stessa modifica.
+function makeUndoRedoPair(key, prevClone, newClone, tabAtChange){
+  function undoFn(){
+    restoreSnapshot(key, structuredClone(prevClone), tabAtChange);
+    pushRedoOnly(redoFn);
+  }
+  function redoFn(){
+    restoreSnapshot(key, structuredClone(newClone), tabAtChange);
+    pushUndoOnly(undoFn);
+  }
+  return undoFn;
+}
+function pushUndoOnly(fn){
   undoStack.push(fn);
   if(undoStack.length > 30) undoStack.shift();
-  updateUndoBtn();
+  updateUndoRedoBtns();
+}
+function pushRedoOnly(fn){
+  redoStack.push(fn);
+  if(redoStack.length > 30) redoStack.shift();
+  updateUndoRedoBtns();
+}
+// Usata solo per le vere e proprie nuove modifiche (non per undo/redo stessi): una nuova
+// modifica interrompe la catena "in avanti", quindi svuota il redo.
+function pushUndo(fn){
+  pushUndoOnly(fn);
+  redoStack = [];
+  updateUndoRedoBtns();
 }
 function performUndo(){
   const fn = undoStack.pop();
   if(fn) fn();
-  updateUndoBtn();
+  updateUndoRedoBtns();
 }
-function updateUndoBtn(){
-  const btn = document.getElementById("undo-btn");
-  if(btn) btn.classList.toggle("visible", undoStack.length>0);
+function performRedo(){
+  const fn = redoStack.pop();
+  if(fn) fn();
+  updateUndoRedoBtns();
+}
+function updateUndoRedoBtns(){
+  const ub = document.getElementById("undo-btn");
+  if(ub) ub.classList.toggle("visible", undoStack.length>0);
+  const rb = document.getElementById("redo-btn");
+  if(rb) rb.classList.toggle("visible", redoStack.length>0);
 }
 function focusAddInput(day){
   const inp = document.querySelector('.add-line input[data-day="'+day+'"]');
