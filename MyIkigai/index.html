@@ -119,9 +119,14 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
 }
 .tabs .brand{
   display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:0 18px 22px 4px;
+}
+.brand-top{
+  display:flex;
   align-items:center;
   gap:10px;
-  padding:0 18px 22px 4px;
 }
 .brand-mark{
   width:38px; height:38px; flex-shrink:0;
@@ -142,8 +147,10 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   white-space:nowrap;
 }
 .brand-tagline{
+  width:100%;
+  text-align:center;
   font-family:'Inter',sans-serif; font-size:10.5px; font-style:italic;
-  color:var(--ink-soft); margin-top:2px; line-height:1.35; min-height:28px;
+  color:var(--ink-soft); line-height:1.35; min-height:28px;
 }
 .brand-footer{
   margin-top:auto;
@@ -236,6 +243,21 @@ h1,h2,h3,.display{font-family:'Fraunces',serif;}
   box-shadow: var(--shadow);
   overflow:hidden;
 }
+.undo-float{
+  position:fixed; left:24px; bottom:24px; z-index:400;
+  display:flex; align-items:center; gap:6px;
+  background:var(--ink); color:#fff;
+  border:none; border-radius:999px;
+  padding:10px 18px; font-size:13px; font-weight:600;
+  font-family:'Inter',sans-serif; cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,0.22);
+  opacity:0; transform:translateY(10px) scale(.95);
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.undo-float.visible{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+.undo-float:hover{ background:var(--forest); }
+@media (max-width:760px){ .undo-float{ left:16px; bottom:16px; padding:9px 15px; font-size:12.5px; } }
 .topbar{
   display:flex; flex-direction:column; align-items:flex-end; gap:8px;
   padding:16px 44px 12px 20px; flex-shrink:0;
@@ -763,6 +785,9 @@ table.tires textarea.gomme-cell{
 .priorities-level{display:flex; align-items:center; gap:6px;}
 .priorities-level-text{font-family:'Fraunces',serif; font-weight:700; font-size:13.5px; color:var(--ink);}
 .priorities-points-text{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);}
+.priorities-head-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+.priorities-week-pct{font-family:'Inter',sans-serif; font-size:10.5px; color:var(--ink-soft); display:flex; align-items:baseline; gap:3px; white-space:nowrap;}
+.priorities-week-pct b{font-family:'Fraunces',serif; font-size:14px; color:var(--ink); font-weight:700;}
 .priorities-medal{font-size:16px; line-height:1; animation:medal-pop .4s ease;}
 @keyframes medal-pop{from{transform:scale(0.4) rotate(-15deg); opacity:0;} to{transform:scale(1) rotate(0); opacity:1;}}
 .priorities-inline-list{
@@ -1022,11 +1047,11 @@ table.tires textarea.gomme-cell{
 <div class="app" id="app-root" style="display:none;">
   <nav class="tabs" id="tabs">
     <div class="brand">
-      <div class="brand-mark"><img id="sidebar-logo-img" alt=""></div>
-      <div>
+      <div class="brand-top">
+        <div class="brand-mark"><img id="sidebar-logo-img" alt=""></div>
         <div class="brand-name">My Ikigai</div>
-        <div class="brand-tagline" id="brand-tagline"></div>
       </div>
+      <div class="brand-tagline" id="brand-tagline"></div>
     </div>
     <button class="tab active" data-c="dashboard" data-tab="dashboard">
       <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
@@ -1082,7 +1107,6 @@ table.tires textarea.gomme-cell{
           <span id="zoom-level" class="zoom-level">100%</span>
           <button id="zoom-in-btn" class="btn ghost small" title="Aumenta zoom">+</button>
         </div>
-        <button id="undo-btn" class="btn ghost small" title="Annulla ultima modifica (es. un'eliminazione)" disabled>↶ Undo</button>
       </div>
       <div class="topbar-row topbar-row-account">
         <div id="user-email" class="user-email"></div>
@@ -1095,6 +1119,7 @@ table.tires textarea.gomme-cell{
     <main id="main"></main>
   </div>
 </div>
+<button id="undo-btn" class="undo-float" title="Annulla ultima modifica (es. un'eliminazione)">↶ Annulla ultima modifica</button>
 
 <script>
 /* ---------------- storage helpers ---------------- */
@@ -1168,8 +1193,6 @@ const ICON_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICON_STAR_KPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6Z"/></svg>';
 const ICON_TARGET_KPI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>';
 const KPI_CATALOG = {
-  taskPct: { label:"task completati questa settimana", icon:ICON_CHECK, color:"var(--forest)",
-    compute: ()=> computeStats().pct + "%" },
   ortoWater: { label:"ultima innaffiata/pioggia orto", icon:ICON_DROP, color:"var(--teal)",
     compute: ()=> fmtDateShort(state.orto.lastWatered) },
   ortoFertilize: { label:"ultima concimata (mensile)", icon:ICON_SPROUT, color:"var(--leaf)",
@@ -1188,7 +1211,7 @@ const KPI_CATALOG = {
       return items.length ? (items.filter(i=>i.done).length+"/"+items.length) : "0";
     } }
 };
-const DEFAULT_KPI_SELECTION = ["taskPct","ortoWater","ortoFertilize","netWorth"];
+const DEFAULT_KPI_SELECTION = ["monthlyPriorities","ortoWater","ortoFertilize","netWorth"];
 const APP_VERSION = "v0.45";
 const ADMIN_EMAIL = "antonio.calamo@gmail.com";
 const DEFAULT_TAGLINES = [
@@ -1446,7 +1469,7 @@ function performUndo(){
 }
 function updateUndoBtn(){
   const btn = document.getElementById("undo-btn");
-  if(btn) btn.disabled = undoStack.length===0;
+  if(btn) btn.classList.toggle("visible", undoStack.length>0);
 }
 function focusAddInput(day){
   const inp = document.querySelector('.add-line input[data-day="'+day+'"]');
@@ -1468,6 +1491,10 @@ async function loadAll(){
   }
   if(!state.dashboard.kpiSelection){
     state.dashboard.kpiSelection = DEFAULT_KPI_SELECTION.slice();
+  }
+  if(state.dashboard.kpiSelection.includes("taskPct")){
+    state.dashboard.kpiSelection = state.dashboard.kpiSelection.filter(k=>k!=="taskPct");
+    if(!state.dashboard.kpiSelection.includes("monthlyPriorities")) state.dashboard.kpiSelection.unshift("monthlyPriorities");
   }
   if(!state.dashboard.monthlyPriorities){
     state.dashboard.monthlyPriorities = { hidden:false, items:[] };
@@ -1921,7 +1948,14 @@ function statCard(kpiKey){
     headLeft.appendChild(el("span",{class:"priorities-level-text"}, "Liv. "+level));
     headLeft.appendChild(el("span",{class:"priorities-points-text"}, "· "+mp.points+" pt"));
     head.appendChild(headLeft);
-    if(allDone) head.appendChild(el("span",{class:"priorities-medal", title:"Tutte le priorità del mese raggiunte!"}, "🏆"));
+    const headRight = el("div",{class:"priorities-head-right"});
+    const weekPct = computeStats().pct;
+    headRight.appendChild(el("span",{class:"priorities-week-pct", title:"Task completati questa settimana"}, [
+      el("b",{}, weekPct+"%"),
+      document.createTextNode(" settimana")
+    ]));
+    if(allDone) headRight.appendChild(el("span",{class:"priorities-medal", title:"Tutte le priorità del mese raggiunte!"}, "🏆"));
+    head.appendChild(headRight);
     card.appendChild(head);
     const listWrap = el("div",{class:"priorities-inline-list"});
     if(!total){
