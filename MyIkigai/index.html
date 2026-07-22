@@ -863,12 +863,14 @@ table.tires textarea.gomme-cell{
 .chart-legend-toggle:hover{opacity:.75;}
 .chart-legend-toggle.hidden-series{opacity:.4; text-decoration:line-through;}
 .chart-legend-dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
-.net-summary{
-  display:flex; align-items:center; flex-wrap:wrap; gap:16px;
-  padding:20px 24px; margin-bottom:22px; border-left:4px solid var(--slate);
+.chart-legend-hint{text-align:center; font-size:10.5px; color:#B8AD8E; margin-top:4px;}
+.finance-networth-card{
+  background:#EAF2FB; border-color:#BFD9F2; padding:22px 24px 20px 24px; margin-bottom:22px;
 }
+.finance-networth-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
+.finance-networth-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
 .net-label{font-family:'Fraunces',serif; font-size:15px; color:var(--ink-soft);}
-.net-value{font-family:'Fraunces',serif; font-weight:700; font-size:27px; color:var(--slate);}
+.net-value{font-family:'Fraunces',serif; font-weight:700; font-size:27px; color:#2C5D8F;}
 .net-value.positive{color:#2F7A3D;}
 .net-value.negative{color:#B3352A;}
 .history-row{
@@ -883,6 +885,8 @@ table.tires textarea.gomme-cell{
 .history-row input.history-col-date, .history-row input.history-col-num{
   border:none; background:transparent; font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:2px 4px;
 }
+.history-row input.history-col-date{ width:100px; }
+.history-row input.history-col-num{ width:112px; }
 .history-row input.history-col-date:focus, .history-row input.history-col-num:focus{
   outline:none; background:var(--card); border-radius:6px;
 }
@@ -1230,8 +1234,6 @@ const KPI_CATALOG = {
     compute: ()=> String(state.trips.length + state.bbqs.length) },
   netWorth: { label:"patrimonio netto", icon:ICON_COIN, color:"var(--slate)",
     compute: ()=> fmtEUR(computeNetWorth()), isNetWorth:true },
-  financeGrowth: { label:"crescita % ultimo snapshot", icon:ICON_COIN, color:"var(--slate)",
-    compute: ()=> "" },
   goodThing: { label:"una cosa bella fatta di recente", icon:ICON_STAR_KPI, color:"var(--mustard)",
     compute: ()=> "" },
   monthlyPriorities: { label:"priorità del mese raggiunte", icon:ICON_TARGET_KPI, color:"var(--forest)",
@@ -1578,6 +1580,9 @@ async function loadAll(){
   if(state.dashboard.kpiSelection.includes("taskPct")){
     state.dashboard.kpiSelection = state.dashboard.kpiSelection.filter(k=>k!=="taskPct");
     if(!state.dashboard.kpiSelection.includes("monthlyPriorities")) state.dashboard.kpiSelection.unshift("monthlyPriorities");
+  }
+  if(state.dashboard.kpiSelection.includes("financeGrowth")){
+    state.dashboard.kpiSelection = state.dashboard.kpiSelection.filter(k=>k!=="financeGrowth");
   }
   if(!state.dashboard.monthlyPriorities){
     state.dashboard.monthlyPriorities = { hidden:false, items:[] };
@@ -2045,6 +2050,26 @@ function statCard(kpiKey){
     head.appendChild(eye);
     card.appendChild(head);
     card.appendChild(el("div",{class:"stat-value"}, netWorthHidden ? "•••••" : def.compute()));
+    if(!netWorthHidden){
+      const deltas = computeFinanceDeltas();
+      if(deltas){
+        const rowsWrap = el("div",{class:"finance-growth-rows"});
+        function deltaRow(label, val){
+          const row = el("div",{class:"finance-growth-row"});
+          row.appendChild(el("span",{}, label));
+          if(val==null){
+            row.appendChild(el("span",{class:"finance-growth-val"}, "—"));
+          } else {
+            row.appendChild(el("span",{class:"finance-growth-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%"));
+          }
+          return row;
+        }
+        rowsWrap.appendChild(deltaRow("Liquidità", deltas.liquidity));
+        rowsWrap.appendChild(deltaRow("Non liquidi", deltas.nonliquid));
+        rowsWrap.appendChild(deltaRow("Patrimonio netto", deltas.net));
+        card.appendChild(rowsWrap);
+      }
+    }
   } else if(kpiKey==="goodThing"){
     const head = el("div",{class:"stat-card-head"});
     head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
@@ -2117,30 +2142,6 @@ function statCard(kpiKey){
     card.appendChild(el("div",{class:"priorities-next-level"}, ptsToNext+" pt al livello "+(level+1)));
     card.style.cursor = "pointer";
     card.addEventListener("click",(e)=>{ if(e.target.tagName==="INPUT") return; openMonthlyPrioritiesModal(); });
-  } else if(kpiKey==="financeGrowth"){
-    const head = el("div",{class:"stat-card-head"});
-    head.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
-    card.appendChild(head);
-    const deltas = computeFinanceDeltas();
-    const rowsWrap = el("div",{class:"finance-growth-rows"});
-    function deltaRow(label, val){
-      const row = el("div",{class:"finance-growth-row"});
-      row.appendChild(el("span",{}, label));
-      if(val==null){
-        row.appendChild(el("span",{class:"finance-growth-val"}, "—"));
-      } else {
-        row.appendChild(el("span",{class:"finance-growth-val "+(val>=0?"positive":"negative")}, (val>=0?"+":"")+val.toFixed(1)+"%"));
-      }
-      return row;
-    }
-    if(!deltas){
-      rowsWrap.appendChild(el("div",{class:"priorities-empty"},"Servono almeno 2 snapshot nello storico finanze"));
-    } else {
-      rowsWrap.appendChild(deltaRow("Liquidità", deltas.liquidity));
-      rowsWrap.appendChild(deltaRow("Non liquidi", deltas.nonliquid));
-      rowsWrap.appendChild(deltaRow("Patrimonio netto", deltas.net));
-    }
-    card.appendChild(rowsWrap);
   } else {
     card.appendChild(el("div",{class:"stat-icon", style:`color:${def.color}`, html:def.icon}));
     card.appendChild(el("div",{class:"stat-value"}, String(def.compute())));
@@ -3933,10 +3934,10 @@ function renderFinanceChart(fullHistory){
     return emptyState("Salva almeno due snapshot nella finestra selezionata per vedere il grafico del trend.", ICON_COIN);
   }
   const series = [
-    {key:"liquidity", color:"#8BC34A", label:"Liquidità"},
-    {key:"nonliquid", color:"#1B5E20", label:"Non liquidi"},
-    {key:"debts", color:"#E53935", label:"Debiti"},
-    {key:"net", color:"#1565C0", label:"Patrimonio netto"}
+    {key:"liquidity", color:"#6FBF73", label:"Liquidità"},
+    {key:"nonliquid", color:"#2E5E3A", label:"Non liquidi"},
+    {key:"debts", color:"#C1584C", label:"Debiti"},
+    {key:"net", color:"#4472A8", label:"Patrimonio netto"}
   ];
   const visibleSeries = series.filter(s=>!financeChartHiddenSeries[s.key]);
 
@@ -4054,6 +4055,7 @@ function renderFinanceChart(fullHistory){
     ]));
   }
   wrap.appendChild(legend);
+  wrap.appendChild(el("div",{class:"chart-legend-hint"},"clicca una voce della legenda per nascondere/mostrare quella linea"));
   return wrap;
 }
 function normalizeSheetRows(rows){
@@ -4216,6 +4218,26 @@ function renderFinanze(main){
     main.appendChild(prefillBanner);
   }
   const catTotals = computeCategoryTotals();
+  const net = computeNetWorth();
+  const netCard = el("div",{class:"card finance-networth-card"});
+  const netHead = el("div",{class:"finance-networth-head"});
+  netHead.appendChild(el("div",{},[
+    el("div",{class:"net-label"},"Patrimonio netto attuale"),
+    el("div",{class:"net-value"+(net>=0?" positive":" negative")}, fmtEUR(net))
+  ]));
+  const netActions = el("div",{class:"finance-networth-actions"});
+  const snapBtn = el("button",{class:"btn primary"},"+ Salva snapshot");
+  snapBtn.addEventListener("click", ()=>{
+    const totals = computeCategoryTotals();
+    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), ...totals});
+    store.set(privKey("finance"), state.finance); render("finanze");
+  });
+  netActions.appendChild(snapBtn);
+  const importBtn = el("button",{class:"btn ghost"},"Importa storico");
+  importBtn.addEventListener("click", openFinanceImportModal);
+  netActions.appendChild(importBtn);
+  netHead.appendChild(netActions);
+  netCard.appendChild(netHead);
   const totalsRow = el("div",{class:"finance-totals-row"});
   totalsRow.appendChild(el("div",{class:"card finance-total-card finance-block-liquidity"},[
     el("span",{class:"finance-total-label"},"Liquidità"),
@@ -4229,28 +4251,13 @@ function renderFinanze(main){
     el("span",{class:"finance-total-label"},"Debiti"),
     el("span",{class:"finance-total-value"}, fmtEUR(catTotals.debts))
   ]));
-  main.appendChild(totalsRow);
+  netCard.appendChild(totalsRow);
+  main.appendChild(netCard);
   const grid = el("div",{class:"finance-grid"});
   grid.appendChild(financeBlock("Liquidità","liquidity"));
   grid.appendChild(financeBlock("Asset non liquidi","nonliquid"));
   grid.appendChild(financeBlock("Debiti","debts"));
   main.appendChild(grid);
-
-  const net = computeNetWorth();
-  const summary = el("div",{class:"card net-summary"});
-  summary.appendChild(el("div",{class:"net-label"},"Patrimonio netto attuale"));
-  summary.appendChild(el("div",{class:"net-value"+(net>=0?" positive":" negative")}, fmtEUR(net)));
-  const snapBtn = el("button",{class:"btn primary"},"+ Salva snapshot");
-  snapBtn.addEventListener("click", ()=>{
-    const totals = computeCategoryTotals();
-    state.finance.history.unshift({date:new Date().toLocaleDateString("it-IT"), ...totals});
-    store.set(privKey("finance"), state.finance); render("finanze");
-  });
-  summary.appendChild(snapBtn);
-  const importBtn = el("button",{class:"btn ghost", style:"margin-left:10px;"},"Importa storico");
-  importBtn.addEventListener("click", openFinanceImportModal);
-  summary.appendChild(importBtn);
-  main.appendChild(summary);
 
   const chartBlock = el("div",{class:"card cat-block"});
   const chartHead = el("div",{style:"display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:4px;"});
@@ -4275,7 +4282,19 @@ function renderFinanze(main){
   main.appendChild(chartBlock);
 
   const histBlock = el("div",{class:"card cat-block"});
-  histBlock.appendChild(el("h4",{},"Storico snapshot"));
+  const histHead = el("div",{style:"display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;"});
+  histHead.appendChild(el("h4",{style:"margin:0;"},"Storico snapshot"));
+  if(state.finance.history.length){
+    const clearHistBtn = el("button",{class:"btn danger small"},"Cancella tutto lo storico");
+    clearHistBtn.addEventListener("click", ()=>{
+      if(confirm("Cancellare definitivamente tutti i "+state.finance.history.length+" snapshot dello storico? L'azione non è reversibile — potrai reimportarli in seguito.")){
+        state.finance.history = [];
+        store.set(privKey("finance"), state.finance); render("finanze");
+      }
+    });
+    histHead.appendChild(clearHistBtn);
+  }
+  histBlock.appendChild(histHead);
   if(!state.finance.history.length){
     histBlock.appendChild(emptyState("Salva il primo snapshot per iniziare a tracciare l'andamento nel tempo.", ICON_COIN));
   } else {
