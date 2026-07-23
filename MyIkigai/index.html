@@ -592,6 +592,26 @@ textarea{resize:vertical;}
 .orto-cal-track{grid-column:2 / span 12; position:relative; height:16px; background:repeating-linear-gradient(90deg, var(--line) 0, var(--line) 1px, transparent 1px, transparent calc(100%/12)); border-radius:5px;}
 .orto-cal-bar{position:absolute; top:1px; height:14px; border-radius:5px; font-size:8.5px; color:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; white-space:nowrap; font-weight:700;}
 .orto-cal-empty{font-size:12.5px; color:var(--ink-soft); font-style:italic; padding:6px 0;}
+.orto-season-year-tabs{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 14px 0;}
+.orto-season-year-tab{
+  padding:6px 12px; border-radius:8px; border:1px solid var(--line); background:var(--card);
+  color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; cursor:pointer;
+}
+.orto-season-year-tab.active{border-color:var(--forest); color:var(--forest); background:rgba(51,80,63,0.08);}
+.orto-season-year-tab.add{width:30px; text-align:center; font-weight:700;}
+.orto-season-banner{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 12px; border-radius:10px;
+  background:var(--paper-2); border:1px solid var(--line); font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;
+}
+.orto-season-banner.active{border-color:var(--forest); background:rgba(51,80,63,0.08); color:var(--ink);}
+.orto-season-banner select, .orto-season-banner input{font-size:12.5px;}
+.orto-season-timeline{max-height:280px; overflow-y:auto;}
+.orto-season-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line);}
+.orto-season-pill{font-size:12.5px; font-weight:600; color:var(--ink-soft);}
+.orto-season-pill.active{color:var(--forest);}
+.orto-snapshot-preview{position:relative; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:10px 0;}
+.orto-snapshot-obj{position:absolute; border-radius:2px; line-height:1; overflow:hidden;}
+.orto-snapshot-obj.bed{border:1px solid #8a6a45;}
 .color-ball{
   position:relative; width:14px; height:14px; border-radius:50%; flex-shrink:0; cursor:pointer;
   background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
@@ -630,6 +650,10 @@ textarea{resize:vertical;}
 .orto-bed .stack-btn{ color:#fff; opacity:.6; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
 .orto-frame-controls{
   position:absolute; bottom:3px; left:5px; display:flex; align-items:center; gap:5px;
+}
+.orto-rotation-warning{
+  position:absolute; top:3px; left:20px; font-size:13px; cursor:help;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 .frame-transp-toggle{
   width:14px; height:14px; border-radius:4px; border:1px solid #1a1a1a; opacity:.5;
@@ -1436,45 +1460,47 @@ const ORTO_TEXTURES = {
   panca: ORTO_WOOD_TEXTURES.chiaro
 };
 const ORTO_PLANTS = [
-  {key:"pomodoro", label:"Pomodoro", emoji:"🍅", color:"#C1584C"},
-  {key:"melanzana", label:"Melanzana", emoji:"🍆", color:"#5B3A73"},
-  {key:"peperone", label:"Peperone", emoji:"🫑", color:"#4C8C4C"},
-  {key:"peperoncino", label:"Peperoncino", emoji:"🌶️", color:"#A6321E"},
-  {key:"zucchina", label:"Zucchina", emoji:"🥒", color:"#5C8C3E"},
-  {key:"zucca", label:"Zucca", emoji:"🎃", color:"#C77D22"},
-  {key:"cetriolo", label:"Cetriolo", emoji:"🥒", color:"#3E7D5C"},
-  {key:"cetriolo_barattiere", label:"Cetriolo barattiere", emoji:"🥒", color:"#7A9C4C"},
-  {key:"patata", label:"Patata", emoji:"🥔", color:"#8C6A3E"},
-  {key:"batata", label:"Batata", emoji:"🍠", color:"#B8622C"},
-  {key:"carota", label:"Carota", emoji:"🥕", color:"#D97B29"},
-  {key:"cipolla", label:"Cipolla", emoji:"🧅", color:"#9C5C8C"},
-  {key:"scalogno", label:"Scalogno", emoji:"🧅", color:"#B889A6"},
-  {key:"aglio", label:"Aglio", emoji:"🧄", color:"#B8AD8E"},
-  {key:"porro", label:"Porro", emoji:"🥬", color:"#6B9C6B"},
-  {key:"insalata", label:"Insalata/Lattuga", emoji:"🥬", color:"#6FA84C"},
-  {key:"rucola", label:"Rucola", emoji:"🥬", color:"#5C8C3E"},
-  {key:"spinaci", label:"Spinaci", emoji:"🥬", color:"#3E6B3E"},
-  {key:"bietola", label:"Bietola", emoji:"🥬", color:"#4C7A4C"},
-  {key:"radicchio", label:"Radicchio", emoji:"🥬", color:"#7A2E3E"},
-  {key:"cavolo", label:"Cavolo", emoji:"🥬", color:"#4C7A4C"},
-  {key:"cavolfiore", label:"Cavolfiore", emoji:"🥬", color:"#D8D0B8"},
-  {key:"broccolo", label:"Broccolo", emoji:"🥦", color:"#3E7A3E"},
-  {key:"cime_di_rapa", label:"Cime di rapa", emoji:"🥬", color:"#4C8C3E"},
-  {key:"sedano", label:"Sedano", emoji:"🥬", color:"#6FA84C"},
-  {key:"fagiolini", label:"Fagiolini", emoji:"🫘", color:"#3E7A3E"},
-  {key:"piselli", label:"Piselli", emoji:"🫛", color:"#5C9C4C"},
-  {key:"asparago", label:"Asparago", emoji:"🌱", color:"#5C9C4C"},
-  {key:"carciofo", label:"Carciofo", emoji:"🍀", color:"#4C7A5C"},
-  {key:"mais", label:"Mais", emoji:"🌽", color:"#D9A62E"},
-  {key:"fragole", label:"Fragole", emoji:"🍓", color:"#C1355C"},
-  {key:"anguria", label:"Anguria", emoji:"🍉", color:"#C1355C"},
-  {key:"melone", label:"Melone", emoji:"🍈", color:"#C7A82C"},
-  {key:"basilico", label:"Basilico", emoji:"🌿", color:"#3E8C5C"},
-  {key:"rosmarino", label:"Rosmarino", emoji:"🌿", color:"#4C6B4C"},
-  {key:"salvia", label:"Salvia", emoji:"🌿", color:"#7A8C6B"},
-  {key:"prezzemolo", label:"Prezzemolo", emoji:"🌿", color:"#4C8C3E"},
-  {key:"menta", label:"Menta", emoji:"🌿", color:"#3EAD7A"},
-  {key:"finocchio", label:"Finocchio", emoji:"🌾", color:"#6B9C6B"}
+  {key:"pomodoro", label:"Pomodoro", emoji:"🍅", color:"#C1584C", family:"Solanacee"},
+  {key:"melanzana", label:"Melanzana", emoji:"🍆", color:"#5B3A73", family:"Solanacee"},
+  {key:"peperone", label:"Peperone", emoji:"🫑", color:"#4C8C4C", family:"Solanacee"},
+  {key:"peperoncino", label:"Peperoncino", emoji:"🌶️", color:"#A6321E", family:"Solanacee"},
+  {key:"zucchina", label:"Zucchina", emoji:"🥒", color:"#5C8C3E", family:"Cucurbitacee"},
+  {key:"zucca", label:"Zucca", emoji:"🎃", color:"#C77D22", family:"Cucurbitacee"},
+  {key:"cetriolo", label:"Cetriolo", emoji:"🥒", color:"#3E7D5C", family:"Cucurbitacee"},
+  {key:"cetriolo_barattiere", label:"Cetriolo barattiere", emoji:"🟢", color:"#7A9C4C", family:"Cucurbitacee"},
+  {key:"patata", label:"Patata", emoji:"🥔", color:"#8C6A3E", family:"Solanacee"},
+  {key:"batata", label:"Batata", emoji:"🍠", color:"#B8622C", family:"Convolvulacee"},
+  {key:"carota", label:"Carota", emoji:"🥕", color:"#D97B29", family:"Ombrellifere"},
+  {key:"cipolla", label:"Cipolla", emoji:"🧅", color:"#9C5C8C", family:"Alliacee"},
+  {key:"scalogno", label:"Scalogno", emoji:"🧅", color:"#B889A6", family:"Alliacee"},
+  {key:"aglio", label:"Aglio", emoji:"🧄", color:"#B8AD8E", family:"Alliacee"},
+  {key:"porro", label:"Porro", emoji:"🥬", color:"#6B9C6B", family:"Alliacee"},
+  {key:"insalata", label:"Insalata/Lattuga", emoji:"🥬", color:"#6FA84C", family:"Composite"},
+  {key:"rucola", label:"Rucola", emoji:"🥬", color:"#5C8C3E", family:"Crucifere"},
+  {key:"spinaci", label:"Spinaci", emoji:"🥬", color:"#3E6B3E", family:"Chenopodiacee"},
+  {key:"bietola", label:"Bietola", emoji:"🥬", color:"#4C7A4C", family:"Chenopodiacee"},
+  {key:"radicchio", label:"Radicchio", emoji:"🥬", color:"#7A2E3E", family:"Composite"},
+  {key:"cavolo", label:"Cavolo", emoji:"🥬", color:"#4C7A4C", family:"Crucifere"},
+  {key:"cavolfiore", label:"Cavolfiore", emoji:"🥬", color:"#D8D0B8", family:"Crucifere"},
+  {key:"broccolo", label:"Broccolo", emoji:"🥦", color:"#3E7A3E", family:"Crucifere"},
+  {key:"cime_di_rapa", label:"Cime di rapa", emoji:"🥬", color:"#4C8C3E", family:"Crucifere"},
+  {key:"sedano", label:"Sedano", emoji:"🥬", color:"#6FA84C", family:"Ombrellifere"},
+  {key:"fagiolini", label:"Fagiolini", emoji:"🫘", color:"#3E7A3E", family:"Leguminose"},
+  {key:"piselli", label:"Piselli", emoji:"🫛", color:"#5C9C4C", family:"Leguminose"},
+  {key:"asparago", label:"Asparago", emoji:"🌱", color:"#5C9C4C", family:"Liliacee"},
+  {key:"carciofo", label:"Carciofo", emoji:"🍀", color:"#4C7A5C", family:"Composite"},
+  {key:"mais", label:"Mais", emoji:"🌽", color:"#D9A62E", family:"Graminacee"},
+  {key:"fragole", label:"Fragole", emoji:"🍓", color:"#C1355C", family:"Rosacee"},
+  {key:"mirtillo", label:"Mirtillo", emoji:"🫐", color:"#3E5C9C", family:"Ericacee"},
+  {key:"more", label:"More", emoji:"🫐", color:"#3E2C5C", family:"Rosacee"},
+  {key:"anguria", label:"Anguria", emoji:"🍉", color:"#C1355C", family:"Cucurbitacee"},
+  {key:"melone", label:"Melone", emoji:"🍈", color:"#C7A82C", family:"Cucurbitacee"},
+  {key:"basilico", label:"Basilico", emoji:"🌿", color:"#3E8C5C", family:"Aromatiche"},
+  {key:"rosmarino", label:"Rosmarino", emoji:"🌿", color:"#4C6B4C", family:"Aromatiche"},
+  {key:"salvia", label:"Salvia", emoji:"🌿", color:"#7A8C6B", family:"Aromatiche"},
+  {key:"prezzemolo", label:"Prezzemolo", emoji:"🌿", color:"#4C8C3E", family:"Ombrellifere"},
+  {key:"menta", label:"Menta", emoji:"🌿", color:"#3EAD7A", family:"Aromatiche"},
+  {key:"finocchio", label:"Finocchio", emoji:"🌾", color:"#6B9C6B", family:"Ombrellifere"}
 ];
 function fmtDateShort(iso){
   if(!iso) return "—";
@@ -1892,6 +1918,8 @@ async function loadAll(){
     store.setQuiet("orto", state.orto);
   }
   if(!state.orto.comments) state.orto.comments = [];
+  if(!state.orto.seasons) state.orto.seasons = [];
+  if(state.orto.cropHistory) delete state.orto.cropHistory;
   if(!state.orto.migratedAbsCoords){
     // il vecchio sistema posizionava gli oggetti in % di una board di riferimento ~900x560;
     // passiamo a coordinate assolute in pixel su un canvas fisso, molto più stabile e senza
@@ -3212,7 +3240,6 @@ function openNewBoxModal(){
 
 /* ---------------- ORTO ---------------- */
 let activeCommentId = null;
-let ortoCalendarView = false;
 let selectedOrtoObjId = null;
 let ortoZoom = 1;
 const ORTO_CANVAS_W = 1800, ORTO_CANVAS_H = 1100;
@@ -3228,8 +3255,8 @@ function ensureOrtoKeyListener(){
     if(e.key==="Delete" || e.key==="Backspace"){
       if(!selectedOrtoObjId) return;
       e.preventDefault();
-      const existed = state.orto.objects.some(o=>o.id===selectedOrtoObjId);
-      if(existed){
+      const obj = state.orto.objects.find(o=>o.id===selectedOrtoObjId);
+      if(obj){
         state.orto.objects = state.orto.objects.filter(o=>o.id!==selectedOrtoObjId);
         selectedOrtoObjId = null;
         store.set("orto", state.orto); render("orto");
@@ -3258,6 +3285,72 @@ function ensureOrtoKeyListener(){
     }
   });
 }
+const ORTO_SEASON_ORDER = ["Primavera","Estate","Autunno","Inverno"];
+function ortoSeasonFromDate(dateStr){
+  if(!dateStr) return "Primavera";
+  const m = parseInt(dateStr.slice(5,7),10);
+  if(m>=3 && m<=5) return "Primavera";
+  if(m>=6 && m<=8) return "Estate";
+  if(m>=9 && m<=11) return "Autunno";
+  return "Inverno";
+}
+function findContainingBedIdIn(objects, obj){
+  // trova l'aiuola (letto rialzato) il cui rettangolo contiene il centro della pianta, in un dato
+  // insieme di oggetti (la board attuale, oppure la fotografia congelata di una stagione passata)
+  const cx = (obj.x||0) + (obj.w||130)/2;
+  const cy = (obj.y||0) + (obj.h||82)/2;
+  const bed = (objects||[]).find(o=>{
+    if(!(o.type==="coltura" && !o.plantKind)) return false;
+    return cx>=o.x && cx<=o.x+(o.w||280) && cy>=o.y && cy<=o.y+(o.h||180);
+  });
+  return bed ? bed.id : null;
+}
+function getActiveOrtoSeason(){
+  return (state.orto.seasons||[]).find(s=>!s.frozenAt) || null;
+}
+function nextOrtoSeasonLabel(year, season){
+  const idx = ORTO_SEASON_ORDER.indexOf(season);
+  if(idx===-1 || idx===ORTO_SEASON_ORDER.length-1) return {year:year+1, season:ORTO_SEASON_ORDER[0]};
+  return {year, season:ORTO_SEASON_ORDER[idx+1]};
+}
+function startOrtoSeason(year, season){
+  if(!state.orto.seasons) state.orto.seasons = [];
+  const s = {id:"se"+Date.now()+Math.round(Math.random()*999), year, season, startedAt:new Date().toISOString().slice(0,10), frozenAt:null, snapshot:null};
+  state.orto.seasons.push(s);
+  store.set("orto", state.orto);
+  return s;
+}
+function freezeAndAdvanceOrtoSeason(){
+  const active = getActiveOrtoSeason();
+  if(!active) return;
+  active.snapshot = JSON.parse(JSON.stringify(state.orto.objects||[]));
+  active.frozenAt = new Date().toISOString().slice(0,10);
+  const next = nextOrtoSeasonLabel(active.year, active.season);
+  startOrtoSeason(next.year, next.season);
+}
+function bedRotationWarning(bedObj){
+  // guarda le ultime 2 stagioni congelate: se una famiglia coltivata lì di recente
+  // corrisponde a una pianta attualmente presente nella stessa aiuola, avvisa
+  const frozen = (state.orto.seasons||[]).filter(s=>s.frozenAt && s.snapshot)
+    .sort((a,b)=> (b.frozenAt||"").localeCompare(a.frozenAt||"")).slice(0,2);
+  if(!frozen.length) return null;
+  const recentFamilies = new Set();
+  frozen.forEach(s=>{
+    (s.snapshot||[]).filter(o=>o.type==="coltura" && o.plantKind).forEach(p=>{
+      if(findContainingBedIdIn(s.snapshot, p)===bedObj.id){
+        const def = ORTO_PLANTS.find(x=>x.key===p.plantKind);
+        if(def) recentFamilies.add(def.family);
+      }
+    });
+  });
+  if(!recentFamilies.size) return null;
+  const currentPlants = state.orto.objects.filter(o=>o.type==="coltura" && o.plantKind && findContainingBedIdIn(state.orto.objects, o)===bedObj.id);
+  for(const p of currentPlants){
+    const def = ORTO_PLANTS.find(x=>x.key===p.plantKind);
+    if(def && recentFamilies.has(def.family)) return {family:def.family, plantName:def.label};
+  }
+  return null;
+}
 function renderOrto(main){
   ensureOrtoKeyListener();
   main.appendChild(el("div",{class:"section-head"},[
@@ -3278,9 +3371,6 @@ function renderOrto(main){
   });
   toolbar.appendChild(addCommentBtn);
 
-  const calToggleBtn = el("button",{class:"btn ghost orto-cal-toggle"}, ortoCalendarView ? "🗓 Nascondi calendario colture" : "🗓 Vista calendario colture");
-  calToggleBtn.addEventListener("click", ()=>{ ortoCalendarView = !ortoCalendarView; render("orto"); });
-  toolbar.appendChild(calToggleBtn);
 
   const ZOOM_MIN = 0.4, ZOOM_MAX = 2.2, ZOOM_STEP = 0.15;
   const zoomControls = el("div",{class:"orto-zoom-controls"});
@@ -3293,6 +3383,11 @@ function renderOrto(main){
   zoomResetBtn.addEventListener("click", ()=>{ ortoZoom = 1; render("orto"); });
   zoomControls.appendChild(zoomOutBtn); zoomControls.appendChild(zoomLabel); zoomControls.appendChild(zoomInBtn); zoomControls.appendChild(zoomResetBtn);
   toolbar.appendChild(zoomControls);
+
+  const activeSeasonForBtn = getActiveOrtoSeason();
+  const seasonsBtn = el("button",{class:"btn ghost"}, "📅 Stagioni" + (activeSeasonForBtn ? " · "+activeSeasonForBtn.season+" "+activeSeasonForBtn.year : ""));
+  seasonsBtn.addEventListener("click", openOrtoSeasonsModal);
+  toolbar.appendChild(seasonsBtn);
 
   const waterField = el("label",{style:"display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);font-weight:600;"});
   waterField.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
@@ -3324,7 +3419,12 @@ function renderOrto(main){
   boardWrap.appendChild(sizer);
   layoutWrap.appendChild(boardWrap);
 
-  const sortedObjects = state.orto.objects.slice().sort((a,b)=>(a.z||0)-(b.z||0));
+  const sortedObjects = state.orto.objects.slice().sort((a,b)=>{
+    const aBed = a.type==="coltura" && !a.plantKind;
+    const bBed = b.type==="coltura" && !b.plantKind;
+    if(aBed!==bBed) return aBed ? -1 : 1; // le aiuole restano sempre più in fondo
+    return (a.z||0)-(b.z||0);
+  });
   sortedObjects.forEach(obj=>{
     const def = ORTO_TYPES[obj.type] || ORTO_TYPES.coltura;
     const plantDef = obj.plantKind ? ORTO_PLANTS.find(p=>p.key===obj.plantKind) : null;
@@ -3376,16 +3476,23 @@ function renderOrto(main){
       frameControls.appendChild(woodToggle);
       node.appendChild(frameControls);
 
+      const rotWarning = bedRotationWarning(obj);
+      if(rotWarning){
+        node.appendChild(el("span",{class:"orto-ctrl orto-rotation-warning",
+          title:`Rotazione consigliata: hai già coltivato ${rotWarning.family} (${rotWarning.plantName}) di recente in questa aiuola`}, "⚠️"));
+      }
+
       makeDraggable(hit, obj, board, {moveTarget:node, onTap:()=>{ selectedOrtoObjId = obj.id; render("orto"); }});
     } else if(isPlant){
       node.style.background = obj.color || plantDef.color;
       const iconSize = Math.max(20, Math.min(obj.w||130, obj.h||82)*0.42);
       const bigIcon = el("div",{class:"orto-plant-icon", style:`font-size:${iconSize}px;`}, plantDef.emoji);
       node.appendChild(bigIcon);
-      const nameInput = el("textarea",{rows:"1", value:obj.name, class:"orto-plant-name"});
+      const nameInput = el("textarea",{rows:"1", class:"orto-plant-name"});
       nameInput.value = obj.name||"";
+      nameInput.addEventListener("pointerdown", ev=>ev.stopPropagation());
       nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-      nameInput.addEventListener("input", ()=>autoResize(nameInput));
+      nameInput.addEventListener("input", ()=>{ autoResize(nameInput); obj.name=nameInput.value; });
       nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
       node.appendChild(nameInput);
       requestAnimationFrame(()=>autoResize(nameInput));
@@ -3438,8 +3545,9 @@ function renderOrto(main){
       if(def.showName){
         const nameInput = el("textarea",{rows:"1", class:"orto-element-name"});
         nameInput.value = obj.name||def.label;
+        nameInput.addEventListener("pointerdown", ev=>ev.stopPropagation());
         nameInput.addEventListener("mousedown", ev=>ev.stopPropagation());
-        nameInput.addEventListener("input", ()=>autoResize(nameInput));
+        nameInput.addEventListener("input", ()=>{ autoResize(nameInput); obj.name=nameInput.value; });
         nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
         node.appendChild(nameInput);
         requestAnimationFrame(()=>autoResize(nameInput));
@@ -3495,9 +3603,7 @@ function renderOrto(main){
   layoutWrap.appendChild(renderOrtoDetailPanel(selectedPlant));
   main.appendChild(layoutWrap);
 
-  if(ortoCalendarView){
-    main.appendChild(renderOrtoCalendar());
-  }
+  main.appendChild(renderOrtoCalendar());
 }
 function renderOrtoDetailPanel(obj){
   const panel = el("div",{class:"orto-detail-panel"});
@@ -3587,6 +3693,127 @@ function renderOrtoCalendar(){
     wrap.appendChild(row);
   });
   return wrap;
+}
+function suggestNextOrtoSeason(){
+  const all = (state.orto.seasons||[]).slice().sort((a,b)=> (a.startedAt||"").localeCompare(b.startedAt||""));
+  if(all.length){
+    const last = all[all.length-1];
+    return nextOrtoSeasonLabel(last.year, last.season);
+  }
+  const today = new Date().toISOString().slice(0,10);
+  return {year:new Date().getFullYear(), season: ortoSeasonFromDate(today)};
+}
+function renderOrtoSnapshotPreview(snapshot){
+  const scale = 480/ORTO_CANVAS_W;
+  const wrap = el("div",{class:"orto-snapshot-preview", style:`width:${Math.round(ORTO_CANVAS_W*scale)}px; height:${Math.round(ORTO_CANVAS_H*scale)}px;`});
+  (snapshot||[]).slice().sort((a,b)=>(a.z||0)-(b.z||0)).forEach(obj=>{
+    const isContainer = obj.type==="coltura" && !obj.plantKind;
+    const isPlant = obj.type==="coltura" && !!obj.plantKind;
+    const plantDef = isPlant ? ORTO_PLANTS.find(p=>p.key===obj.plantKind) : null;
+    const w = Math.max(3, Math.round((obj.w||130)*scale)), h = Math.max(3, Math.round((obj.h||82)*scale));
+    const box = el("div",{class:"orto-snapshot-obj"+(isContainer?" bed":""),
+      style:`left:${Math.round((obj.x||0)*scale)}px; top:${Math.round((obj.y||0)*scale)}px; width:${w}px; height:${h}px; background:${isContainer?"transparent":(obj.color||(plantDef?plantDef.color:"#9C8B6B"))};`});
+    if(isPlant && plantDef && w>10 && h>10){
+      box.textContent = plantDef.emoji;
+      box.style.fontSize = Math.min(14, Math.max(6, h*0.6))+"px";
+      box.style.display = "flex"; box.style.alignItems="center"; box.style.justifyContent="center";
+    }
+    wrap.appendChild(box);
+  });
+  return wrap;
+}
+let ortoSeasonsModalYear = null;
+function openOrtoSeasonsModal(){
+  const active = getActiveOrtoSeason();
+  let years = Array.from(new Set((state.orto.seasons||[]).map(s=>s.year)));
+  if(ortoSeasonsModalYear===null){
+    ortoSeasonsModalYear = active ? active.year : (years.length ? Math.max(...years) : new Date().getFullYear());
+  }
+  if(!years.includes(ortoSeasonsModalYear)) years.push(ortoSeasonsModalYear);
+  years.sort((a,b)=>a-b);
+
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Stagioni dell'orto"));
+    modal.appendChild(el("div",{class:"field-label"}, "Tieni traccia di cosa cresce dove, stagione per stagione, per pianificare la rotazione l'anno dopo."));
+
+    const yearTabs = el("div",{class:"orto-season-year-tabs"});
+    years.forEach(y=>{
+      const btn = el("button",{type:"button", class:"orto-season-year-tab"+(y===ortoSeasonsModalYear?" active":"")}, String(y));
+      btn.addEventListener("click", ()=>{ ortoSeasonsModalYear=y; close(); openOrtoSeasonsModal(); });
+      yearTabs.appendChild(btn);
+    });
+    const addYearBtn = el("button",{type:"button", class:"orto-season-year-tab add", title:"Aggiungi anno"}, "+");
+    addYearBtn.addEventListener("click", ()=>{ ortoSeasonsModalYear = Math.max(...years)+1; close(); openOrtoSeasonsModal(); });
+    yearTabs.appendChild(addYearBtn);
+    modal.appendChild(yearTabs);
+
+    if(active){
+      const next = nextOrtoSeasonLabel(active.year, active.season);
+      const banner = el("div",{class:"orto-season-banner active"});
+      banner.appendChild(el("span",{}, `🌱 Stagione in corso: ${active.season} ${active.year}`));
+      const advBtn = el("button",{class:"btn primary small"}, `❄️ Congela e avvia ${next.season} ${next.year}`);
+      advBtn.addEventListener("click", ()=>{
+        freezeAndAdvanceOrtoSeason();
+        ortoSeasonsModalYear = next.year;
+        close(); openOrtoSeasonsModal(); render("orto");
+      });
+      banner.appendChild(advBtn);
+      modal.appendChild(banner);
+    } else {
+      const suggested = suggestNextOrtoSeason();
+      const banner = el("div",{class:"orto-season-banner"});
+      banner.appendChild(el("span",{}, "Nessuna stagione attiva."));
+      const seasonSel = el("select",{});
+      ORTO_SEASON_ORDER.forEach(s=> seasonSel.appendChild(el("option",{value:s}, s)));
+      seasonSel.value = suggested.season;
+      const yearInp = el("input",{type:"number", value:String(suggested.year), style:"width:80px;"});
+      const startBtn = el("button",{class:"btn primary small"}, "▶️ Avvia stagione");
+      startBtn.addEventListener("click", ()=>{
+        const y = parseInt(yearInp.value,10)||suggested.year;
+        startOrtoSeason(y, seasonSel.value);
+        ortoSeasonsModalYear = y;
+        close(); openOrtoSeasonsModal(); render("orto");
+      });
+      banner.appendChild(seasonSel); banner.appendChild(yearInp); banner.appendChild(startBtn);
+      modal.appendChild(banner);
+    }
+
+    const yearSeasons = (state.orto.seasons||[]).filter(s=>s.year===ortoSeasonsModalYear)
+      .sort((a,b)=> ORTO_SEASON_ORDER.indexOf(a.season)-ORTO_SEASON_ORDER.indexOf(b.season));
+    const timeline = el("div",{class:"orto-season-timeline"});
+    if(!yearSeasons.length){
+      timeline.appendChild(el("div",{class:"orto-cal-empty"}, "Nessuna stagione registrata per questo anno."));
+    }
+    yearSeasons.forEach(s=>{
+      const isActive = !s.frozenAt;
+      const row = el("div",{class:"orto-season-row"});
+      row.appendChild(el("span",{class:"orto-season-pill"+(isActive?" active":"")},
+        s.season+(isActive?" · in corso":" · congelata il "+fmtDateShort(s.frozenAt))));
+      if(s.frozenAt && s.snapshot){
+        const viewBtn = el("button",{class:"btn ghost small"}, "👁 Vedi com'era");
+        viewBtn.addEventListener("click", ()=>{
+          openModal((m2,close2)=>{
+            m2.appendChild(el("h3",{}, s.season+" "+s.year+" — com'era la board"));
+            m2.appendChild(renderOrtoSnapshotPreview(s.snapshot));
+            const actions2 = el("div",{class:"modal-actions"});
+            const closeBtn2 = el("button",{class:"btn ghost"},"Chiudi");
+            closeBtn2.addEventListener("click", close2);
+            actions2.appendChild(closeBtn2);
+            m2.appendChild(actions2);
+          });
+        });
+        row.appendChild(viewBtn);
+      }
+      timeline.appendChild(row);
+    });
+    modal.appendChild(timeline);
+
+    const actions = el("div",{class:"modal-actions"});
+    const closeBtn = el("button",{class:"btn ghost"},"Chiudi");
+    closeBtn.addEventListener("click", ()=>{ ortoSeasonsModalYear=null; close(); });
+    actions.appendChild(closeBtn);
+    modal.appendChild(actions);
+  });
 }
 function openNewOrtoObjectModal(){
   openModal((modal, close)=>{
@@ -3687,6 +3914,13 @@ async function loadOrtoWeather(container){
     const data = await res.json();
     const temp = Math.round(data.current.temperature_2m);
     const precipToday = data.daily.precipitation_sum[0];
+    const today = new Date().toISOString().slice(0,10);
+    if(precipToday > 0.5 && state.orto.lastWatered !== today){
+      state.orto.lastWatered = today;
+      store.set("orto", state.orto);
+      render("orto");
+      return;
+    }
     container.innerHTML = "";
     container.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
     container.appendChild(el("span",{}, `Milano ora: ${temp}°C, pioggia oggi: ${precipToday} mm`));
@@ -3696,14 +3930,6 @@ async function loadOrtoWeather(container){
     weatherLinks.appendChild(forecastLink);
     weatherLinks.appendChild(stationLink);
     container.appendChild(weatherLinks);
-    if(precipToday > 0.5){
-      const markBtn = el("button",{class:"btn small ghost", style:"margin-left:10px;"}, "Piove — segna come annaffiata oggi");
-      markBtn.addEventListener("click", ()=>{
-        state.orto.lastWatered = new Date().toISOString().slice(0,10);
-        store.set("orto", state.orto); render("orto");
-      });
-      container.appendChild(markBtn);
-    }
   }catch(e){
     container.innerHTML = "";
     container.appendChild(el("span",{}, "Meteo non disponibile al momento."));
