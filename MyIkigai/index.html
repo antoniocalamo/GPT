@@ -508,20 +508,24 @@ textarea{resize:vertical;}
 }
 .weather-link:hover{text-decoration:underline;}
 .orto-layout{display:flex; gap:14px; align-items:flex-start;}
-.orto-board-wrap{flex:1; min-width:0;}
+.orto-board-wrap{flex:1; min-width:0; overflow:auto; max-height:72vh; -webkit-overflow-scrolling:touch;}
+.orto-board-sizer{position:relative; width:100%; height:560px; overflow:hidden; border-radius:14px; border:1px solid var(--line); box-shadow:inset var(--shadow);}
 .orto-board{
-  position:relative;
+  position:absolute; top:0; left:0;
   background-color:var(--card);
   background-image:
     linear-gradient(var(--line) 1px, transparent 1px),
     linear-gradient(90deg, var(--line) 1px, transparent 1px);
   background-size:20px 20px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  height:560px;
-  overflow:hidden;
-  box-shadow: inset var(--shadow);
+  transform-origin: top left;
 }
+.orto-zoom-controls{display:flex; align-items:center; gap:6px; margin-left:auto;}
+.orto-zoom-btn{
+  width:26px; height:26px; border-radius:8px; border:1px solid var(--line); background:var(--card);
+  cursor:pointer; font-size:14px; font-weight:700; color:var(--ink); display:flex; align-items:center; justify-content:center;
+}
+.orto-zoom-btn:hover{background:var(--paper-2);}
+.orto-zoom-label{font-size:11px; color:var(--ink-soft); min-width:36px; text-align:center; font-family:'IBM Plex Mono',monospace;}
 .orto-obj{
   position:absolute;
   border-radius:10px;
@@ -547,7 +551,7 @@ textarea{resize:vertical;}
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:grab;
   box-shadow: 0 3px 8px rgba(0,0,0,0.18);
 }
-.orto-obj.orto-element.orto-path{ box-shadow:none; }
+.orto-obj.orto-element.orto-path{ box-shadow:none; border-radius:0; }
 .orto-obj.orto-element:active{cursor:grabbing;}
 .orto-element-icon{opacity:.92; flex-shrink:0;}
 .orto-element-icon svg{width:100%; height:100%; display:block; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));}
@@ -563,13 +567,13 @@ textarea{resize:vertical;}
 .orto-path-texture-toggle:hover{opacity:1;}
 .orto-obj.orto-selected{ outline:2px solid var(--forest); outline-offset:2px; }
 /* --- letto rialzato: contenitore, cliccabile solo sul bordo di legno --- */
-.orto-obj.orto-bed{ pointer-events:none; border-radius:8px; padding:0; box-shadow:none; }
+.orto-obj.orto-bed{ pointer-events:none; border-radius:0; padding:0; box-shadow:none; }
 .orto-bed-visual{
-  position:absolute; inset:0; pointer-events:none; border-radius:8px;
+  position:absolute; inset:0; pointer-events:none; border-radius:0;
   box-shadow: inset 0 0 5px rgba(0,0,0,0.4);
   clip-path: polygon(evenodd, 0 0,100% 0,100% 100%,0 100%,0 0, 14px 14px,calc(100% - 14px) 14px,calc(100% - 14px) calc(100% - 14px),14px calc(100% - 14px),14px 14px);
 }
-.orto-bed-inner{ position:absolute; inset:14px; border-radius:4px; }
+.orto-bed-inner{ position:absolute; inset:14px; border-radius:0; }
 .orto-bed-hit{
   position:absolute; inset:0; pointer-events:auto; cursor:grab;
   clip-path: polygon(evenodd, 0 0,100% 0,100% 100%,0 100%,0 0, 14px 14px,calc(100% - 14px) 14px,calc(100% - 14px) calc(100% - 14px),14px calc(100% - 14px),14px 14px);
@@ -596,11 +600,20 @@ textarea{resize:vertical;}
 .color-ball input[type=color]{
   position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; padding:0; border:none;
 }
-.orto-obj-resize{
-  position:absolute; right:2px; bottom:2px; width:12px; height:12px; cursor:nwse-resize;
+.orto-obj-resize{ position:absolute; width:12px; height:12px; }
+.orto-resize-br{
+  right:2px; bottom:2px; cursor:nwse-resize;
   border-right:2px solid rgba(255,255,255,0.6); border-bottom:2px solid rgba(255,255,255,0.6);
 }
-.orto-bed .orto-obj-resize{ border-right-color:rgba(0,0,0,0.55); border-bottom-color:rgba(0,0,0,0.55); }
+.orto-resize-bl{
+  left:2px; bottom:2px; cursor:nesw-resize;
+  border-left:2px solid rgba(255,255,255,0.6); border-bottom:2px solid rgba(255,255,255,0.6);
+}
+.orto-resize-tl{
+  left:2px; top:2px; cursor:nwse-resize;
+  border-left:2px solid rgba(255,255,255,0.6); border-top:2px solid rgba(255,255,255,0.6);
+}
+.orto-bed .orto-obj-resize{ border-color:rgba(0,0,0,0.55); }
 .bed-del{
   position:absolute; top:3px; right:5px; font-size:11px; opacity:.7; cursor:pointer; color:#fff;
 }
@@ -1228,8 +1241,6 @@ table.tires textarea.gomme-cell{
   table.tires{min-width:640px;}
   .orto-layout{flex-direction:column;}
   .orto-detail-panel{width:100%;}
-  .orto-board-wrap{overflow:auto; -webkit-overflow-scrolling:touch;}
-  .orto-board{min-width:700px; min-height:480px;}
   .modal-card{padding:20px 18px; max-width:calc(100vw - 32px);}
   .login-screen{padding:16px; flex-direction:column;}
   .login-credit{position:static; text-align:center; margin-bottom:14px; order:-1;}
@@ -3187,6 +3198,7 @@ function openNewBoxModal(){
 let activeCommentId = null;
 let ortoCalendarView = false;
 let selectedOrtoObjId = null;
+let ortoZoom = 1;
 let ortoClipboard = null;
 let ortoKeyListenerAttached = false;
 function ensureOrtoKeyListener(){
@@ -3253,6 +3265,18 @@ function renderOrto(main){
   calToggleBtn.addEventListener("click", ()=>{ ortoCalendarView = !ortoCalendarView; render("orto"); });
   toolbar.appendChild(calToggleBtn);
 
+  const ZOOM_MIN = 0.4, ZOOM_MAX = 2.2, ZOOM_STEP = 0.15;
+  const zoomControls = el("div",{class:"orto-zoom-controls"});
+  const zoomOutBtn = el("button",{class:"orto-zoom-btn", title:"Zoom out (rivela più griglia)"}, "−");
+  zoomOutBtn.addEventListener("click", ()=>{ ortoZoom = Math.max(ZOOM_MIN, Math.round((ortoZoom-ZOOM_STEP)*100)/100); render("orto"); });
+  const zoomLabel = el("span",{class:"orto-zoom-label", title:"Livello di zoom"}, Math.round(ortoZoom*100)+"%");
+  const zoomInBtn = el("button",{class:"orto-zoom-btn", title:"Zoom in (più dettaglio)"}, "+");
+  zoomInBtn.addEventListener("click", ()=>{ ortoZoom = Math.min(ZOOM_MAX, Math.round((ortoZoom+ZOOM_STEP)*100)/100); render("orto"); });
+  const zoomResetBtn = el("button",{class:"orto-zoom-btn", title:"Reimposta zoom (100%)"}, "⟲");
+  zoomResetBtn.addEventListener("click", ()=>{ ortoZoom = 1; render("orto"); });
+  zoomControls.appendChild(zoomOutBtn); zoomControls.appendChild(zoomLabel); zoomControls.appendChild(zoomInBtn); zoomControls.appendChild(zoomResetBtn);
+  toolbar.appendChild(zoomControls);
+
   const waterField = el("label",{style:"display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);font-weight:600;"});
   waterField.appendChild(el("span",{class:"box-icon", html:ICON_DROP, style:"color:var(--teal);"}));
   waterField.appendChild(document.createTextNode("Ultima annaffiata/pioggia"));
@@ -3277,8 +3301,11 @@ function renderOrto(main){
 
   const layoutWrap = el("div",{class:"orto-layout"});
   const boardWrap = el("div",{class:"orto-board-wrap"});
-  const board = el("div",{class:"orto-board", id:"orto-board"});
-  boardWrap.appendChild(board);
+  const sizer = el("div",{class:"orto-board-sizer"});
+  const worldPct = 100/ortoZoom;
+  const board = el("div",{class:"orto-board", id:"orto-board", style:`width:${worldPct}%; height:${worldPct}%; transform:scale(${ortoZoom});`});
+  sizer.appendChild(board);
+  boardWrap.appendChild(sizer);
   layoutWrap.appendChild(boardWrap);
 
   const sortedObjects = state.orto.objects.slice().sort((a,b)=>(a.z||0)-(b.z||0));
@@ -3310,7 +3337,6 @@ function renderOrto(main){
       node.appendChild(stackBtns);
     }
 
-    const resizeHandle = el("span",{class:"orto-obj-resize orto-ctrl"});
     let resizeCallback = null;
 
     if(isContainer){
@@ -3333,7 +3359,6 @@ function renderOrto(main){
       });
       frameControls.appendChild(woodToggle);
       node.appendChild(frameControls);
-      node.appendChild(resizeHandle);
 
       makeDraggable(hit, obj, board, {moveTarget:node, onTap:()=>{ selectedOrtoObjId = obj.id; render("orto"); }});
     } else if(isPlant){
@@ -3347,7 +3372,6 @@ function renderOrto(main){
       nameInput.addEventListener("input", ()=>autoResize(nameInput));
       nameInput.addEventListener("change", ()=>{ obj.name=nameInput.value; store.set("orto", state.orto); });
       node.appendChild(nameInput);
-      node.appendChild(resizeHandle);
       requestAnimationFrame(()=>autoResize(nameInput));
       resizeCallback = (w,h)=>{ bigIcon.style.fontSize = Math.max(20, Math.min(w,h)*0.42)+"px"; };
 
@@ -3404,12 +3428,11 @@ function renderOrto(main){
         node.appendChild(nameInput);
         requestAnimationFrame(()=>autoResize(nameInput));
       }
-      node.appendChild(resizeHandle);
 
       makeDraggable(node, obj, board, {onTap:()=>{ selectedOrtoObjId = obj.id; render("orto"); }});
     }
 
-    makeResizable(resizeHandle, node, obj, board, resizeCallback);
+    addOrtoResizeHandles(node, obj, board, resizeCallback);
     board.appendChild(node);
   });
 
@@ -3732,21 +3755,46 @@ function sendOrtoObjToBack(item, node){
   store.set("orto", state.orto);
   if(node) node.style.zIndex = String(item.z);
 }
-function makeResizable(handle, node, obj, board, onResize){
+function makeResizable(handle, node, obj, board, onResize, corner){
   const GRID_PX = 20;
   const MIN_W = 56, MIN_H = 48;
+  const leftEdge = corner==="bl" || corner==="tl";
+  const topEdge = corner==="tl" || corner==="tr";
   handle.addEventListener("pointerdown",(e)=>{
     e.preventDefault(); e.stopPropagation();
     handle.setPointerCapture(e.pointerId);
+    const rect = board.getBoundingClientRect(); // rect visivo (post-scala): coincide sempre col contenitore
+    const worldW = rect.width/ortoZoom, worldH = rect.height/ortoZoom; // dimensione logica reale del canvas ora
     const startX = e.clientX, startY = e.clientY;
-    const startW = node.offsetWidth, startH = node.offsetHeight;
+    const startW = obj.w||130, startH = obj.h||82;
+    const startLeftPx = (obj.x/100)*worldW;
+    const startTopPx = (obj.y/100)*worldH;
     function move(ev){
-      let w = Math.max(MIN_W, startW + (ev.clientX - startX));
-      let h = Math.max(MIN_H, startH + (ev.clientY - startY));
+      // il mouse si muove in pixel schermo: va riportato in pixel logici dividendo per lo zoom corrente
+      const dx = (ev.clientX-startX)/ortoZoom, dy = (ev.clientY-startY)/ortoZoom;
+      let w, h, leftPx = startLeftPx, topPx = startTopPx;
+      if(leftEdge){
+        w = Math.max(MIN_W, startW - dx);
+        leftPx = startLeftPx + (startW - w);
+      } else {
+        w = Math.max(MIN_W, startW + dx);
+      }
+      if(topEdge){
+        h = Math.max(MIN_H, startH - dy);
+        topPx = startTopPx + (startH - h);
+      } else {
+        h = Math.max(MIN_H, startH + dy);
+      }
       w = Math.round(w/GRID_PX)*GRID_PX;
       h = Math.round(h/GRID_PX)*GRID_PX;
+      leftPx = Math.round(leftPx/GRID_PX)*GRID_PX;
+      topPx = Math.round(topPx/GRID_PX)*GRID_PX;
       node.style.width = w+"px"; node.style.height = h+"px";
+      node.style.left = ((leftPx/worldW)*100)+"%";
+      node.style.top = ((topPx/worldH)*100)+"%";
       obj.w = w; obj.h = h;
+      obj.x = (leftPx/worldW)*100;
+      obj.y = (topPx/worldH)*100;
       if(onResize) onResize(w,h);
     }
     function up(){
@@ -3757,6 +3805,14 @@ function makeResizable(handle, node, obj, board, onResize){
     }
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
+  });
+}
+function addOrtoResizeHandles(node, obj, board, onResize){
+  // 3 maniglie: in alto a sx, in basso a sx, in basso a dx — non in alto a dx dove c'è la ✕
+  [["tl","orto-resize-tl"],["bl","orto-resize-bl"],["br","orto-resize-br"]].forEach(([corner,cls])=>{
+    const h = el("span",{class:"orto-obj-resize orto-ctrl "+cls});
+    node.appendChild(h);
+    makeResizable(h, node, obj, board, onResize, corner);
   });
 }
 
