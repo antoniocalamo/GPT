@@ -3419,10 +3419,14 @@ function renderOrto(main){
   boardWrap.appendChild(sizer);
   layoutWrap.appendChild(boardWrap);
 
+  function ortoZBand(o){
+    if(o.type==="camminatoio") return 0; // i vialetti restano sotto anche alle aiuole
+    if(o.type==="coltura" && !o.plantKind) return 1; // le aiuole (letti rialzati) sotto al resto
+    return 2;
+  }
   const sortedObjects = state.orto.objects.slice().sort((a,b)=>{
-    const aBed = a.type==="coltura" && !a.plantKind;
-    const bBed = b.type==="coltura" && !b.plantKind;
-    if(aBed!==bBed) return aBed ? -1 : 1; // le aiuole restano sempre più in fondo
+    const ba = ortoZBand(a), bb = ortoZBand(b);
+    if(ba!==bb) return ba-bb;
     return (a.z||0)-(b.z||0);
   });
   sortedObjects.forEach(obj=>{
@@ -3431,7 +3435,8 @@ function renderOrto(main){
     const isContainer = obj.type==="coltura" && !obj.plantKind;
     const isPlant = obj.type==="coltura" && !!obj.plantKind;
     const kindClass = isContainer ? " orto-bed" : (isPlant ? " orto-plant" : " orto-element");
-    const cssZ = isContainer ? 0 : Math.max(1, obj.z||1);
+    const zBand = ortoZBand(obj);
+    const cssZ = zBand===0 ? 0 : (zBand===1 ? 1 : Math.max(2, obj.z||2));
     const node = el("div",{class:"orto-obj"+kindClass+(selectedOrtoObjId===obj.id?" orto-selected":""), style:`left:${obj.x}px; top:${obj.y}px; width:${obj.w||130}px; height:${obj.h||82}px; z-index:${cssZ};`});
 
     const del = el("span",{class:"bed-del orto-ctrl", html:"✕"});
