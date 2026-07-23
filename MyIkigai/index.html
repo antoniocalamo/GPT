@@ -509,7 +509,7 @@ textarea{resize:vertical;}
 .weather-link:hover{text-decoration:underline;}
 .orto-layout{display:flex; gap:14px; align-items:flex-start;}
 .orto-board-wrap{flex:1; min-width:0; overflow:auto; max-height:72vh; -webkit-overflow-scrolling:touch;}
-.orto-board-sizer{position:relative; width:100%; height:560px; overflow:hidden; border-radius:14px; border:1px solid var(--line); box-shadow:inset var(--shadow);}
+.orto-board-sizer{position:relative; overflow:hidden; border-radius:14px; border:1px solid var(--line); box-shadow:inset var(--shadow);}
 .orto-board{
   position:absolute; top:0; left:0;
   background-color:var(--card);
@@ -1892,6 +1892,22 @@ async function loadAll(){
     store.setQuiet("orto", state.orto);
   }
   if(!state.orto.comments) state.orto.comments = [];
+  if(!state.orto.migratedAbsCoords){
+    // il vecchio sistema posizionava gli oggetti in % di una board di riferimento ~900x560;
+    // passiamo a coordinate assolute in pixel su un canvas fisso, molto più stabile e senza
+    // gli arrotondamenti che causavano disallineamenti tra un livello di zoom e l'altro
+    const REF_W = 900, REF_H = 560;
+    (state.orto.objects||[]).forEach(o=>{
+      o.x = Math.round((o.x/100)*REF_W);
+      o.y = Math.round((o.y/100)*REF_H);
+    });
+    (state.orto.comments||[]).forEach(c=>{
+      c.x = Math.round((c.x/100)*REF_W);
+      c.y = Math.round((c.y/100)*REF_H);
+    });
+    state.orto.migratedAbsCoords = true;
+    store.setQuiet("orto", state.orto);
+  }
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
@@ -3199,6 +3215,7 @@ let activeCommentId = null;
 let ortoCalendarView = false;
 let selectedOrtoObjId = null;
 let ortoZoom = 1;
+const ORTO_CANVAS_W = 1800, ORTO_CANVAS_H = 1100;
 let ortoClipboard = null;
 let ortoKeyListenerAttached = false;
 function ensureOrtoKeyListener(){
@@ -3301,9 +3318,8 @@ function renderOrto(main){
 
   const layoutWrap = el("div",{class:"orto-layout"});
   const boardWrap = el("div",{class:"orto-board-wrap"});
-  const sizer = el("div",{class:"orto-board-sizer"});
-  const worldPct = 100/ortoZoom;
-  const board = el("div",{class:"orto-board", id:"orto-board", style:`width:${worldPct}%; height:${worldPct}%; transform:scale(${ortoZoom});`});
+  const sizer = el("div",{class:"orto-board-sizer", style:`width:${ORTO_CANVAS_W*ortoZoom}px; height:${ORTO_CANVAS_H*ortoZoom}px;`});
+  const board = el("div",{class:"orto-board", id:"orto-board", style:`width:${ORTO_CANVAS_W}px; height:${ORTO_CANVAS_H}px; transform:scale(${ortoZoom});`});
   sizer.appendChild(board);
   boardWrap.appendChild(sizer);
   layoutWrap.appendChild(boardWrap);
@@ -3316,7 +3332,7 @@ function renderOrto(main){
     const isPlant = obj.type==="coltura" && !!obj.plantKind;
     const kindClass = isContainer ? " orto-bed" : (isPlant ? " orto-plant" : " orto-element");
     const cssZ = isContainer ? 0 : Math.max(1, obj.z||1);
-    const node = el("div",{class:"orto-obj"+kindClass+(selectedOrtoObjId===obj.id?" orto-selected":""), style:`left:${obj.x}%; top:${obj.y}%; width:${obj.w||130}px; height:${obj.h||82}px; z-index:${cssZ};`});
+    const node = el("div",{class:"orto-obj"+kindClass+(selectedOrtoObjId===obj.id?" orto-selected":""), style:`left:${obj.x}px; top:${obj.y}px; width:${obj.w||130}px; height:${obj.h||82}px; z-index:${cssZ};`});
 
     const del = el("span",{class:"bed-del orto-ctrl", html:"✕"});
     del.addEventListener("click",(e)=>{
@@ -3437,7 +3453,7 @@ function renderOrto(main){
   });
 
   state.orto.comments.forEach(c=>{
-    const pin = el("div",{class:"orto-comment-pin", style:`left:${c.x}%; top:${c.y}%;`});
+    const pin = el("div",{class:"orto-comment-pin", style:`left:${c.x}px; top:${c.y}px;`});
     pin.appendChild(el("span",{class:"orto-comment-icon", html:ICON_COMMENT}));
     pin.addEventListener("click",(e)=>{
       e.stopPropagation();
@@ -3703,28 +3719,21 @@ function makeDraggable(handleEl, item, board, opts={}){
        e.target.closest(".orto-ctrl")) return;
     e.preventDefault();
     handleEl.setPointerCapture(e.pointerId);
-    const rect = board.getBoundingClientRect();
-    const nodeRect = moveTarget.getBoundingClientRect();
-    // offset tra il punto cliccato e l'angolo in alto a sinistra del box, così il box
-    // non "scatta" per allinearsi al cursore ma mantiene la posizione relativa al click
-    const offsetX = e.clientX - nodeRect.left;
-    const offsetY = e.clientY - nodeRect.top;
-    // soglia massima calcolata sulla dimensione reale della shape, così si può trascinare
-    // fino a ridosso del bordo destro/inferiore invece di fermarsi a una soglia fissa
-    const maxPosX = isPin ? 96 : Math.max(0, 100 - (nodeRect.width/rect.width)*100);
-    const maxPosY = isPin ? 96 : Math.max(0, 100 - (nodeRect.height/rect.height)*100);
     const startClientX = e.clientX, startClientY = e.clientY;
+    const startLeft = item.x||0, startTop = item.y||0;
+    const elemW = moveTarget.offsetWidth||0, elemH = moveTarget.offsetHeight||0;
+    const maxX = isPin ? (ORTO_CANVAS_W-24) : Math.max(0, ORTO_CANVAS_W-elemW);
+    const maxY = isPin ? (ORTO_CANVAS_H-24) : Math.max(0, ORTO_CANVAS_H-elemH);
     let moved = false;
     function move(ev){
       if(Math.abs(ev.clientX-startClientX)>4 || Math.abs(ev.clientY-startClientY)>4) moved = true;
-      let xPx = ev.clientX - offsetX - rect.left;
-      let yPx = ev.clientY - offsetY - rect.top;
-      xPx = Math.round(xPx/GRID_PX)*GRID_PX;
-      yPx = Math.round(yPx/GRID_PX)*GRID_PX;
-      let x = (xPx/rect.width)*100;
-      let y = (yPx/rect.height)*100;
-      x = Math.max(0, Math.min(maxPosX, x)); y = Math.max(0, Math.min(maxPosY, y));
-      moveTarget.style.left = x+"%"; moveTarget.style.top = y+"%";
+      // il mouse si muove in pixel schermo: va riportato in pixel del canvas dividendo per lo zoom corrente
+      const dx = (ev.clientX-startClientX)/ortoZoom, dy = (ev.clientY-startClientY)/ortoZoom;
+      let x = startLeft + dx, y = startTop + dy;
+      x = Math.round(x/GRID_PX)*GRID_PX;
+      y = Math.round(y/GRID_PX)*GRID_PX;
+      x = Math.max(0, Math.min(maxX, x)); y = Math.max(0, Math.min(maxY, y));
+      moveTarget.style.left = x+"px"; moveTarget.style.top = y+"px";
       item.x = x; item.y = y;
     }
     function up(){
@@ -3763,38 +3772,33 @@ function makeResizable(handle, node, obj, board, onResize, corner){
   handle.addEventListener("pointerdown",(e)=>{
     e.preventDefault(); e.stopPropagation();
     handle.setPointerCapture(e.pointerId);
-    const rect = board.getBoundingClientRect(); // rect visivo (post-scala): coincide sempre col contenitore
-    const worldW = rect.width/ortoZoom, worldH = rect.height/ortoZoom; // dimensione logica reale del canvas ora
     const startX = e.clientX, startY = e.clientY;
     const startW = obj.w||130, startH = obj.h||82;
-    const startLeftPx = (obj.x/100)*worldW;
-    const startTopPx = (obj.y/100)*worldH;
+    const startLeft = obj.x||0, startTop = obj.y||0;
     function move(ev){
-      // il mouse si muove in pixel schermo: va riportato in pixel logici dividendo per lo zoom corrente
+      // il mouse si muove in pixel schermo: va riportato in pixel del canvas dividendo per lo zoom corrente
       const dx = (ev.clientX-startX)/ortoZoom, dy = (ev.clientY-startY)/ortoZoom;
-      let w, h, leftPx = startLeftPx, topPx = startTopPx;
+      let w, h, left = startLeft, top = startTop;
       if(leftEdge){
         w = Math.max(MIN_W, startW - dx);
-        leftPx = startLeftPx + (startW - w);
+        left = startLeft + (startW - w);
       } else {
         w = Math.max(MIN_W, startW + dx);
       }
       if(topEdge){
         h = Math.max(MIN_H, startH - dy);
-        topPx = startTopPx + (startH - h);
+        top = startTop + (startH - h);
       } else {
         h = Math.max(MIN_H, startH + dy);
       }
       w = Math.round(w/GRID_PX)*GRID_PX;
       h = Math.round(h/GRID_PX)*GRID_PX;
-      leftPx = Math.round(leftPx/GRID_PX)*GRID_PX;
-      topPx = Math.round(topPx/GRID_PX)*GRID_PX;
+      left = Math.round(left/GRID_PX)*GRID_PX;
+      top = Math.round(top/GRID_PX)*GRID_PX;
       node.style.width = w+"px"; node.style.height = h+"px";
-      node.style.left = ((leftPx/worldW)*100)+"%";
-      node.style.top = ((topPx/worldH)*100)+"%";
+      node.style.left = left+"px"; node.style.top = top+"px";
       obj.w = w; obj.h = h;
-      obj.x = (leftPx/worldW)*100;
-      obj.y = (topPx/worldH)*100;
+      obj.x = left; obj.y = top;
       if(onResize) onResize(w,h);
     }
     function up(){
