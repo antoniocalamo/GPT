@@ -829,6 +829,66 @@ table.tires textarea.gomme-cell{
 .finance-total-info{display:flex; flex-direction:column; gap:4px;}
 .finance-total-label{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
 .finance-total-value{font-family:'Fraunces',serif; font-weight:700; font-size:22px; color:var(--ink);}
+
+/* ---- Finanze: sotto-navigazione ---- */
+.finance-subnav{display:flex; gap:8px; margin-bottom:16px;}
+.finance-subnav-btn.active{background:var(--forest); color:#fff; border-color:var(--forest);}
+
+/* ---- Investimenti ---- */
+.invest-actions-row{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+.invest-search-results{margin-top:10px; max-height:280px; overflow-y:auto;}
+.invest-search-row{padding:8px 10px; border-radius:8px; cursor:pointer; border-bottom:1px solid var(--line);}
+.invest-search-row:hover{background:var(--paper-2);}
+.invest-search-symbol{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px; color:var(--ink);}
+.invest-search-name{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+.invest-list{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
+.invest-row{
+  display:grid; grid-template-columns:1fr 190px 110px 150px 178px; align-items:center; gap:14px; padding:12px 16px;
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+}
+.invest-row-main{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.invest-top-line{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+.invest-symbol{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px; color:var(--ink);}
+.invest-primary-text{font-family:'Fraunces',serif; font-weight:700; font-size:14px; color:var(--ink);}
+.invest-symbol-chip{
+  font-size:10.5px; font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--forest);
+  background:rgba(47,122,61,0.12); padding:2px 8px; border-radius:20px;
+}
+.invest-name{font-size:11.5px; color:var(--ink-soft);}
+.invest-qty{font-size:12px; color:var(--ink-soft); text-align:right; font-variant-numeric:tabular-nums;}
+.invest-value{font-family:'Fraunces',serif; font-weight:700; font-size:15px; color:var(--ink); text-align:right; font-variant-numeric:tabular-nums;}
+.invest-pnl{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12.5px; text-align:right; font-variant-numeric:tabular-nums;}
+.invest-pnl.positive{color:#2F7A3D;}
+.invest-pnl.negative{color:#B3352A;}
+.invest-row-actions{display:flex; align-items:center; gap:10px; justify-self:end;}
+.invest-row-actions .btn{white-space:nowrap;}
+.invest-totals-bar{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; padding:22px 24px; margin-bottom:20px;}
+.invest-totals-bar .finance-total-label{display:block; margin-bottom:8px;}
+.invest-manual-link{
+  margin-top:12px; font-size:12.5px; color:var(--forest); cursor:pointer; text-decoration:underline; text-underline-offset:2px;
+}
+.invest-manual-edit{cursor:pointer; opacity:.55; font-size:13px; flex-shrink:0;}
+.invest-manual-edit:hover{opacity:1;}
+.invest-manual-note{
+  grid-column:1 / -1; font-size:11px; font-style:italic; color:var(--ink-soft); margin-top:-4px;
+}
+.invest-orders-window{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 14px 0;}
+.invest-orders-window .btn.active{background:var(--forest); color:#fff; border-color:var(--forest);}
+.invest-orders-list{display:flex; flex-direction:column; gap:0;}
+.invest-order-row{
+  display:flex; align-items:center; gap:16px; padding:8px 4px; border-bottom:1px dashed var(--line); font-size:12.5px;
+}
+.invest-order-date{width:90px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);}
+.invest-order-symbol{width:70px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-weight:700;}
+.invest-order-type{width:70px; flex-shrink:0; font-size:11px; text-transform:uppercase; letter-spacing:.03em;}
+.invest-order-type.sell{color:#B3352A;}
+.invest-order-type.buy{color:#2F7A3D;}
+.invest-order-qty{flex:1; color:var(--ink-soft);}
+.invest-order-total{font-weight:700; flex-shrink:0;}
+.invest-edit-lots{display:flex; flex-direction:column; gap:6px; margin-top:8px;}
+.invest-edit-lot-row{display:flex; align-items:center; gap:6px;}
+.invest-edit-lot-row select{width:90px; flex-shrink:0;}
+.invest-edit-lot-input{width:auto; flex:1; min-width:0;}
 .finance-block-liquidity{background:#E9F6E9; border-color:#B9E0B9;}
 .finance-block-liquidity h4{color:#2F6B2F;}
 .finance-block-nonliquid{background:#DCEBDD; border-color:#A8CBA9;}
@@ -852,6 +912,11 @@ table.tires textarea.gomme-cell{
 .finance-amort-btn{cursor:pointer; font-size:12px; opacity:.4; flex-shrink:0;}
 .finance-amort-btn:hover, .finance-amort-btn.active{opacity:1;}
 .finance-amort-hint{font-size:10.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; padding:0 0 3px 0;}
+.finance-item-updated-row{display:flex; align-items:center; gap:8px; padding:0 0 3px 0;}
+.finance-item-updated-spacer-icon{width:16px; flex-shrink:0;}
+.finance-item-updated-spacer-name{flex:1;}
+.finance-item-updated-spacer-actions{width:38px; flex-shrink:0;}
+.finance-item-updated{max-width:128px; width:128px; flex-shrink:0; text-align:right; font-size:10.5px; color:var(--ink-soft); font-style:italic;}
 .finance-note{
   border:none; background:transparent; font-size:11.5px; font-style:italic; color:var(--ink-soft);
   padding:0 0 4px 0; width:100%; resize:none; overflow:hidden; font-family:'Inter',sans-serif;
@@ -1200,7 +1265,7 @@ const DEFAULTS = {
   trips: [],
   bbqs: [],
   tires: [],
-  finance: { liquidity: [], nonliquid: [], debts: [], history: [] },
+  finance: { liquidity: [], nonliquid: [], debts: [], history: [], investments: [], investAutoPriceEnabled: false },
   sharedBoards: [],
   projects: []
 };
@@ -1655,6 +1720,36 @@ async function loadAll(){
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
   state.finance = await store.get(privKey("finance"), DEFAULTS.finance);
+  if(!state.finance.investments) state.finance.investments = [];
+  if(state.finance.investAutoPriceEnabled===undefined) state.finance.investAutoPriceEnabled = false;
+  if(state.finance.investments.length){
+    const merged = {};
+    const order = [];
+    state.finance.investments.forEach(inv=>{
+      if(!inv.lots){
+        // vecchio formato con qty/buyPrice diretti sulla voce: lo trasformiamo in un lotto
+        inv.lots = [{ id:"lot"+Date.now()+Math.random().toString(36).slice(2,7), qty:inv.qty, price:inv.buyPrice, date:inv.buyDate||"", type:"buy" }];
+        delete inv.qty; delete inv.buyPrice; delete inv.buyDate;
+      }
+      (inv.lots||[]).forEach(lot=>{
+        if(lot.price===undefined && lot.buyPrice!==undefined){ lot.price = lot.buyPrice; delete lot.buyPrice; }
+        if(lot.date===undefined && lot.buyDate!==undefined){ lot.date = lot.buyDate; delete lot.buyDate; }
+        if(!lot.type) lot.type = "buy";
+      });
+      if(inv.manual===undefined) inv.manual = false;
+      if(inv.manualNote===undefined) inv.manualNote = "";
+      if(inv.label===undefined) inv.label = "";
+      const key = (inv.symbol||"").toUpperCase();
+      if(merged[key]){
+        merged[key].lots = merged[key].lots.concat(inv.lots);
+      } else {
+        merged[key] = inv;
+        order.push(key);
+      }
+    });
+    state.finance.investments = order.map(k=>merged[k]);
+    store.setQuiet(privKey("finance"), state.finance);
+  }
   state.sharedBoards = await store.get("sharedBoards", DEFAULTS.sharedBoards);
   state.projects = await store.get("projects", DEFAULTS.projects);
   state.customTabs = await store.get("customTabs", []);
@@ -2061,6 +2156,11 @@ function fmtEUR(n){
 }
 function fmtMoneyPlain(n){
   return n.toLocaleString("it-IT",{minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true}) + " €";
+}
+function fmtNativeAmount(n, currency){
+  const numStr = n.toLocaleString("it-IT",{minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:true});
+  if(!currency || currency==="EUR") return numStr+" €";
+  return numStr+" "+currency;
 }
 function computeStats(){
   let total=0, done=0;
@@ -3925,6 +4025,21 @@ function openAmortizationModal(item, onSave){
   });
 }
 function financeBlock(title, key){
+  function fmtDateShort(d){
+    return d.toLocaleDateString("it-IT",{day:"2-digit", month:"2-digit", year:"2-digit"});
+  }
+  function shortItDate(str){
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str||"");
+    return m ? m[1]+"/"+m[2]+"/"+m[3].slice(2) : str;
+  }
+  function financeItemUpdatedRow(text){
+    const wrap = el("div",{class:"finance-item-updated-row"});
+    wrap.appendChild(el("span",{class:"finance-item-updated-spacer-icon"}));
+    wrap.appendChild(el("span",{class:"finance-item-updated-spacer-name"}));
+    wrap.appendChild(el("span",{class:"finance-item-updated"}, text));
+    wrap.appendChild(el("span",{class:"finance-item-updated-spacer-actions"}));
+    return wrap;
+  }
   const colorClass = key==="liquidity" ? "finance-block-liquidity" : key==="nonliquid" ? "finance-block-nonliquid" : "finance-block-debts";
   const block = el("div",{class:"card cat-block "+colorClass});
   state.finance[key].forEach((item,i)=>{
@@ -3962,7 +4077,11 @@ function financeBlock(title, key){
       const rv = parseFinanceValue(item.value);
       valInp.value = item.value ? fmtMoneyPlain(rv) : "";
     });
-    valInp.addEventListener("change", ()=>{ item.value=valInp.value; store.set(privKey("finance"), state.finance); render("finanze"); });
+    valInp.addEventListener("change", ()=>{
+      item.value=valInp.value;
+      item.updatedAt = new Date().toLocaleDateString("it-IT");
+      store.set(privKey("finance"), state.finance); render("finanze");
+    });
     row.appendChild(valInp);
     const amortBtn = el("span",{class:"finance-amort-btn"+(hasAmort?" active":""), title:hasAmort?"Piano di ammortamento collegato":"Collega un piano di ammortamento"}, "📅");
     amortBtn.addEventListener("click", ()=> openAmortizationModal(item, ()=>store.set(privKey("finance"), state.finance)));
@@ -3971,9 +4090,28 @@ function financeBlock(title, key){
     del.addEventListener("click", ()=>{ state.finance[key].splice(i,1); store.set(privKey("finance"), state.finance); render("finanze"); });
     row.appendChild(del);
     itemWrap.appendChild(row);
+    const isPortfolioTitoli = item.name && item.name.trim().toLowerCase()==="portafoglio titoli";
     if(hasAmort){
       const am = item.amortization;
-      itemWrap.appendChild(el("div",{class:"finance-amort-hint"}, "rata "+(am.idx+1)+"/"+am.rows.length+" · "+am.rows[am.idx].date));
+      itemWrap.appendChild(el("div",{class:"finance-amort-hint"}, "rata "+(am.idx+1)+"/"+am.rows.length+" · periodo "+am.rows[am.idx].date));
+    } else if(isPortfolioTitoli){
+      const invs = state.finance.investments || [];
+      if(invs.length){
+        const stale = invs.filter(iv=>iv.lastPrice==null);
+        let hintTxt = "";
+        if(stale.length){
+          hintTxt = stale.length+" titol"+(stale.length===1?"o":"i")+" ancora al prezzo di carico, mai aggiornat"+(stale.length===1?"o":"i");
+        } else {
+          const dates = invs.map(iv=>iv.lastPriceAt).filter(Boolean).map(d=>new Date(d));
+          if(dates.length){
+            const oldest = new Date(Math.min.apply(null, dates));
+            hintTxt = "titoli aggiornati — il meno recente il "+fmtDateShort(oldest);
+          }
+        }
+        if(hintTxt) itemWrap.appendChild(financeItemUpdatedRow(hintTxt));
+      }
+    } else if(item.value){
+      itemWrap.appendChild(financeItemUpdatedRow(item.updatedAt ? "agg. "+shortItDate(item.updatedAt) : "data non nota"));
     }
     const noteInp = el("textarea",{rows:"1", class:"finance-note", placeholder:"nota (opzionale)"});
     noteInp.value = item.note||"";
@@ -4264,10 +4402,595 @@ function openFinanceImportModal(){
     modal.appendChild(actions);
   });
 }
+let financeSubTab = "dashboard";
+function computeInvestmentsTotalEUR(){
+  const invs = state.finance.investments || [];
+  let total = 0;
+  invs.forEach(inv=>{
+    const {qty, avgBuyPrice} = investLotsTotals(inv);
+    const isEUR = !inv.currency || inv.currency==="EUR";
+    const fx = inv.fxRate!=null ? inv.fxRate : (isEUR?1:null);
+    const priceNative = inv.lastPrice!=null ? inv.lastPrice : avgBuyPrice;
+    if(fx!=null) total += qty*priceNative*fx;
+  });
+  return total;
+}
+function syncPortfolioTitoliItem(){
+  const total = computeInvestmentsTotalEUR();
+  const totalStr = String(Math.round(total*100)/100);
+  let changed = false;
+  ["liquidity","nonliquid","debts"].forEach(key=>{
+    (state.finance[key]||[]).forEach(item=>{
+      if(item.name && item.name.trim().toLowerCase()==="portafoglio titoli" && item.value!==totalStr){
+        item.value = totalStr; changed = true;
+      }
+    });
+  });
+  if(changed) store.setQuiet(privKey("finance"), state.finance);
+}
 function renderFinanze(main){
+  syncPortfolioTitoliItem();
   main.appendChild(el("div",{class:"section-head"},[
     el("h1",{},"Finanze")
   ]));
+  const nav = el("div",{class:"finance-subnav"});
+  [["dashboard","Panoramica"],["investimenti","Investimenti"]].forEach(([key,label])=>{
+    const btn = el("button",{class:"btn ghost small finance-subnav-btn"+(financeSubTab===key?" active":"")}, label);
+    btn.addEventListener("click", ()=>{ financeSubTab=key; render("finanze"); });
+    nav.appendChild(btn);
+  });
+  main.appendChild(nav);
+  if(financeSubTab==="investimenti") renderFinanzeInvestimenti(main);
+  else renderFinanzeDashboard(main);
+}
+
+function normalizePriceCurrency(price, currency){
+  // Alcuni titoli (es. ETF/ETC quotati a Londra) vengono quotati in pence (GBp/GBX)
+  // invece che in sterline: li normalizziamo prima di qualunque conversione.
+  if(currency==="GBp" || currency==="GBX"){
+    return { price: price/100, currency: "GBP" };
+  }
+  return { price, currency: (currency||"EUR").toUpperCase() };
+}
+function investLotsTotals(inv){
+  // Elabora i lotti in ordine cronologico (acquisti/vendite) mantenendo un costo medio
+  // ponderato corrente; sulle vendite scala qty/costo proporzionalmente e accumula il realizzato.
+  const lots = (inv.lots||[]).slice().sort((a,b)=>{
+    const da = parseItDate(a.date), db = parseItDate(b.date);
+    if(da && db) return da-db;
+    if(da) return -1;
+    if(db) return 1;
+    return 0;
+  });
+  let qty = 0, cost = 0, realized = 0;
+  lots.forEach(l=>{
+    if(l.type==="sell"){
+      const sellQty = Math.min(l.qty||0, qty);
+      const avgCost = qty ? cost/qty : 0;
+      realized += sellQty*((l.price||0)-avgCost);
+      cost -= avgCost*sellQty;
+      qty -= sellQty;
+    } else {
+      cost += (l.qty||0)*(l.price||0);
+      qty += (l.qty||0);
+    }
+  });
+  return { qty, cost, avgBuyPrice: qty ? cost/qty : 0, realized };
+}
+function addOrMergeInvestment(meta, qty, price, date, type){
+  if(!state.finance.investments) state.finance.investments = [];
+  const key = (meta.symbol||"").toUpperCase();
+  let inv = state.finance.investments.find(i=>(i.symbol||"").toUpperCase()===key);
+  const lot = { id:"lot"+Date.now()+Math.random().toString(36).slice(2,7), qty, price, date: date||"", type: type||"buy" };
+  if(inv){
+    inv.lots.push(lot);
+  } else {
+    inv = {
+      id:"inv"+Date.now(), symbol: meta.symbol, name: meta.name||meta.symbol, exchange: meta.exchange||"", micCode: meta.micCode||"",
+      currency: meta.currency||"EUR", manual: !!meta.manual, label:"",
+      lastPrice:null, lastPriceAt:null, fxRate: (!meta.currency||meta.currency==="EUR")?1:null, manualNote:"",
+      lots:[lot]
+    };
+    state.finance.investments.push(inv);
+  }
+  store.set(privKey("finance"), state.finance);
+}
+
+function openInvestSearchModal(onPick, onManual){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Cerca titolo"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"},
+      "Cerca per nome o ticker (es. \"Apple\", \"AAPL\", \"iShares Core MSCI World\")."));
+    const inp = el("input",{type:"text", placeholder:"Nome o ticker…"});
+    modal.appendChild(inp);
+    const resultsWrap = el("div",{class:"invest-search-results"});
+    modal.appendChild(resultsWrap);
+    let debounceTimer;
+    inp.addEventListener("input", ()=>{
+      clearTimeout(debounceTimer);
+      const q = inp.value.trim();
+      resultsWrap.innerHTML = "";
+      if(q.length<2) return;
+      debounceTimer = setTimeout(async ()=>{
+        resultsWrap.innerHTML = "";
+        resultsWrap.appendChild(el("div",{class:"empty-hint"},"Cerco…"));
+        try{
+          const { data, error } = await sb.functions.invoke(`invest-prices?action=search&symbol=${encodeURIComponent(q)}`, { method:"GET" });
+          if(error) throw error;
+          const matches = (data && data.data) || [];
+          resultsWrap.innerHTML = "";
+          if(!matches.length){ resultsWrap.appendChild(el("div",{class:"empty-hint"},"Nessun risultato.")); return; }
+          matches.slice(0,15).forEach(m=>{
+            const row = el("div",{class:"invest-search-row"});
+            row.appendChild(el("div",{class:"invest-search-symbol"}, m.symbol));
+            row.appendChild(el("div",{class:"invest-search-name"}, [m.instrument_name||m.name||"", m.exchange||"", m.currency||""].filter(Boolean).join(" · ")));
+            row.addEventListener("click", ()=>{ close(); onPick(m); });
+            resultsWrap.appendChild(row);
+          });
+        }catch(e){
+          resultsWrap.innerHTML = "";
+          resultsWrap.appendChild(el("div",{class:"empty-hint"},"Errore nella ricerca: "+(e.message||e)));
+        }
+      }, 400);
+    });
+    const manualRow = el("div",{class:"invest-manual-link"}, "Non lo trovi (es. BTP italiani)? Aggiungilo manualmente →");
+    manualRow.addEventListener("click", ()=>{ close(); onManual(); });
+    modal.appendChild(manualRow);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    actions.appendChild(cancelBtn);
+    modal.appendChild(actions);
+  });
+}
+
+function openAddHoldingModal(match){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{}, "Aggiungi "+match.symbol));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"},
+      [match.instrument_name||match.name||"", match.exchange||"", match.currency||""].filter(Boolean).join(" · ")));
+    modal.appendChild(el("div",{class:"field-label"},"Quantità"));
+    const qtyInp = el("input",{type:"text", placeholder:"es. 10"});
+    modal.appendChild(qtyInp);
+    modal.appendChild(el("div",{class:"field-label"},"Prezzo di carico (per unità, nella valuta del titolo: "+(match.currency||"EUR")+")"));
+    const priceInp = el("input",{type:"text", placeholder:"es. 85,40"});
+    modal.appendChild(priceInp);
+    modal.appendChild(el("div",{class:"field-label"},"Data acquisto (facoltativa)"));
+    const dateInp = el("input",{type:"text", placeholder:"gg/mm/aaaa"});
+    modal.appendChild(dateInp);
+    const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
+    modal.appendChild(errBox);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Aggiungi");
+    saveBtn.addEventListener("click", ()=>{
+      const qty = parseItalianNumber(qtyInp.value);
+      const buyPrice = parseItalianNumber(priceInp.value);
+      if(!qty || !buyPrice){ errBox.textContent = "Inserisci quantità e prezzo di carico validi."; return; }
+      addOrMergeInvestment({
+        symbol: match.symbol, name: match.instrument_name||match.name||match.symbol,
+        exchange: match.exchange||"", micCode: match.mic_code||"", currency: (match.currency||"EUR").toUpperCase(), manual:false
+      }, qty, buyPrice, dateInp.value.trim(), "buy");
+      close(); render("finanze");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
+
+function openManualHoldingModal(){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Aggiungi titolo manualmente"));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"},
+      "Per titoli non coperti dalla ricerca automatica (es. BTP italiani). Il prezzo non si aggiorna da solo: lo aggiorni tu quando serve."));
+    modal.appendChild(el("div",{class:"field-label"},"Nome"));
+    const nameInp = el("input",{type:"text", placeholder:"es. BTP 15/06/2035"});
+    modal.appendChild(nameInp);
+    modal.appendChild(el("div",{class:"field-label"},"Codice/ISIN (facoltativo, usato come identificativo)"));
+    const symInp = el("input",{type:"text", placeholder:"es. IT0005XXXXXX"});
+    modal.appendChild(symInp);
+    modal.appendChild(el("div",{class:"field-label"},"Quantità (es. valore nominale per i BTP)"));
+    const qtyInp = el("input",{type:"text", placeholder:"es. 10000"});
+    modal.appendChild(qtyInp);
+    modal.appendChild(el("div",{class:"field-label"},"Prezzo di carico (per unità)"));
+    const priceInp = el("input",{type:"text", placeholder:"es. 98,50"});
+    modal.appendChild(priceInp);
+    modal.appendChild(el("div",{class:"field-label"},"Data acquisto (facoltativa)"));
+    const dateInp = el("input",{type:"text", placeholder:"gg/mm/aaaa"});
+    modal.appendChild(dateInp);
+    const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
+    modal.appendChild(errBox);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Aggiungi");
+    saveBtn.addEventListener("click", ()=>{
+      const qty = parseItalianNumber(qtyInp.value);
+      const buyPrice = parseItalianNumber(priceInp.value);
+      const name = nameInp.value.trim();
+      if(!name || !qty || !buyPrice){ errBox.textContent = "Inserisci almeno nome, quantità e prezzo di carico."; return; }
+      const symbol = symInp.value.trim() || name;
+      addOrMergeInvestment({ symbol, name, exchange:"", currency:"EUR", manual:true }, qty, buyPrice, dateInp.value.trim(), "buy");
+      close(); render("finanze");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
+
+function openAddOrderModal(inv){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Nuovo ordine — "+inv.symbol));
+    modal.appendChild(el("div",{style:"font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;"}, inv.name));
+    const typeRow = el("div",{class:"modal-radio-row"});
+    const buyLabel = el("label",{});
+    const buyRadio = el("input",{type:"radio", name:"ordertype"}); buyRadio.checked = true;
+    buyLabel.appendChild(buyRadio); buyLabel.appendChild(document.createTextNode("Acquisto"));
+    const sellLabel = el("label",{});
+    const sellRadio = el("input",{type:"radio", name:"ordertype"});
+    sellLabel.appendChild(sellRadio); sellLabel.appendChild(document.createTextNode("Vendita"));
+    typeRow.appendChild(buyLabel); typeRow.appendChild(sellLabel);
+    modal.appendChild(typeRow);
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:12px;"},"Quantità"));
+    const qtyInp = el("input",{type:"text", placeholder:"es. 10"});
+    modal.appendChild(qtyInp);
+    modal.appendChild(el("div",{class:"field-label"},"Prezzo (per unità"+(inv.currency&&inv.currency!=="EUR"?", in "+inv.currency:"")+")"));
+    const priceInp = el("input",{type:"text", placeholder:"es. 85,40"});
+    modal.appendChild(priceInp);
+    modal.appendChild(el("div",{class:"field-label"},"Data (facoltativa)"));
+    const dateInp = el("input",{type:"text", placeholder:"gg/mm/aaaa"});
+    modal.appendChild(dateInp);
+    const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
+    modal.appendChild(errBox);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Aggiungi ordine");
+    saveBtn.addEventListener("click", ()=>{
+      const qty = parseItalianNumber(qtyInp.value);
+      const price = parseItalianNumber(priceInp.value);
+      if(!qty || !price){ errBox.textContent = "Inserisci quantità e prezzo validi."; return; }
+      const type = sellRadio.checked ? "sell" : "buy";
+      inv.lots.push({ id:"lot"+Date.now()+Math.random().toString(36).slice(2,7), qty, price, date: dateInp.value.trim(), type });
+      store.set(privKey("finance"), state.finance);
+      close(); render("finanze");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
+
+function openEditHoldingModal(inv){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Modifica — "+inv.symbol));
+    modal.appendChild(el("div",{class:"field-label"},"Etichetta personale (facoltativa)"));
+    const labelInp = el("input",{type:"text", placeholder:"es. PAC mensile, Fondo pensione…"});
+    labelInp.value = inv.label||"";
+    labelInp.addEventListener("change", ()=>{ inv.label = labelInp.value.trim(); store.set(privKey("finance"), state.finance); });
+    modal.appendChild(labelInp);
+
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:12px;"},"Valuta di quotazione (correggila se la ricerca ha agganciato la borsa sbagliata)"));
+    const curInp = el("input",{type:"text", placeholder:"es. EUR"});
+    curInp.value = inv.currency||"EUR";
+    curInp.addEventListener("change", ()=>{
+      const newCur = curInp.value.trim().toUpperCase() || "EUR";
+      inv.currency = newCur;
+      if(newCur==="EUR") inv.fxRate = 1;
+      store.set(privKey("finance"), state.finance);
+    });
+    modal.appendChild(curInp);
+
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:16px;"},"Storico ordini (modifica o cancella una riga)"));
+    const lotsWrap = el("div",{class:"invest-edit-lots"});
+    function renderLots(){
+      lotsWrap.innerHTML = "";
+      if(!inv.lots || !inv.lots.length){
+        lotsWrap.appendChild(el("div",{class:"empty-hint"},"Nessun ordine."));
+        return;
+      }
+      inv.lots.forEach((lot,i)=>{
+        const row = el("div",{class:"invest-edit-lot-row"});
+        const typeSel = el("select",{});
+        [["buy","Acquisto"],["sell","Vendita"]].forEach(([val,label])=>{
+          const opt = el("option",{value:val}, label);
+          if((lot.type||"buy")===val) opt.selected = true;
+          typeSel.appendChild(opt);
+        });
+        typeSel.addEventListener("change", ()=>{ lot.type = typeSel.value; store.set(privKey("finance"), state.finance); });
+        const qtyInp = el("input",{type:"text", class:"invest-edit-lot-input", placeholder:"quantità"});
+        qtyInp.value = lot.qty!=null ? String(lot.qty).replace(".",",") : "";
+        qtyInp.addEventListener("change", ()=>{ lot.qty = parseItalianNumber(qtyInp.value); store.set(privKey("finance"), state.finance); });
+        const priceInp = el("input",{type:"text", class:"invest-edit-lot-input", placeholder:"prezzo"});
+        priceInp.value = lot.price!=null ? String(lot.price).replace(".",",") : "";
+        priceInp.addEventListener("change", ()=>{ lot.price = parseItalianNumber(priceInp.value); store.set(privKey("finance"), state.finance); });
+        const dateInp = el("input",{type:"text", class:"invest-edit-lot-input", placeholder:"gg/mm/aaaa"});
+        dateInp.value = lot.date||"";
+        dateInp.addEventListener("change", ()=>{ lot.date = dateInp.value.trim(); store.set(privKey("finance"), state.finance); });
+        const del = el("span",{class:"del", html:"✕"});
+        del.addEventListener("click", ()=>{
+          inv.lots.splice(i,1);
+          store.set(privKey("finance"), state.finance);
+          renderLots();
+        });
+        row.appendChild(typeSel); row.appendChild(qtyInp); row.appendChild(priceInp); row.appendChild(dateInp); row.appendChild(del);
+        lotsWrap.appendChild(row);
+      });
+    }
+    renderLots();
+    modal.appendChild(lotsWrap);
+
+    const actions = el("div",{class:"modal-actions"});
+    const closeBtn = el("button",{class:"btn primary"},"Fatto");
+    closeBtn.addEventListener("click", ()=>{ close(); render("finanze"); });
+    actions.appendChild(closeBtn);
+    modal.appendChild(actions);
+  });
+}
+
+function openManualPriceUpdateModal(inv){
+  openModal((modal, close)=>{
+    const isEUR = !inv.currency || inv.currency==="EUR";
+    modal.appendChild(el("h3",{},"Aggiorna prezzo — "+inv.name));
+    modal.appendChild(el("div",{class:"field-label"},"Prezzo attuale (per unità"+(isEUR?"":", in "+inv.currency)+")"));
+    const priceInp = el("input",{type:"text", placeholder:"es. 99,10"});
+    priceInp.value = inv.lastPrice!=null ? String(inv.lastPrice).replace(".",",") : "";
+    modal.appendChild(priceInp);
+    let fxInp = null;
+    if(!isEUR){
+      modal.appendChild(el("div",{class:"field-label"},"Cambio 1 "+inv.currency+" = ? EUR (es. 1,17)"));
+      fxInp = el("input",{type:"text", placeholder:"es. 1,17"});
+      fxInp.value = inv.fxRate!=null ? String(inv.fxRate).replace(".",",") : "";
+      modal.appendChild(fxInp);
+    }
+    modal.appendChild(el("div",{class:"field-label"},"Nota (fonte e data della rilevazione)"));
+    const noteInp = el("input",{type:"text", placeholder:"es. quotazione MOT del 20/07/2026"});
+    noteInp.value = inv.manualNote || "";
+    modal.appendChild(noteInp);
+    const errBox = el("div",{style:"color:var(--rust); font-size:12px; margin-top:8px; min-height:16px;"});
+    modal.appendChild(errBox);
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const saveBtn = el("button",{class:"btn primary"},"Salva");
+    saveBtn.addEventListener("click", ()=>{
+      const price = parseItalianNumber(priceInp.value);
+      if(!price){ errBox.textContent = "Inserisci un prezzo valido."; return; }
+      let fx = 1;
+      if(fxInp){
+        fx = parseItalianNumber(fxInp.value);
+        if(!fx){ errBox.textContent = "Inserisci un cambio valido (es. 1,17)."; return; }
+      }
+      inv.lastPrice = price;
+      inv.fxRate = fx;
+      inv.lastPriceAt = new Date().toISOString();
+      inv.manualNote = noteInp.value.trim();
+      store.set(privKey("finance"), state.finance);
+      close(); render("finanze");
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+    modal.appendChild(actions);
+  });
+}
+
+async function refreshInvestmentPrices(){
+  const invs = state.finance.investments || [];
+  const fxCache = {};
+  async function getFxRate(currency){
+    if(!currency || currency==="EUR") return 1;
+    if(Object.prototype.hasOwnProperty.call(fxCache,currency)) return fxCache[currency];
+    try{
+      const { data, error } = await sb.functions.invoke(`invest-prices?action=fx&symbol=${encodeURIComponent(currency)}/EUR`, { method:"GET" });
+      fxCache[currency] = (!error && data && data.rate) ? parseFloat(data.rate) : null;
+    }catch(e){ fxCache[currency] = null; }
+    return fxCache[currency];
+  }
+  const failures = [];
+  for(const inv of invs){
+    if(inv.manual) continue; // i titoli manuali non si aggiornano da soli
+    try{
+      let q = `invest-prices?action=quote&symbol=${encodeURIComponent(inv.symbol)}`;
+      if(inv.micCode) q += `&mic_code=${encodeURIComponent(inv.micCode)}`;
+      else if(inv.exchange) q += `&exchange=${encodeURIComponent(inv.exchange)}`;
+      const { data, error } = await sb.functions.invoke(q, { method:"GET" });
+      if(!error && data && data.close && !isNaN(parseFloat(data.close))){
+        const norm = normalizePriceCurrency(parseFloat(data.close), data.currency || inv.currency);
+        inv.lastPrice = norm.price;
+        inv.currency = norm.currency;
+        inv.lastPriceAt = new Date().toISOString();
+        inv.fxRate = await getFxRate(norm.currency);
+      } else {
+        failures.push(inv.symbol + (data&&data.message ? " ("+data.message+")" : ""));
+      }
+    }catch(e){ failures.push(inv.symbol); }
+  }
+  if(failures.length){
+    alert("Non sono riuscito ad aggiornare automaticamente: "+failures.join(", ")+".\nSpesso è perché il piano gratuito di Twelve Data non copre quel titolo (es. ETF europei) — in quel caso usa l'icona 💰 sulla riga per aggiornarne il prezzo a mano.");
+  }
+  store.set(privKey("finance"), state.finance);
+  render("finanze");
+}
+
+let investOrdersWindow = "month";
+function renderFinanzeInvestimenti(main){
+  const invs = state.finance.investments || [];
+
+  const rows = invs.map(inv=>{
+    const {qty, cost, avgBuyPrice} = investLotsTotals(inv);
+    const isEUR = !inv.currency || inv.currency==="EUR";
+    const fx = inv.fxRate!=null ? inv.fxRate : (isEUR?1:null);
+    const priceKnown = inv.lastPrice!=null;
+    const priceNative = priceKnown ? inv.lastPrice : avgBuyPrice;
+    let valueEUR = null, costEUR = null;
+    if(fx!=null){
+      valueEUR = qty*priceNative*fx;
+      costEUR = cost*fx; // conversione al tasso di cambio più recente, non a quello storico d'acquisto
+    }
+    return { inv, qty, cost, avgBuyPrice, isEUR, fx, priceNative, priceKnown, valueEUR, costEUR };
+  });
+
+  let totalEUR = 0, totalCostEUR = 0;
+  const otherCurrencies = new Set();
+  rows.forEach(r=>{
+    if(r.valueEUR!=null){ totalEUR += r.valueEUR; totalCostEUR += r.costEUR; }
+    if(!r.isEUR) otherCurrencies.add(r.inv.currency);
+  });
+  const totalPnl = totalEUR-totalCostEUR;
+  const totalPnlPct = totalCostEUR ? (totalPnl/totalCostEUR*100) : null;
+
+  // --- KPI in alto ---
+  const totalsBar = el("div",{class:"card invest-totals-bar"});
+  totalsBar.appendChild(el("div",{},[
+    el("span",{class:"finance-total-label"},"Totale portafoglio"),
+    el("span",{class:"finance-total-value"}, fmtEUR(totalEUR))
+  ]));
+  totalsBar.appendChild(el("div",{class:"invest-pnl "+(totalPnl>=0?"positive":"negative"), style:"font-size:16px;"},
+    (totalPnl>=0?"+":"")+fmtEUR(totalPnl)+(totalPnlPct!=null?" ("+(totalPnlPct>=0?"+":"")+totalPnlPct.toFixed(1)+"%)":"")
+  ));
+  main.appendChild(totalsBar);
+  if(otherCurrencies.size){
+    main.appendChild(el("div",{class:"finance-note"},
+      "Nota: alcuni titoli sono in "+[...otherCurrencies].join(", ")+", convertiti in € al tasso di cambio più recente disponibile (non a quello storico d'acquisto)."));
+  }
+
+  const actionsRow = el("div",{class:"invest-actions-row"});
+  const addBtn = el("button",{class:"btn primary"},"+ Aggiungi titolo");
+  addBtn.addEventListener("click", ()=> openInvestSearchModal(openAddHoldingModal, openManualHoldingModal));
+  actionsRow.appendChild(addBtn);
+  main.appendChild(actionsRow);
+
+  if(!invs.length){
+    main.appendChild(el("div",{class:"empty-hint"},"Nessun titolo in portafoglio. Aggiungine uno per iniziare a tracciarlo."));
+    return;
+  }
+
+  // --- posizioni aggregate (una riga per titolo, media pesata su acquisti/vendite) ---
+  const list = el("div",{class:"invest-list"});
+  rows.forEach(r=>{
+    const inv = r.inv;
+    const pnl = r.valueEUR!=null ? r.valueEUR-r.costEUR : null;
+    const pnlPct = (pnl!=null && r.costEUR) ? (pnl/r.costEUR*100) : null;
+    const row = el("div",{class:"invest-row"});
+    const mainCol = el("div",{class:"invest-row-main"});
+    const topLine = el("div",{class:"invest-top-line"});
+    if(inv.label){
+      topLine.appendChild(el("span",{class:"invest-primary-text"}, inv.label));
+      topLine.appendChild(el("span",{class:"invest-symbol-chip"}, inv.symbol + (inv.manual?" · manuale":"")));
+    } else {
+      topLine.appendChild(el("span",{class:"invest-symbol"}, inv.symbol + (inv.manual?" · manuale":"")));
+    }
+    mainCol.appendChild(topLine);
+    mainCol.appendChild(el("span",{class:"invest-name"}, inv.name));
+    row.appendChild(mainCol);
+    row.appendChild(el("div",{class:"invest-qty"},
+      r.qty+" × "+fmtNativeAmount(r.priceNative, inv.currency)+(!r.priceKnown?" (carico)":"")
+    ));
+    row.appendChild(el("div",{class:"invest-value"}, r.valueEUR!=null ? fmtEUR(r.valueEUR) : "—"));
+    row.appendChild(el("div",{class:"invest-pnl "+(pnl!=null ? (pnl>=0?"positive":"negative") : "")},
+      pnl!=null ? (pnl>=0?"+":"")+fmtEUR(pnl)+(pnlPct!=null?" ("+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+"%)":"") : "—"
+    ));
+    const rowActions = el("div",{class:"invest-row-actions"});
+    const orderBtn = el("button",{class:"btn ghost small"},"+ Ordine");
+    orderBtn.addEventListener("click", ()=> openAddOrderModal(inv));
+    rowActions.appendChild(orderBtn);
+    const editBtn = el("span",{class:"invest-manual-edit", title:"Modifica etichetta e storico ordini"}, "✎");
+    editBtn.addEventListener("click", ()=> openEditHoldingModal(inv));
+    rowActions.appendChild(editBtn);
+    const priceBtn = el("span",{class:"invest-manual-edit", title:"Aggiorna prezzo manualmente"}, "💰");
+    priceBtn.addEventListener("click", ()=> openManualPriceUpdateModal(inv));
+    rowActions.appendChild(priceBtn);
+    const del = el("span",{class:"del", html:"✕"});
+    del.addEventListener("click", ()=>{
+      if(confirm("Rimuovere "+inv.symbol+" (tutti gli ordini) dal portafoglio?")){
+        state.finance.investments = state.finance.investments.filter(i=>i!==inv);
+        store.set(privKey("finance"), state.finance); render("finanze");
+      }
+    });
+    rowActions.appendChild(del);
+    row.appendChild(rowActions);
+    if(inv.manual && inv.manualNote){
+      row.appendChild(el("div",{class:"invest-manual-note"}, inv.manualNote));
+    }
+    list.appendChild(row);
+  });
+  main.appendChild(list);
+
+  if(invs.some(i=>!i.manual)){
+    const priceToggleRow = el("div",{style:"display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-bottom:8px;"});
+    if(state.finance.investAutoPriceEnabled){
+      const refreshBtn = el("button",{class:"btn ghost small"},"↻ Aggiorna prezzi");
+      refreshBtn.addEventListener("click", ()=>{
+        refreshBtn.textContent = "Aggiorno…"; refreshBtn.disabled = true;
+        refreshInvestmentPrices();
+      });
+      priceToggleRow.appendChild(refreshBtn);
+      const disableLink = el("span",{class:"invest-manual-link", style:"margin:0;"}, "Disattiva aggiornamento automatico");
+      disableLink.addEventListener("click", ()=>{
+        state.finance.investAutoPriceEnabled = false;
+        store.setQuiet(privKey("finance"), state.finance); render("finanze");
+      });
+      priceToggleRow.appendChild(disableLink);
+    } else {
+      const enableLink = el("span",{class:"invest-manual-link", style:"margin:0;"},
+        "Attiva aggiornamento automatico prezzi (richiede piano a pagamento Twelve Data) →");
+      enableLink.addEventListener("click", ()=>{
+        state.finance.investAutoPriceEnabled = true;
+        store.setQuiet(privKey("finance"), state.finance); render("finanze");
+      });
+      priceToggleRow.appendChild(enableLink);
+    }
+    main.appendChild(priceToggleRow);
+  }
+
+  // --- ordini recenti (ogni lotto, filtrabile per periodo) ---
+  main.appendChild(el("div",{class:"section-head", style:"margin-top:28px;"},[el("h1",{style:"font-size:20px;"},"Ordini recenti")]));
+  const windowRow = el("div",{class:"invest-orders-window"});
+  [["week","Ultima settimana"],["month","Ultimo mese"],["6m","Ultimi 6 mesi"],["year","Ultimo anno"],["all","Tutto"]].forEach(([val,label])=>{
+    const b = el("button",{class:"btn ghost small"+(investOrdersWindow===val?" active":"")}, label);
+    b.addEventListener("click", ()=>{ investOrdersWindow = val; render("finanze"); });
+    windowRow.appendChild(b);
+  });
+  main.appendChild(windowRow);
+
+  let allLots = [];
+  invs.forEach(inv=>{ (inv.lots||[]).forEach(lot=>{ allLots.push({ inv, lot }); }); });
+  if(investOrdersWindow!=="all"){
+    const cutoff = new Date();
+    if(investOrdersWindow==="week") cutoff.setDate(cutoff.getDate()-7);
+    else if(investOrdersWindow==="month") cutoff.setMonth(cutoff.getMonth()-1);
+    else if(investOrdersWindow==="6m") cutoff.setMonth(cutoff.getMonth()-6);
+    else if(investOrdersWindow==="year") cutoff.setFullYear(cutoff.getFullYear()-1);
+    allLots = allLots.filter(o=>{
+      const d = parseItDate(o.lot.date);
+      return d ? d>=cutoff : true;
+    });
+  }
+  allLots.sort((a,b)=>{
+    const da = parseItDate(a.lot.date), db = parseItDate(b.lot.date);
+    if(!da && !db) return 0;
+    if(!da) return 1;
+    if(!db) return -1;
+    return db-da;
+  });
+
+  if(!allLots.length){
+    main.appendChild(el("div",{class:"empty-hint"},"Nessun ordine in questo periodo."));
+  } else {
+    const ordersList = el("div",{class:"invest-orders-list"});
+    allLots.forEach(({inv,lot})=>{
+      const row = el("div",{class:"invest-order-row"});
+      row.appendChild(el("span",{class:"invest-order-date"}, lot.date || "—"));
+      row.appendChild(el("span",{class:"invest-order-symbol"}, inv.symbol));
+      row.appendChild(el("span",{class:"invest-order-type "+(lot.type==="sell"?"sell":"buy")}, lot.type==="sell"?"Vendita":"Acquisto"));
+      row.appendChild(el("span",{class:"invest-order-qty"}, lot.qty+" × "+fmtNativeAmount(lot.price, inv.currency)));
+      row.appendChild(el("span",{class:"invest-order-total"}, fmtNativeAmount(lot.qty*lot.price, inv.currency)));
+      ordersList.appendChild(row);
+    });
+    main.appendChild(ordersList);
+  }
+}
+
+function renderFinanzeDashboard(main){
   const today = new Date();
   const dom = today.getDate();
   if(dom>=26 && dom<=29){
