@@ -1760,8 +1760,9 @@ const store = {
   }
 };
 
-let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, dashTitles:null, gommeLayout:null, builtinLabels:null, accountSettings:null };
+let state = { dashboard:null, orto:null, trips:null, bbqs:null, tires:null, finance:null, sharedBoards:null, customTabs:null, customTabsPrivate:null, hiddenBuiltins:null, taglines:null, dashTitles:null, gommeLayout:null, builtinLabels:null, accountSettings:null, maintenanceItems:null };
 let activeTrip = null, activeBbq = null, activeSharedBoard = null, activeProject = null;
+let activeMaintenanceItem = null;
 let goodThingPick = null;
 let financeChartWindow = "12";
 let financeChartForecast = false;
@@ -1787,7 +1788,8 @@ let historyExpanded = false;
 let currentRenderedTab = "dashboard";
 const STATE_KEY_MAP_SHARED = {
   orto:"orto", trips:"trips", bbqs:"bbqs", tires:"tires",
-  sharedBoards:"sharedBoards", customTabs:"customTabs", taglines:"taglines", dashTitles:"dashTitles"
+  sharedBoards:"sharedBoards", customTabs:"customTabs", taglines:"taglines", dashTitles:"dashTitles",
+  maintenanceItems:"maintenanceItems"
 };
 const STATE_KEY_MAP_PRIVATE = {
   dashboard:"dashboard", finance:"finance", hiddenBuiltins:"hiddenBuiltins",
@@ -1959,6 +1961,7 @@ async function loadAll(){
   state.trips = await store.get("trips", DEFAULTS.trips);
   state.bbqs = await store.get("bbqs", DEFAULTS.bbqs);
   state.tires = await store.get("tires", DEFAULTS.tires);
+  state.maintenanceItems = await store.get("maintenanceItems", [{id:"tires", name:"Gomme", type:"tires", created:new Date().toLocaleDateString("it-IT")}]);
   state.finance = await store.get(privKey("finance"), DEFAULTS.finance);
   if(!state.finance.investments) state.finance.investments = [];
   if(state.finance.investAutoPriceEnabled===undefined) state.finance.investAutoPriceEnabled = false;
@@ -4174,13 +4177,13 @@ function addOrtoResizeHandles(node, obj, board, onResize){
 /* ---------------- COLLECTIONS (trips / bbq) ---------------- */
 function renderCollection(main, opts){
   const { key, title, active, setActive, template, itemsPath } = opts;
-  const nounPlural = opts.itemsLabel || "checklist salvate";
-  const newBtnLabel = opts.newBtnLabel || "+ Nuova checklist";
-  const namePrompt = opts.namePrompt || "Nome della checklist (es. nome viaggio o evento):";
-  const renameTitle = opts.renameTitle || "Rinomina checklist";
-  const renamePrompt = opts.renamePrompt || "Rinomina checklist:";
-  const delBtnLabel = opts.delBtnLabel || "Elimina checklist";
-  const emptyStateText = opts.emptyStateText || "Seleziona o crea una checklist per iniziare.";
+  const nounPlural = opts.itemsLabel || "sotto schede salvate";
+  const newBtnLabel = opts.newBtnLabel || "+ Nuova sotto-scheda";
+  const namePrompt = opts.namePrompt || "Nome della sotto-scheda:";
+  const renameTitle = opts.renameTitle || "Rinomina sotto-scheda";
+  const renamePrompt = opts.renamePrompt || "Rinomina sotto-scheda:";
+  const delBtnLabel = opts.delBtnLabel || "Elimina sotto-scheda";
+  const emptyStateText = opts.emptyStateText || "Seleziona o crea una sotto-scheda per iniziare.";
   const emptyStateIcon = opts.emptyStateIcon || ICON_SUITCASE;
   main.appendChild(el("div",{class:"section-head"},[
     opts.titleEl || el("h1",{},title),
@@ -4190,12 +4193,24 @@ function renderCollection(main, opts){
   const list = el("div",{class:"coll-list"});
   const newBtn = el("button",{class:"btn primary"}, newBtnLabel);
   newBtn.addEventListener("click", ()=>{
-    const name = prompt(namePrompt);
-    if(!name) return;
-    const item = { id:"c"+Date.now(), name, created:new Date().toLocaleDateString("it-IT"), data: template() };
-    state[key].push(item);
-    store.set(key, state[key]);
-    setActive(item.id); render(opts.tab);
+    if(opts.fixedTemplate){
+      // Alcune schede (es. Progetti) hanno un unico formato fisso: niente scelta di template.
+      const name = prompt(namePrompt);
+      if(!name) return;
+      const item = { id:"c"+Date.now(), name, created:new Date().toLocaleDateString("it-IT"), data: template() };
+      state[key].push(item);
+      store.set(key, state[key]);
+      setActive(item.id); render(opts.tab);
+      return;
+    }
+    openNewSubItemModal(namePrompt, (name, templateType)=>{
+      const item = { id:"c"+Date.now(), name, created:new Date().toLocaleDateString("it-IT"), type:templateType };
+      if(templateType==="table") Object.assign(item, newTableTemplateData());
+      else item.data = template();
+      state[key].push(item);
+      store.set(key, state[key]);
+      setActive(item.id); render(opts.tab);
+    });
   });
   list.appendChild(newBtn);
   state[key].forEach(c=>{
@@ -4231,10 +4246,166 @@ function renderCollection(main, opts){
       store.set(key, state[key]); setActive(null); render(opts.tab);
     });
     detail.appendChild(delBtn);
-    opts.renderDetail(detail, current);
+    if(current.type==="table"){
+      renderGenericTable(detail, current, (quiet)=>{ store.set(key, state[key]); if(!quiet) render(opts.tab); });
+    } else {
+      opts.renderDetail(detail, current);
+    }
   }
   wrap.appendChild(detail);
   main.appendChild(wrap);
+}
+// Modale scelta template per una nuova sotto-scheda: Checklist (categorie/voci) o Tabella
+// (righe/colonne libere, come quella storica di Gomme). In futuro si potranno aggiungere altri template.
+function newTableTemplateData(){
+  return { columns: [{id:"col"+Date.now(), label:"Colonna 1", width:200}], rows: [] };
+}
+function openNewSubItemModal(namePromptLabel, onCreate){
+  openModal((modal, close)=>{
+    modal.appendChild(el("h3",{},"Nuova sotto-scheda"));
+    modal.appendChild(el("div",{class:"field-label"},"Nome"));
+    const nameInput = el("input",{type:"text", placeholder:(namePromptLabel||"Nome della sotto-scheda").replace(/:$/,"")});
+    modal.appendChild(nameInput);
+    modal.appendChild(el("div",{class:"field-label", style:"margin-top:10px;"},"Tipo di contenuto"));
+    let selected = "checklist";
+    const tabsWrap = el("div",{class:"modal-tabs"});
+    const checklistBtn = el("div",{class:"modal-tab-btn active"},"Checklist");
+    const tableBtn = el("div",{class:"modal-tab-btn"},"Tabella");
+    checklistBtn.addEventListener("click", ()=>{ selected="checklist"; checklistBtn.classList.add("active"); tableBtn.classList.remove("active"); });
+    tableBtn.addEventListener("click", ()=>{ selected="table"; tableBtn.classList.add("active"); checklistBtn.classList.remove("active"); });
+    tabsWrap.appendChild(checklistBtn); tabsWrap.appendChild(tableBtn);
+    modal.appendChild(tabsWrap);
+    modal.appendChild(el("div",{style:"font-size:11.5px; color:var(--ink-soft); margin-top:6px;"},
+      "Checklist: categorie e voci da spuntare. Tabella: righe e colonne libere, come quella di Gomme."));
+    const actions = el("div",{class:"modal-actions"});
+    const cancelBtn = el("button",{class:"btn ghost"},"Annulla");
+    cancelBtn.addEventListener("click", close);
+    const createBtn = el("button",{class:"btn primary"},"Crea");
+    createBtn.addEventListener("click", ()=>{
+      if(!nameInput.value.trim()) return;
+      onCreate(nameInput.value.trim(), selected);
+      close();
+    });
+    actions.appendChild(cancelBtn); actions.appendChild(createBtn);
+    modal.appendChild(actions);
+    nameInput.focus();
+  });
+}
+// Tabella generica riusabile (sotto schede "Tabella" e, con dati propri, il tab Manutenzione).
+// Ricalca lo stile e il comportamento della tabella storica di Gomme: resize di colonne/righe
+// senza re-render continuo, re-render solo sulle modifiche strutturali (righe/colonne aggiunte o tolte).
+function renderGenericTable(container, item, onSave){
+  if(!item.columns || !item.columns.length) item.columns = [{id:"col"+Date.now(), label:"Colonna 1", width:200}];
+  if(!item.rows) item.rows = [];
+  const addRowBtn = el("button",{class:"btn primary"},"+ Nuova riga");
+  addRowBtn.style.marginBottom="14px";
+  addRowBtn.addEventListener("click", ()=>{ item.rows.push({id:"r"+Date.now()+Math.random().toString(36).slice(2,5)}); onSave(); });
+  container.appendChild(addRowBtn);
+  const addColBtn = el("button",{class:"btn ghost"},"+ Nuova colonna");
+  addColBtn.style.marginLeft="8px"; addColBtn.style.marginBottom="14px";
+  addColBtn.addEventListener("click", ()=>{
+    item.columns.push({id:"col"+Date.now()+Math.random().toString(36).slice(2,5), label:"Nuova colonna", width:160});
+    onSave();
+  });
+  container.appendChild(addColBtn);
+
+  const wrap = el("div",{style:"overflow-x:auto;"});
+  const table = el("table",{class:"tires card"});
+  const colgroup = el("colgroup");
+  const cols = {};
+  item.columns.forEach(col=>{
+    const c = el("col",{style:`width:${col.width||160}px;`});
+    cols[col.id] = c;
+    colgroup.appendChild(c);
+  });
+  colgroup.appendChild(el("col",{style:"width:36px;"}));
+  table.appendChild(colgroup);
+
+  const headRow = el("tr");
+  item.columns.forEach((col,ci)=>{
+    const th = el("th",{style:"position:relative; padding-right:26px;"});
+    const labelInput = el("input",{type:"text", value:col.label,
+      style:"width:100%; border:none; background:transparent; font-family:'Fraunces',serif; font-size:13px; color:var(--forest); font-weight:600; padding:0;"});
+    labelInput.addEventListener("change", ()=>{ col.label = labelInput.value; onSave(true); });
+    th.appendChild(labelInput);
+    if(item.columns.length>1){
+      const delColBtn = el("span",{class:"del", html:"✕", title:"Elimina colonna",
+        style:"cursor:pointer;opacity:.5;font-size:11px; position:absolute; top:8px; right:14px;"});
+      delColBtn.addEventListener("click", ()=>{
+        if(confirm('Eliminare la colonna "'+(col.label||"")+'"?')){
+          item.columns.splice(ci,1);
+          item.rows.forEach(r=>{ delete r[col.id]; });
+          onSave();
+        }
+      });
+      th.appendChild(delColBtn);
+    }
+    const handle = el("span",{class:"col-resize-handle"});
+    handle.addEventListener("pointerdown",(e)=>{
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      const startX = e.clientX;
+      const startW = col.width || 160;
+      function move(ev){
+        const w = Math.max(50, startW + (ev.clientX - startX));
+        cols[col.id].style.width = w+"px";
+        col.width = w;
+      }
+      function up(){
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", up);
+        onSave(true);
+      }
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", up);
+    });
+    th.appendChild(handle);
+    headRow.appendChild(th);
+  });
+  headRow.appendChild(el("th",{},""));
+  table.appendChild(headRow);
+
+  item.rows.forEach((row,ri)=>{
+    const rowH = row.height;
+    const tr = el("tr",{style: rowH ? `height:${rowH}px;` : ""});
+    item.columns.forEach(col=>{
+      const td = el("td",{style:"position:relative;"});
+      const inp = el("textarea",{rows:"1", class:"gomme-cell"});
+      inp.value = row[col.id]||"";
+      inp.addEventListener("input", ()=>autoResize(inp));
+      inp.addEventListener("change", ()=>{ row[col.id]=inp.value; onSave(true); });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    const lastTd = el("td",{style:"position:relative;"});
+    const del = el("button",{class:"btn small danger"},"✕");
+    del.addEventListener("click", ()=>{ item.rows.splice(ri,1); onSave(); });
+    lastTd.appendChild(del);
+    const rowHandle = el("span",{class:"row-resize-handle"});
+    rowHandle.addEventListener("pointerdown",(e)=>{
+      e.preventDefault();
+      rowHandle.setPointerCapture(e.pointerId);
+      const startY = e.clientY;
+      const startH = tr.offsetHeight;
+      function move(ev){
+        const h = Math.max(28, startH + (ev.clientY - startY));
+        tr.style.height = h+"px";
+        row.height = h;
+      }
+      function up(){
+        rowHandle.removeEventListener("pointermove", move);
+        rowHandle.removeEventListener("pointerup", up);
+        onSave(true);
+      }
+      rowHandle.addEventListener("pointermove", move);
+      rowHandle.addEventListener("pointerup", up);
+    });
+    lastTd.appendChild(rowHandle);
+    tr.appendChild(lastTd);
+    table.appendChild(tr);
+  });
+  wrap.appendChild(table);
+  container.appendChild(wrap);
 }
 
 function renderPackItem(item, i, arr, onSave, idPrefix){
@@ -4628,23 +4799,23 @@ function renderBbqDetail(detail, bbq){
   detail.appendChild(noteBlock);
 }
 
-/* ---------------- GOMME ---------------- */
+/* ---------------- MANUTENZIONE (ex Gomme) ---------------- */
 const GOMME_FIELDS = [
   ["treno","text","Treno",110],["intervento","text","Intervento",220],["data","date","Data",130],
   ["km","text","Km",80],["note","text","Note",220]
 ];
-function renderGomme(main){
-  main.appendChild(el("div",{class:"section-head"},[
-    builtinTabHeader("gomme","Gomme"),
-    el("span",{class:"tag"},state.tires.length+" interventi registrati")
-  ]));
+// La scheda Manutenzione è una collezione di sotto schede (state.maintenanceItems), con lo
+// stesso layout elenco+dettaglio di Viaggi/Grigliate. La sotto scheda "Gomme" (type:"tires")
+// è quella storica con la tabella a colonne fisse e non si può eliminare (ma si può rinominare);
+// tutte le altre (type:"checklist") sono checklist a categorie come quelle di Viaggi/Grigliate.
+function renderTiresTable(container){
   const addBtn = el("button",{class:"btn primary"},"+ Nuovo intervento");
   addBtn.style.marginBottom="14px";
   addBtn.addEventListener("click", ()=>{
     state.tires.push({id:"g"+Date.now(), treno:"", intervento:"", data:"", km:"", note:""});
     store.set("tires", state.tires); render("gomme");
   });
-  main.appendChild(addBtn);
+  container.appendChild(addBtn);
 
   const layout = state.gommeLayout;
   const wrap = el("div",{style:"overflow-x:auto;"});
@@ -4736,6 +4907,86 @@ function renderGomme(main){
     table.appendChild(tr);
   });
   wrap.appendChild(table);
+  container.appendChild(wrap);
+}
+function renderMaintenanceItemDetail(detail, item){
+  if(item.type==="tires"){
+    renderTiresTable(detail);
+    return;
+  }
+  if(item.type==="table"){
+    renderGenericTable(detail, item, (quiet)=>{ store.set("maintenanceItems", state.maintenanceItems); if(!quiet) render("gomme"); });
+    return;
+  }
+  if(!item.data) item.data = [];
+  const save = (quiet)=>{ (quiet?store.setQuiet:store.set)("maintenanceItems", state.maintenanceItems); render("gomme"); };
+  renderCategorizedChecklist(detail, item, save, "mnt"+item.id, "gomme");
+}
+function renderGomme(main){
+  if(!state.maintenanceItems.length){
+    state.maintenanceItems = [{id:"tires", name:"Gomme", type:"tires", created:new Date().toLocaleDateString("it-IT")}];
+  }
+  main.appendChild(el("div",{class:"section-head"},[
+    builtinTabHeader("gomme","Gomme"),
+    el("span",{class:"tag"}, state.maintenanceItems.length+" sotto schede")
+  ]));
+
+  const wrap = el("div",{class:"collection"});
+  const list = el("div",{class:"coll-list"});
+  const newBtn = el("button",{class:"btn primary"}, "+ Nuova sotto-scheda");
+  newBtn.addEventListener("click", ()=>{
+    openNewSubItemModal("Nome della sotto-scheda (es. Casa, Auto, Caldaia…):", (name, templateType)=>{
+      const item = { id:"m"+Date.now(), name, created:new Date().toLocaleDateString("it-IT"), type:templateType };
+      if(templateType==="table") Object.assign(item, newTableTemplateData());
+      else item.data = [];
+      state.maintenanceItems.push(item);
+      store.set("maintenanceItems", state.maintenanceItems);
+      activeMaintenanceItem = item.id;
+      render("gomme");
+    });
+  });
+  list.appendChild(newBtn);
+
+  if(!activeMaintenanceItem || !state.maintenanceItems.find(it=>it.id===activeMaintenanceItem)){
+    activeMaintenanceItem = state.maintenanceItems[0].id;
+  }
+  state.maintenanceItems.forEach(item=>{
+    const it = el("div",{class:"coll-item"+(activeMaintenanceItem===item.id?" active":"")});
+    const nameRow = el("div",{class:"coll-item-name-row"});
+    nameRow.appendChild(el("span",{class:"coll-item-name"}, item.name));
+    const renameBtn = el("span",{class:"coll-item-rename", html:ICON_EDIT, title:"Rinomina sotto scheda"});
+    renameBtn.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      const newName = prompt("Rinomina sotto scheda:", item.name);
+      if(newName && newName.trim()){
+        item.name = newName.trim();
+        store.set("maintenanceItems", state.maintenanceItems); render("gomme");
+      }
+    });
+    nameRow.appendChild(renameBtn);
+    it.appendChild(nameRow);
+    it.appendChild(el("div",{style:"font-weight:400;font-size:11px;opacity:.75;margin-top:2px;"}, item.created));
+    it.addEventListener("click", ()=>{ activeMaintenanceItem = item.id; render("gomme"); });
+    list.appendChild(it);
+  });
+  wrap.appendChild(list);
+
+  const detail = el("div",{class:"coll-detail"});
+  const current = state.maintenanceItems.find(it=>it.id===activeMaintenanceItem);
+  if(current.type!=="tires"){
+    const delBtn = el("button",{class:"btn danger small"}, "Elimina sotto scheda");
+    delBtn.style.marginBottom="14px";
+    delBtn.addEventListener("click", ()=>{
+      if(!confirm('Eliminare la sotto scheda "'+current.name+'" e tutti i suoi contenuti?')) return;
+      state.maintenanceItems = state.maintenanceItems.filter(it=>it.id!==current.id);
+      store.set("maintenanceItems", state.maintenanceItems);
+      activeMaintenanceItem = null;
+      render("gomme");
+    });
+    detail.appendChild(delBtn);
+  }
+  renderMaintenanceItemDetail(detail, current);
+  wrap.appendChild(detail);
   main.appendChild(wrap);
 }
 
@@ -6545,7 +6796,7 @@ function render(tab){
   else if(tab==="progetti") renderCollection(main, {
     key:"projects", tab:"progetti", title:"Progetti", titleEl: builtinTabHeader("progetti","Progetti"), active:activeProject,
     setActive:(id)=>activeProject=id, template:PROJECT_TEMPLATE, renderDetail:renderProjectDetail,
-    itemsLabel:"progetti salvati", newBtnLabel:"+ Nuovo progetto",
+    itemsLabel:"progetti salvati", newBtnLabel:"+ Nuovo progetto", fixedTemplate:true,
     namePrompt:"Nome del progetto:", renameTitle:"Rinomina progetto", renamePrompt:"Rinomina progetto:",
     delBtnLabel:"Elimina progetto", emptyStateText:"Seleziona o crea un progetto per iniziare.", emptyStateIcon:ICON_CHECK
   });
